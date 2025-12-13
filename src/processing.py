@@ -112,7 +112,7 @@ def plot_ica(n_plot_components, ica, save_dir, idx):
         plt.close(fig)
         print(f"Saved plot to {filename}")
 
-def explain_variance(ica, raw, n_compoenents):
+def explain_variance(ica, raw, n_components):
     '''
     given ICA, explain how much of the data it explains along with how much each
     component explains the data
@@ -184,7 +184,54 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
         
         print(ica.get_components())
 
+def permutation_divider(log_paths, set_paths):
+    '''
+    divide a list of set files into their appropriate permutation
+    input: list of set files, corresponding logs file
+    output: a tuple of 3 lists of set files, ith element of tuple = list of ith permutation
+    '''
+    # initialize lists
+    perm1 = []
+    perm2 = []
+    perm3 = []
 
+    # Create a mapping from subject ID to permutation version
+    subject_to_perm = {}
+    
+    for log_path in log_paths:
+        # Extract filename from path
+        log_filename = os.path.basename(log_path)
+        
+        # Extract subject ID (first 4 digits)
+        subject_id = log_filename[:4]
+        
+        # Extract version (v1, v2, or v3)
+        if '_v1' in log_filename:
+            subject_to_perm[subject_id] = 1
+        elif '_v2' in log_filename:
+            subject_to_perm[subject_id] = 2
+        elif '_v3' in log_filename:
+            subject_to_perm[subject_id] = 3
+    
+    # Assign set files to appropriate permutation list
+    for set_path in set_paths:
+        # Extract filename from path
+        set_filename = os.path.basename(set_path)
+        
+        # Extract subject ID (first 4 digits)
+        subject_id = set_filename[:4]
+        
+        # Assign to correct permutation
+        if subject_id in subject_to_perm:
+            perm_num = subject_to_perm[subject_id]
+            if perm_num == 1:
+                perm1.append(set_path)
+            elif perm_num == 2:
+                perm2.append(set_path)
+            elif perm_num == 3:
+                perm3.append(set_path)
+    
+    return (perm1, perm2, perm3)
 
         
 def main(do_make_epochs=False, do_make_ERPs=False):
@@ -199,13 +246,18 @@ def main(do_make_epochs=False, do_make_ERPs=False):
     # get the paths to all the data in this year
     data_path_cmpy2 = '/quobyte/millerlmgrp/CMPy2/MarkerFixed/' # note it's an absolute path
     data_files_paths_cmpy2 = list_file_paths(data_path_cmpy2)
-    set_file_paths_cmpy2 = data_files_paths_cmpy2[1::2]
+    log_paths_cmpy2 = '/quobyte/millerlmgrp/CMPy2/Logs/'
+    log_files_cmpy2 = list_file_paths(log_paths_cmpy2)
 
-    # divide data into hearing and CI
-    hearing_cmpy2_data_paths = [path for path in set_file_paths_cmpy2 if '/08' in path]
-    ci_cmpy2_data_paths = [path for path in set_file_paths_cmpy2 if '/09' in path]
+    # divide data into hearing and CI, accounting for each permutation
+    hearing_cmpy2_data_paths = [path for path in data_files_paths_cmpy2 if ('/08' in path and '.set' in path)]
+    ci_cmpy2_data_paths = [path for path in data_files_paths_cmpy2 if ('/09' in path and '.set' in path)]
     print(f"Amount hearing data files: {len(hearing_cmpy2_data_paths)}")
     print(f"Amount ci data files: {len(ci_cmpy2_data_paths)}")
+
+    # divide into appropriate permuation paths
+    hearing_1, hearing_2, hearing_3 = permutation_divider(set_paths=hearing_cmpy2_data_paths, log_paths=log_files_cmpy2)
+    ci_1, ci_2, ci_3 = permutation_divider(set_paths=ci_cmpy2_data_paths, log_paths=log_files_cmpy2)
 
     if do_make_epochs:
         # create epochs and store them
@@ -220,7 +272,7 @@ def main(do_make_epochs=False, do_make_ERPs=False):
     # isolate the noise from the data via ICA, high pass it above 2 Hz with Butterwork, zero-phase
     # only need to run this on the CI data
     # n_componenets = 10 is the max because of how much component 0 explains the variance
-    isolate_noise(ci_cmpy2_data_paths, explain_variance=False, n_plot_components=None, n_components=5, l_freq=2)
+    isolate_noise(set_paths=ci_cmpy2_data_paths, do_explain_variance=False, n_plot_components=None, n_components=5, l_freq=2)
 
     # create clean dirty pairs for the data via noise injection
 
