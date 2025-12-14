@@ -18,6 +18,55 @@ def list_file_paths(directory_path):
             file_names.append(directory_path + entry)
     return file_names
 
+def permutation_divider(log_paths, set_paths):
+    '''
+    divide a list of set files into their appropriate permutation
+    input: list of set files, corresponding logs file
+    output: a tuple of 3 lists of set files, ith element of tuple = list of ith permutation
+    '''
+    # initialize lists
+    perm1 = []
+    perm2 = []
+    perm3 = []
+
+    # Create a mapping from subject ID to permutation version
+    subject_to_perm = {}
+    
+    for log_path in log_paths:
+        # Extract filename from path
+        log_filename = os.path.basename(log_path)
+        
+        # Extract subject ID (first 4 digits)
+        subject_id = log_filename[:4]
+        
+        # Extract version (v1, v2, or v3)
+        if '_v1' in log_filename:
+            subject_to_perm[subject_id] = 1
+        elif '_v2' in log_filename:
+            subject_to_perm[subject_id] = 2
+        elif '_v3' in log_filename:
+            subject_to_perm[subject_id] = 3
+    
+    # Assign set files to appropriate permutation list
+    for set_path in set_paths:
+        # Extract filename from path
+        set_filename = os.path.basename(set_path)
+        
+        # Extract subject ID (first 4 digits)
+        subject_id = set_filename[:4]
+        
+        # Assign to correct permutation
+        if subject_id in subject_to_perm:
+            perm_num = subject_to_perm[subject_id]
+            if perm_num == 1:
+                perm1.append(set_path)
+            elif perm_num == 2:
+                perm2.append(set_path)
+            elif perm_num == 3:
+                perm3.append(set_path)
+    
+    return (perm1, perm2, perm3)
+
 def make_epochs_util(set_path, save_path, tmin, tmax):
     raw = mne.io.read_raw_eeglab(set_path, preload=True)
     # NOTE: at this point raw can be now used with any standard mne function
@@ -130,7 +179,7 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
     '''
     given a list of .set paths, isolate the noise from each via ICA
     input: list of dirty .set paths
-    output: the averaged out noise from each
+    output: a list of raw instances of the isolated noise
     '''
     # NOTE: it would be good to see how much the noise from each datapoint varies
     noise = []
@@ -140,98 +189,61 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
     # enfore n_plot components < n_compoenents
     if ((n_plot_components is not None) and (n_plot_components > n_components)) :
         raise ValueError("n_plot_components cannot be greater than n_components")
+    # intialize CI likely channel names
+    CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8']
 
     # loop through each file and get the noise
     for idx, path in enumerate(set_paths[:5]): 
         raw = mne.io.read_raw_eeglab(path, preload=True)
-
         # rename mastoids
         raw.rename_channels({
             'LMas': 'M1',
             'RMas': 'M2',
         })
-
         # get m1 and m2 indexes
         m1_idx = raw.ch_names.index('M1')
         m2_idx = raw.ch_names.index('M2')
-        
+
         # set montage
         raw.set_montage(montage)
 
         # apply filter
         raw.filter(l_freq=l_freq, h_freq=h_freq)
 
-        # run ICA on it
+        # run ICA on it and store the data itself
         ica = ICA(n_components=n_components, max_iter="auto", random_state=97)
         ica.fit(raw)
+        sources = ica.get_sources(raw)
 
         # explain each component
         if do_explain_variance:
-            explain_variance(ica=ica, raw=raw, n_compoenents=n_components)
+            explain_variance(ica=ica, raw=raw, n_components=n_components)
 
         # plot where components are coming from
         if n_plot_components is not None:
             plot_ica(n_plot_components=n_plot_components, ica=ica, save_dir=save_dir, idx=idx)
+        
+        # save the ICAs that have some threshold percentage of their weight coming from around the point of
+        # where the cochlear implant is placed
+        component_matrix = ica.get_components()  # (n_channels, n_components)
 
-        # save the ICAs of components centered around the mastoids
-        componenent_matrix = ica.get_components() # (n_channels, n_components)
-        # compare values across the index corresponding to the left and right mastoids
-        # get the corresponding rows
-        m1_weights = np.abs(componenent_matrix[m1_idx, :]) # (1, 5)
-        m2_weights = np.abs(componenent_matrix[m2_idx, :])
-        mastoid_weights = (m1_weights + m2_weights) / 2.0
-        top_components = np.argsort(mastoid_weights) # indicies of the ordered highest components
-        
-        print(ica.get_components())
+        # get the top channels for each component
+        top_components = []
+        for i, column in enumerate(component_matrix.T):
+            ranked = np.argsort(np.abs(column))[::-1]
+            # convert into channel names
+            ranked_ch = [raw.ch_names[index] for index in ranked]
+            # print(f"{i}th component: {ranked_ch}")
+            # if the top component is one that corresponds to being around the implant, include it as noise
+            if (ranked_ch[0] in CI_chs) or (ranked[1] in CI_chs):
+                # store this component index as one to add later
+                top_components.append(i)
 
-def permutation_divider(log_paths, set_paths):
-    '''
-    divide a list of set files into their appropriate permutation
-    input: list of set files, corresponding logs file
-    output: a tuple of 3 lists of set files, ith element of tuple = list of ith permutation
-    '''
-    # initialize lists
-    perm1 = []
-    perm2 = []
-    perm3 = []
+        # add the raw components to noise
+        raw_noise = sources.copy().pick(top_components)
+        noise.append(raw_noise)
 
-    # Create a mapping from subject ID to permutation version
-    subject_to_perm = {}
-    
-    for log_path in log_paths:
-        # Extract filename from path
-        log_filename = os.path.basename(log_path)
-        
-        # Extract subject ID (first 4 digits)
-        subject_id = log_filename[:4]
-        
-        # Extract version (v1, v2, or v3)
-        if '_v1' in log_filename:
-            subject_to_perm[subject_id] = 1
-        elif '_v2' in log_filename:
-            subject_to_perm[subject_id] = 2
-        elif '_v3' in log_filename:
-            subject_to_perm[subject_id] = 3
-    
-    # Assign set files to appropriate permutation list
-    for set_path in set_paths:
-        # Extract filename from path
-        set_filename = os.path.basename(set_path)
-        
-        # Extract subject ID (first 4 digits)
-        subject_id = set_filename[:4]
-        
-        # Assign to correct permutation
-        if subject_id in subject_to_perm:
-            perm_num = subject_to_perm[subject_id]
-            if perm_num == 1:
-                perm1.append(set_path)
-            elif perm_num == 2:
-                perm2.append(set_path)
-            elif perm_num == 3:
-                perm3.append(set_path)
-    
-    return (perm1, perm2, perm3)
+    return noise
 
         
 def main(do_make_epochs=False, do_make_ERPs=False):
@@ -272,7 +284,8 @@ def main(do_make_epochs=False, do_make_ERPs=False):
     # isolate the noise from the data via ICA, high pass it above 2 Hz with Butterwork, zero-phase
     # only need to run this on the CI data
     # n_componenets = 10 is the max because of how much component 0 explains the variance
-    isolate_noise(set_paths=ci_cmpy2_data_paths, do_explain_variance=False, n_plot_components=None, n_components=5, l_freq=2)
+    ci_1_noise = isolate_noise(set_paths=ci_1, do_explain_variance=False, n_plot_components=None, n_components=5, l_freq=2)
+    print(type(ci_1_noise[0]))
 
     # create clean dirty pairs for the data via noise injection
 
