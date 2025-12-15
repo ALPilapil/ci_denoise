@@ -111,6 +111,10 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
     montage = mne.channels.make_standard_montage('standard_1020')
     os.makedirs(save_dir, exist_ok=True)
 
+    # tracked skipped files
+    bad_ch_list = []
+    bad_comp_list = []
+
     # enfore n_plot components < n_compoenents
     if ((n_plot_components is not None) and (n_plot_components > n_components)) :
         raise ValueError("n_plot_components cannot be greater than n_components")
@@ -157,6 +161,7 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
         # check if we have enough channels left for ICA
         if len(raw.ch_names) < n_components:
             print(f"File {idx}: Not enough channels ({len(raw.ch_names)}) for {n_components} components, skip")
+            bad_ch_list.append(f"File {path}, bad ch")
             continue
         
         # Get updated channel indices after dropping
@@ -195,11 +200,16 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
         # account for no good components found
         if not top_components:
             print(f"no good components found for file {idx}, skip")
+            bad_comp_list.append(f"File {path}, bad comp")
             continue
 
         # add the raw components to noise
         raw_noise = sources.copy().pick(top_components)
         noise.append(raw_noise)
+
+    print(f"skipped {len(bad_comp_list) + len(bad_ch_list)} files out of {len(set_paths)}: ")
+    print(f"{len(bad_ch_list)} for bad channels", bad_ch_list)
+    print(f"{len(bad_comp_list)} for bad components", bad_comp_list)
 
     return noise
 
@@ -217,8 +227,12 @@ def read_raws(read_path, preload=False):
     input: path to read from
     output: list of raws
     '''
-    list_raws = list_file_paths(read_path)
-    for filename in list_raws:
+    file_paths = list_file_paths(read_path)
+    print("list raws: ", file_paths)
+    list_raws = []
+
+    for filename in file_paths :
+        print("filename: ", filename)
         raw_loaded = mne.io.read_raw_fif(filename, preload=preload)
         list_raws.append(raw_loaded)
 
@@ -230,9 +244,14 @@ def make_ERP(list_raws):
     input: list of mne.raw objs
     output: ERP of them
     '''
+    # NOTE: n times for all of these are different but all around 12-12.8 million, they all differ by a matter of 10-20 seconds
+    # all have the same number of events, shape of events (8960, 3)
     for raw in list_raws:
-        print(raw.info)
-
+        events, event_id = mne.events_from_annotations(raw)
+        print("events: ", events.shape)
+        # print("event_id: ", event_id)
+        # ERPs naturally work on epochs, we want it to just apply to the whole series
+        # TODO: Ask about this distinction, very important
 
 
 def main():
@@ -249,40 +268,43 @@ def main():
     CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8'] # points where you would expect lots of CI noise from
     n_components = 5 # how many components to run ICA with, 10 is the max because of how much component 0 explains the variance
     l_freq = 2 # low frequency band 
+    years = [2, 3, 4]
 
-    # get the paths to all the data in all years
-    # year 2: 
-    data_path_cmpy2 = '/quobyte/millerlmgrp/CMPy2/MarkerFixed/'
-    data_files_paths_cmpy2 = list_file_paths(data_path_cmpy2)
-    log_paths_cmpy2 = '/quobyte/millerlmgrp/CMPy2/Logs/'
-    log_files_cmpy2 = list_file_paths(log_paths_cmpy2)
-    # year 3: 
-    # data_path_cmpy3 = '/quobyte/millerlmgrp/CMPy3/MarkerFixed/'
-    # data_files_paths_cmpy3 = list_file_paths(data_path_cmpy3)
-    # log_paths_cmpy3 = '/quobyte/millerlmgrp/CMPy3/Logs/'
-    # log_files_cmpy3 = list_file_paths(log_paths_cmpy3)
-    # year 4: 
-    # data_path_cmpy4 = '/quobyte/millerlmgrp/CMPy4/MarkerFixed/'
-    # data_files_paths_cmpy4 = list_file_paths(data_path_cmpy4)
-    # log_paths_cmpy4 = '/quobyte/millerlmgrp/CMPy4/Logs/'
-    # log_files_cmpy4 = list_file_paths(log_paths_cmpy4)
-    # combine them all
+    # initialize empty lists to add to later
+    ci_paths = ([], [], [])
+    hearing_paths = ([], [], [])
 
-    #----------- More Paths -----------#
-    # divide data into hearing and CI, accounting for each permutation
-    hearing_cmpy2_data_paths = [path for path in data_files_paths_cmpy2 if ('/08' in path and '.set' in path)]
-    ci_cmpy2_data_paths = [path for path in data_files_paths_cmpy2 if ('/09' in path and '.set' in path)]
-    print(f"Amount hearing data files: {len(hearing_cmpy2_data_paths)}")
-    print(f"Amount ci data files: {len(ci_cmpy2_data_paths)}")
+    # this will all be absolute paths from quobyte
+    for year in years:
+        # set paths to raw EEG data and their log paths
+        raw_directory = f'/quobyte/millerlmgrp/CMPy{year}/MarkerFixed/'
+        raw_data_file_paths = list_file_paths(raw_directory)
+        log_paths = f'/quobyte/millerlmgrp/CMPy{year}/Logs/'
+        log_files = list_file_paths(log_paths)
+        print("raw directory: ", raw_directory)
+        print("log directory: ", log_paths)
 
-    # divide into appropriate permuation paths
-    hearing_1, hearing_2, hearing_3 = permutation_divider(set_paths=hearing_cmpy2_data_paths, log_paths=log_files_cmpy2)
-    ci_1, ci_2, ci_3 = permutation_divider(set_paths=ci_cmpy2_data_paths, log_paths=log_files_cmpy2)
+        # specify to set paths for hearing vs CI kids
+        hearing_data_paths = [path for path in raw_data_file_paths if ('/08' in path and '.set' in path)]
+        ci_data_paths = [path for path in raw_data_file_paths if ('/09' in path and '.set' in path)]
+        print(f"Amount hearing data files: {len(hearing_data_paths)}")
+        print(f"Amount ci data files: {len(ci_data_paths)}")
 
+        # divide into appropriate permuation paths
+        permed_hearing_paths = permutation_divider(set_paths=hearing_data_paths, log_paths=log_files)
+        permed_ci_paths = permutation_divider(set_paths=ci_data_paths, log_paths=log_files)
+
+        # extend to appropriate places
+        for i in range(3):
+            ci_paths[i].extend(permed_ci_paths[i])
+            hearing_paths[i].extend(permed_hearing_paths[i])
+    
+    ci_1_paths = ci_paths[0]
+    print(ci_1_paths)
     #----------- Noise Isolation -----------#
     # isolate the noise from the data via ICA, high pass it above 2 Hz with Butterwork, zero-phase
     if run_isolation:
-        ci_1_noise = isolate_noise(set_paths=ci_1, CI_chs=CI_chs, do_explain_variance=False, n_plot_components=None, n_components=n_components, l_freq=l_freq)
+        ci_1_noise = isolate_noise(set_paths=ci_1_paths, CI_chs=CI_chs, do_explain_variance=False, n_plot_components=None, n_components=n_components, l_freq=l_freq)
         save_raws(list_raws=ci_1_noise, save_path=noise_folder_path)
     else:
         ci_1_noise = read_raws(read_path=noise_folder_path)
@@ -290,13 +312,12 @@ def main():
     # create an ERP of the dirty signal
     # NOTE: ch_names are now the ICA components, this is what SHOULD happen
     print(ci_1_noise)
-    make_ERP(list_raws=ci_1_noise)
+    ci_1_ERP = make_ERP(list_raws=ci_1_noise)
 
-    # create clean dirty pairs for the data via noise injection
+    # create clean dirty pairs for the data via noise injection to read in easily later
 
     # output this data as the final result of this script
 
     
 if __name__ == "__main__":
     main()
-    
