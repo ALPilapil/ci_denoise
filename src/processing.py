@@ -133,6 +133,36 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
         # apply filter
         raw.filter(l_freq=l_freq, h_freq=h_freq)
 
+        # detect and drop bad channels
+        data = raw.get_data()
+        bad_channels = []
+        
+        for i, ch_name in enumerate(raw.ch_names):
+            ch_data = data[i, :]
+            
+            # check for NaN/Inf
+            if np.any(np.isnan(ch_data)) or np.any(np.isinf(ch_data)):
+                bad_channels.append(ch_name)
+                print(f"  File {idx}: {ch_name} has NaN/Inf - marking as bad")
+            # check for flat channels (std very close to 0)
+            elif np.std(ch_data) < 1e-10:
+                bad_channels.append(ch_name)
+                print(f"  File {idx}: {ch_name} is flat - marking as bad")
+        
+        # drop bad channels
+        if bad_channels:
+            print(f"File {idx}: Dropping {len(bad_channels)} bad channels: {bad_channels}")
+            raw.drop_channels(bad_channels)
+        
+        # check if we have enough channels left for ICA
+        if len(raw.ch_names) < n_components:
+            print(f"File {idx}: Not enough channels ({len(raw.ch_names)}) for {n_components} components, skip")
+            continue
+        
+        # Get updated channel indices after dropping
+        m1_idx = raw.ch_names.index('M1') if 'M1' in raw.ch_names else None
+        m2_idx = raw.ch_names.index('M2') if 'M2' in raw.ch_names else None
+
         # run ICA on it and store the data itself
         ica = ICA(n_components=n_components, max_iter="auto", random_state=97)
         ica.fit(raw)
@@ -158,9 +188,14 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
             ranked_ch = [raw.ch_names[index] for index in ranked]
             # print(f"{i}th component: {ranked_ch}")
             # if the top component is one that corresponds to being around the implant, include it as noise
-            if (ranked_ch[0] in CI_chs) or (ranked[1] in CI_chs):
+            if (ranked_ch[0] in CI_chs) or (ranked_ch[1] in CI_chs):
                 # store this component index as one to add later
                 top_components.append(i)
+        
+        # account for no good components found
+        if not top_components:
+            print(f"no good components found for file {idx}, skip")
+            continue
 
         # add the raw components to noise
         raw_noise = sources.copy().pick(top_components)
@@ -253,6 +288,7 @@ def main():
         ci_1_noise = read_raws(read_path=noise_folder_path)
 
     # create an ERP of the dirty signal
+    # NOTE: ch_names are now the ICA components, this is what SHOULD happen
     print(ci_1_noise)
     make_ERP(list_raws=ci_1_noise)
 
