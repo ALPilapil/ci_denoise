@@ -156,7 +156,8 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
         # drop bad channels
         if bad_channels:
             print(f"File {idx}: Dropping {len(bad_channels)} bad channels: {bad_channels}")
-            raw.drop_channels(bad_channels)
+            raw.info['bads'] = bad_channels
+            raw.interpolate_bads(reset_bads=True)
         
         # check if we have enough channels left for ICA
         if len(raw.ch_names) < n_components:
@@ -203,9 +204,14 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
             bad_comp_list.append(f"File {path}, bad comp")
             continue
 
-        # add the raw components to noise
-        raw_noise = sources.copy().pick(top_components)
-        noise.append(raw_noise)
+        # reconstruct the data back into its original form
+        raw_clean = raw.copy() # copy original data
+        ica.apply(raw_clean, exclude=top_components) # exclude the noisy components from it
+
+        raw_noise_sensor = raw.copy() # copy the original data
+        raw_noise_sensor._data = raw.get_data() - raw_clean.get_data() # subtract the clean components from it
+
+        noise.append(raw_noise_sensor)
 
     print(f"skipped {len(bad_comp_list) + len(bad_ch_list)} files out of {len(set_paths)}: ")
     print(f"{len(bad_ch_list)} for bad channels", bad_ch_list)
@@ -238,20 +244,28 @@ def read_raws(read_path, preload=False):
 
     return list_raws
 
-def make_ERP(list_raws):
+def make_noise_epochs(eeg_data, wanted_epochs, tmin, tmax, baseline, save_path):
     '''
-    average out instances of mne.raw into a single ERP 
-    input: list of mne.raw objs
-    output: ERP of them
-    '''
-    # NOTE: n times for all of these are different but all around 12-12.8 million, they all differ by a matter of 10-20 seconds
-    # all have the same number of events, shape of events (8960, 3)
-    for raw in list_raws:
-        events, event_id = mne.events_from_annotations(raw)
-        print("events: ", events.shape)
-        # print("event_id: ", event_id)
-        # ERPs naturally work on epochs, we want it to just apply to the whole series
-        # TODO: Ask about this distinction, very important
+    given a list of mne.raw objects create and save just the epochs that are relevant to us
+    these relevant epochs are identified by their event name and come into this function via a list
+    input: set_paths, save_path, wanted_events
+    output: noisy_epochs
+    '''    
+    for raw in eeg_data[:1]:
+        events, event_dict = mne.events_from_annotations(raw)
+        # sort the event_dict according to events of interest and those which are available
+        valid_ids = []
+        for event_id in wanted_epochs:
+            if event_id in event_dict:
+                valid_ids.append(event_id)
+
+        wanted_events = {key: event_dict[key] for key in valid_ids}
+        epochs = mne.Epochs(raw, events, event_id=wanted_events, tmin=tmin, tmax=tmax, baseline=baseline,preload=True, reject_by_annotation=True)
+
+        # get the data from each epoch and store it per each epoch type
+        epoch_data = epochs.get_data()
+    
+
 
 
 def main():
@@ -263,16 +277,24 @@ def main():
     #----------- Parameters and Paths -----------#
     # where to store noise once isolated
     noise_folder_path = '/quobyte/millerlmgrp/processed_data/noise/'
-    run_isolation = True
+    noisy_epochs_folder_path = '/quobyte/millerlmgrp/processed_data/noisy_epochs/'
+    run_isolation = True # boolean to control if we actually run noise isolation or read in the data we already have
+    epoch_noise = True
     # preprocessing parameters:
     CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8'] # points where you would expect lots of CI noise from
-    n_components = 5 # how many components to run ICA with, 10 is the max because of how much component 0 explains the variance
+    n_components = 5 # how many components to run ICA with, 10 is the max i think because of how much component 0 explains the variance
     l_freq = 2 # low frequency band 
     years = [2, 3, 4]
+    wanted_epochs = [str(x) for x in list(range(98, 200, 1))] # needs to be a subset of event_dict
+    tmin = 0.0
+    tmax = 0.5
+    baseline = (0,0)
+    # wanted epochs are 98, 99, and anything in the 100s
+    print(wanted_epochs)
 
     # initialize empty lists to add to later
-    ci_paths = ([], [], [])
-    hearing_paths = ([], [], [])
+    ci_paths = []
+    hearing_paths = []
 
     # this will all be absolute paths from quobyte
     for year in years:
@@ -290,31 +312,29 @@ def main():
         print(f"Amount hearing data files: {len(hearing_data_paths)}")
         print(f"Amount ci data files: {len(ci_data_paths)}")
 
-        # divide into appropriate permuation paths
+        # divide into appropriate permuation paths, each of these is a 3 long list
         permed_hearing_paths = permutation_divider(set_paths=hearing_data_paths, log_paths=log_files)
         permed_ci_paths = permutation_divider(set_paths=ci_data_paths, log_paths=log_files)
 
         # extend to appropriate places
         for i in range(3):
-            ci_paths[i].extend(permed_ci_paths[i])
-            hearing_paths[i].extend(permed_hearing_paths[i])
-    
-    ci_1_paths = ci_paths[0]
-    print(ci_1_paths)
+            ci_paths.extend(permed_ci_paths[i])
+            hearing_paths.extend(permed_hearing_paths[i])
+
     #----------- Noise Isolation -----------#
     # isolate the noise from the data via ICA, high pass it above 2 Hz with Butterwork, zero-phase
     if run_isolation:
-        ci_1_noise = isolate_noise(set_paths=ci_1_paths, CI_chs=CI_chs, do_explain_variance=False, n_plot_components=None, n_components=n_components, l_freq=l_freq)
-        save_raws(list_raws=ci_1_noise, save_path=noise_folder_path)
+        ci_raws = isolate_noise(set_paths=ci_paths, CI_chs=CI_chs, do_explain_variance=False, n_plot_components=None, n_components=n_components, l_freq=l_freq)
+        save_raws(list_raws=ci_paths, save_path=noise_folder_path)
     else:
-        ci_1_noise = read_raws(read_path=noise_folder_path)
+        ci_raws = read_raws(read_path=noise_folder_path)
 
-    # create an ERP of the dirty signal
     # NOTE: ch_names are now the ICA components, this is what SHOULD happen
-    print(ci_1_noise)
-    ci_1_ERP = make_ERP(list_raws=ci_1_noise)
-
-    # create clean dirty pairs for the data via noise injection to read in easily later
+    # save data of just the relevant epochs of interest for the CI Data
+    if epoch_noise: 
+        make_noise_epochs(eeg_data=ci_raws, save_path=noisy_epochs_folder_path, tmin=tmin, tmax=tmax, baseline=baseline, wanted_epochs=wanted_epochs)
+    
+    # create clean dirty pairs for the data via noise injection
 
     # output this data as the final result of this script
 
