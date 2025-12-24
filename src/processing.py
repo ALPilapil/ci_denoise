@@ -333,7 +333,6 @@ def main():
     else:
         ci_raws = read_raws(read_path=noise_folder_path)
 
-    # NOTE: ch_names are now the ICA components, this is what SHOULD happen
     # save data of just the relevant epochs of interest for the CI Data
     if epoch_noise: 
         make_noise_epochs(eeg_data=ci_raws, save_path=noisy_epochs_folder_path, tmin=tmin, tmax=tmax, baseline=baseline, wanted_epochs=wanted_epochs)
