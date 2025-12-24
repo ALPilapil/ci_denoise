@@ -209,7 +209,7 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
         ica.apply(raw_clean, exclude=top_components) # exclude the noisy components from it
 
         raw_noise_sensor = raw.copy() # copy the original data
-        raw_noise_sensor._data = raw.get_data() - raw_clean.get_data() # subtract the clean components from it
+        raw_noise_sensor._data = raw.get_data() - raw_clean.get_data() # subtract the clean components from itex
 
         noise.append(raw_noise_sensor)
 
@@ -226,6 +226,7 @@ def save_raws(list_raws, save_path):
     '''
     for i, raw_obj in enumerate(list_raws):
         filename = os.path.join(save_path, f"raw_noise{i}.fif")
+        print(raw_obj)
         raw_obj.save(filename, overwrite=True) # overwrite = True replaces folder of the same name
 
 def read_raws(read_path, preload=False):
@@ -260,10 +261,12 @@ def make_noise_epochs(eeg_data, wanted_epochs, tmin, tmax, baseline, save_path):
                 valid_ids.append(event_id)
 
         wanted_events = {key: event_dict[key] for key in valid_ids}
-        epochs = mne.Epochs(raw, events, event_id=wanted_events, tmin=tmin, tmax=tmax, baseline=baseline,preload=True, reject_by_annotation=True)
+        epochs = mne.Epochs(raw, events, event_id=wanted_events, tmin=tmin, tmax=tmax, baseline=baseline,preload=False, reject_by_annotation=True)
+
+        print(raw.info)
 
         # get the data from each epoch and store it per each epoch type
-        epoch_data = epochs.get_data()
+        # epoch_data = epochs.get_data()
     
 
 
@@ -279,18 +282,16 @@ def main():
     noise_folder_path = '/quobyte/millerlmgrp/processed_data/noise/'
     noisy_epochs_folder_path = '/quobyte/millerlmgrp/processed_data/noisy_epochs/'
     run_isolation = True # boolean to control if we actually run noise isolation or read in the data we already have
-    epoch_noise = True
+    epoch_noise = False
     # preprocessing parameters:
     CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8'] # points where you would expect lots of CI noise from
-    n_components = 5 # how many components to run ICA with, 10 is the max i think because of how much component 0 explains the variance
+    n_components = 8 # how many components to run ICA with, 10 is the max i think because of how much component 0 explains the variance
     l_freq = 2 # low frequency band 
     years = [2, 3, 4]
     wanted_epochs = [str(x) for x in list(range(98, 200, 1))] # needs to be a subset of event_dict
     tmin = 0.0
     tmax = 0.5
     baseline = (0,0)
-    # wanted epochs are 98, 99, and anything in the 100s
-    print(wanted_epochs)
 
     # initialize empty lists to add to later
     ci_paths = []
@@ -321,11 +322,14 @@ def main():
             ci_paths.extend(permed_ci_paths[i])
             hearing_paths.extend(permed_hearing_paths[i])
 
+    # ci_paths = ci_paths[:3]
+    # print(ci_paths)
+
     #----------- Noise Isolation -----------#
     # isolate the noise from the data via ICA, high pass it above 2 Hz with Butterwork, zero-phase
     if run_isolation:
         ci_raws = isolate_noise(set_paths=ci_paths, CI_chs=CI_chs, do_explain_variance=False, n_plot_components=None, n_components=n_components, l_freq=l_freq)
-        save_raws(list_raws=ci_paths, save_path=noise_folder_path)
+        save_raws(list_raws=ci_raws, save_path=noise_folder_path)
     else:
         ci_raws = read_raws(read_path=noise_folder_path)
 

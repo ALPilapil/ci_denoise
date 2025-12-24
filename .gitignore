@@ -4,3 +4,5 @@ temp/
 
 # slurm commands
 *.sh
+*.err
+*.out
