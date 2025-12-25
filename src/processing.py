@@ -225,11 +225,11 @@ def save_raws(list_raws, save_path):
     output: none
     '''
     for i, raw_obj in enumerate(list_raws):
-        filename = os.path.join(save_path, f"raw_noise{i}.fif")
+        filename = os.path.join(save_path, f"noise{i}_raw.fif")
         print(raw_obj)
         raw_obj.save(filename, overwrite=True) # overwrite = True replaces folder of the same name
 
-def read_raws(read_path, preload=False):
+def read_raws(read_path, truncation=None, preload=False):
     '''
     input: path to read from
     output: list of raws
@@ -237,6 +237,12 @@ def read_raws(read_path, preload=False):
     file_paths = list_file_paths(read_path)
     print("list raws: ", file_paths)
     list_raws = []
+
+    if not isinstance(truncation, (int, None)):
+        raise TypeError("Function read_raws only accepts None or int as an argument")
+
+    if truncation:
+        file_paths = file_paths[:truncation]
 
     for filename in file_paths :
         print("filename: ", filename)
