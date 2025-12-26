@@ -235,7 +235,7 @@ def read_raws(read_path, truncation=None, preload=False):
     output: list of raws
     '''
     file_paths = list_file_paths(read_path)
-    print("list raws: ", file_paths)
+    # print("list raws: ", file_paths)
     list_raws = []
 
     if not isinstance(truncation, (int, None)):
@@ -244,8 +244,8 @@ def read_raws(read_path, truncation=None, preload=False):
     if truncation:
         file_paths = file_paths[:truncation]
 
-    for filename in file_paths :
-        print("filename: ", filename)
+    for filename in file_paths:
+        # print("filename: ", filename)
         raw_loaded = mne.io.read_raw_fif(filename, preload=preload)
         list_raws.append(raw_loaded)
 
@@ -265,16 +265,29 @@ def make_noise_epochs(eeg_data, wanted_epochs, tmin, tmax, baseline, save_path):
         for event_id in wanted_epochs:
             if event_id in event_dict:
                 valid_ids.append(event_id)
-
+        # print(event_dict)
         wanted_events = {key: event_dict[key] for key in valid_ids}
-        epochs = mne.Epochs(raw, events, event_id=wanted_events, tmin=tmin, tmax=tmax, baseline=baseline,preload=False, reject_by_annotation=True)
+        epochs = mne.Epochs(raw, events, event_id=wanted_events, tmin=tmin, tmax=tmax, baseline=baseline,preload=True, reject_by_annotation=True)
 
-        print(raw.info)
+        # print(raw.info)
+        
+        # print(epochs.event_id)
 
-        # get the data from each epoch and store it per each epoch type
-        # epoch_data = epochs.get_data()
-    
+        # get the epoch data for this participant
+        epoch_data = epochs.get_data() # (n_epochs, n_channels, n_times) appears in chronological time
 
+        # store the data in an X, data array and Y, label array
+        # X is (n_events, n_channels, n_times) and Y is (n_events). ith Y value = ith X label
+        # just storing 2 numpy arrays in totallots 
+        # store via Zarr
+        X = epoch_data
+        Y = epochs.events[:, 2] # NOTE: from here the events have been translated according to event_dict. so 100 -> 2, 104 -> 4 etc.
+        print(X.shape)
+        print(Y.shape)
+        print(Y[:10])
+
+
+        
 
 
 def main():
@@ -288,7 +301,7 @@ def main():
     noise_folder_path = '/quobyte/millerlmgrp/processed_data/noise/'
     noisy_epochs_folder_path = '/quobyte/millerlmgrp/processed_data/noisy_epochs/'
     run_isolation = True # boolean to control if we actually run noise isolation or read in the data we already have
-    epoch_noise = False
+    epoch_noise = True
     # preprocessing parameters:
     CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8'] # points where you would expect lots of CI noise from
     n_components = 8 # how many components to run ICA with, 10 is the max i think because of how much component 0 explains the variance
@@ -311,7 +324,7 @@ def main():
         log_paths = f'/quobyte/millerlmgrp/CMPy{year}/Logs/'
         log_files = list_file_paths(log_paths)
         print("raw directory: ", raw_directory)
-        print("log directory: ", log_paths)
+        # print("log directory: ", log_paths)
 
         # specify to set paths for hearing vs CI kids
         hearing_data_paths = [path for path in raw_data_file_paths if ('/08' in path and '.set' in path)]
@@ -328,17 +341,13 @@ def main():
             ci_paths.extend(permed_ci_paths[i])
             hearing_paths.extend(permed_hearing_paths[i])
 
-    # ci_paths = ci_paths[:3]
-    # print(ci_paths)
-
     #----------- Noise Isolation -----------#
     # isolate the noise from the data via ICA, high pass it above 2 Hz with Butterwork, zero-phase
     if run_isolation:
         ci_raws = isolate_noise(set_paths=ci_paths, CI_chs=CI_chs, do_explain_variance=False, n_plot_components=None, n_components=n_components, l_freq=l_freq)
         save_raws(list_raws=ci_raws, save_path=noise_folder_path)
     else:
-        ci_raws = read_raws(read_path=noise_folder_path)
-
+        ci_raws = read_raws(read_path=noise_folder_path, truncation=3)
     # save data of just the relevant epochs of interest for the CI Data
     if epoch_noise: 
         make_noise_epochs(eeg_data=ci_raws, save_path=noisy_epochs_folder_path, tmin=tmin, tmax=tmax, baseline=baseline, wanted_epochs=wanted_epochs)
