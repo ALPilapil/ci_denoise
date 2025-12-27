@@ -101,13 +101,12 @@ def explain_variance(ica, raw, n_components):
         print(f"Ratio for componenent {i}: {explained_var_ratio}")
 
 
-def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_components, CI_chs, l_freq, h_freq=None, save_dir='ica_plots'):
+def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_components, CI_chs, l_freq, save_dir, h_freq=None):
     '''
     given a list of .set paths, isolate the noise from each via ICA
     input: list of dirty .set paths
-    output: a list of raw instances of the isolated noise
+    output: nothing
     '''
-    noise = []
     montage = mne.channels.make_standard_montage('standard_1020')
     os.makedirs(save_dir, exist_ok=True)
 
@@ -209,15 +208,16 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
         ica.apply(raw_clean, exclude=top_components) # exclude the noisy components from it
 
         raw_noise_sensor = raw.copy() # copy the original data
-        raw_noise_sensor._data = raw.get_data() - raw_clean.get_data() # subtract the clean components from itex
+        raw_noise_sensor._data = raw.get_data() - raw_clean.get_data() # subtract the clean components
 
-        noise.append(raw_noise_sensor)
+        # save the data
+        filename = os.path.join(save_path, f"noise{idx}_raw.fif")
+        raw_noise_sensor.save(filename, overwrite=True)
+
 
     print(f"skipped {len(bad_comp_list) + len(bad_ch_list)} files out of {len(set_paths)}: ")
     print(f"{len(bad_ch_list)} for bad channels", bad_ch_list)
     print(f"{len(bad_comp_list)} for bad components", bad_comp_list)
-
-    return noise
 
 def save_raws(list_raws, save_path):
     '''
@@ -288,8 +288,6 @@ def make_noise_epochs(eeg_data, wanted_epochs, tmin, tmax, baseline, save_path):
 
 
         
-
-
 def main():
     '''
     Isolates the CI noise from each CI kid via ICA and saves it to [path here]. Does this through running ICA on each datapoint
@@ -304,7 +302,7 @@ def main():
     epoch_noise = True
     # preprocessing parameters:
     CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8'] # points where you would expect lots of CI noise from
-    n_components = 8 # how many components to run ICA with, 10 is the max i think because of how much component 0 explains the variance
+    n_components = 0.99999 # tells ICA to use however many components explain %99.9999 of the data
     l_freq = 2 # low frequency band 
     years = [2, 3, 4]
     wanted_epochs = [str(x) for x in list(range(98, 200, 1))] # needs to be a subset of event_dict
@@ -345,7 +343,6 @@ def main():
     # isolate the noise from the data via ICA, high pass it above 2 Hz with Butterwork, zero-phase
     if run_isolation:
         ci_raws = isolate_noise(set_paths=ci_paths, CI_chs=CI_chs, do_explain_variance=False, n_plot_components=None, n_components=n_components, l_freq=l_freq)
-        save_raws(list_raws=ci_raws, save_path=noise_folder_path)
     else:
         ci_raws = read_raws(read_path=noise_folder_path, truncation=3)
     # save data of just the relevant epochs of interest for the CI Data
