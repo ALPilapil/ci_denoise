@@ -4,6 +4,8 @@ import os
 from mne.preprocessing import ICA
 import sklearn
 import matplotlib.pyplot as plt
+import zarr
+from pathlib import Path
 
 def list_file_paths(directory_path):
     '''
@@ -100,15 +102,13 @@ def explain_variance(ica, raw, n_components):
         explained_var_ratio = ica.get_explained_variance_ratio(raw, components=[i], ch_type="eeg")
         print(f"Ratio for componenent {i}: {explained_var_ratio}")
 
-
-def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_components, CI_chs, l_freq, save_dir, h_freq=None):
+def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_components, CI_chs, l_freq, save_path, save_dir=None, h_freq=None):
     '''
     given a list of .set paths, isolate the noise from each via ICA
     input: list of dirty .set paths
     output: nothing
     '''
     montage = mne.channels.make_standard_montage('standard_1020')
-    os.makedirs(save_dir, exist_ok=True)
 
     # tracked skipped files
     bad_ch_list = []
@@ -251,7 +251,7 @@ def read_raws(read_path, truncation=None, preload=False):
 
     return list_raws
 
-def make_noise_epochs(eeg_data, wanted_epochs, tmin, tmax, baseline, save_path):
+def make_noise_epochs(eeg_data, wanted_epochs, tmin, tmax, baseline, save_path, compressor):
     '''
     given a list of mne.raw objects create and save just the epochs that are relevant to us
     these relevant epochs are identified by their event name and come into this function via a list
@@ -269,22 +269,15 @@ def make_noise_epochs(eeg_data, wanted_epochs, tmin, tmax, baseline, save_path):
         wanted_events = {key: event_dict[key] for key in valid_ids}
         epochs = mne.Epochs(raw, events, event_id=wanted_events, tmin=tmin, tmax=tmax, baseline=baseline,preload=True, reject_by_annotation=True)
 
-        # print(raw.info)
-        
-        # print(epochs.event_id)
-
         # get the epoch data for this participant
         epoch_data = epochs.get_data() # (n_epochs, n_channels, n_times) appears in chronological time
 
         # store the data in an X, data array and Y, label array
-        # X is (n_events, n_channels, n_times) and Y is (n_events). ith Y value = ith X label
-        # just storing 2 numpy arrays in totallots 
-        # store via Zarr
-        X = epoch_data
-        Y = epochs.events[:, 2] # NOTE: from here the events have been translated according to event_dict. so 100 -> 2, 104 -> 4 etc.
-        print(X.shape)
-        print(Y.shape)
-        print(Y[:10])
+        # epoch data is (n_events, n_channels, n_times) and event is ids is (n_events). ith event id = ith epoch data event id
+        # just storing 2 numpy arrays in total 
+        event_ids = epochs.events[:, 2] # NOTE: from here the events have been translated according to event_dict. so 100 -> 2, 104 -> 4 etc. this is fine 
+
+
 
 
         
@@ -299,7 +292,7 @@ def main():
     noise_folder_path = '/quobyte/millerlmgrp/processed_data/noise/'
     noisy_epochs_folder_path = '/quobyte/millerlmgrp/processed_data/noisy_epochs/'
     run_isolation = True # boolean to control if we actually run noise isolation or read in the data we already have
-    epoch_noise = True
+    epoch_noise = False
     # preprocessing parameters:
     CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8'] # points where you would expect lots of CI noise from
     n_components = 0.99999 # tells ICA to use however many components explain %99.9999 of the data
@@ -309,6 +302,7 @@ def main():
     tmin = 0.0
     tmax = 0.5
     baseline = (0,0)
+    # other parametesrs
 
     # initialize empty lists to add to later
     ci_paths = []
@@ -342,7 +336,8 @@ def main():
     #----------- Noise Isolation -----------#
     # isolate the noise from the data via ICA, high pass it above 2 Hz with Butterwork, zero-phase
     if run_isolation:
-        ci_raws = isolate_noise(set_paths=ci_paths, CI_chs=CI_chs, do_explain_variance=False, n_plot_components=None, n_components=n_components, l_freq=l_freq)
+        ci_raws = isolate_noise(set_paths=ci_paths, CI_chs=CI_chs, do_explain_variance=False, n_plot_components=None, 
+                                n_components=n_components, l_freq=l_freq, save_path=noise_folder_path)
     else:
         ci_raws = read_raws(read_path=noise_folder_path, truncation=3)
     # save data of just the relevant epochs of interest for the CI Data
