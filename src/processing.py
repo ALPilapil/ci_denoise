@@ -219,13 +219,13 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
     print(f"{len(bad_ch_list)} for bad channels", bad_ch_list)
     print(f"{len(bad_comp_list)} for bad components", bad_comp_list)
 
-def save_raws(list_raws, save_path):
+def save_raws(list_raws, save_path, participant_type='noise'):
     '''
     input: list of mne.raw, some directory
     output: none
     '''
     for i, raw_obj in enumerate(list_raws):
-        filename = os.path.join(save_path, f"noise{i}_raw.fif")
+        filename = os.path.join(save_path, f"{participant_type}{i}_raw.fif")
         print(raw_obj)
         raw_obj.save(filename, overwrite=True) # overwrite = True replaces folder of the same name
 
@@ -251,12 +251,12 @@ def read_raws(read_path, truncation=None, preload=False):
 
     return list_raws
 
-def make_noise_epochs(eeg_data, wanted_epochs, tmin, tmax, baseline, save_path, compressor):
+def make_epoch_data(eeg_data, wanted_epochs, tmin, tmax, baseline, zarr_group):
     '''
     given a list of mne.raw objects create and save just the epochs that are relevant to us
     these relevant epochs are identified by their event name and come into this function via a list
     input: set_paths, save_path, wanted_events
-    output: noisy_epochs
+    output: none, saves to zarr file
     '''    
     for raw in eeg_data[:1]:
         events, event_dict = mne.events_from_annotations(raw)
@@ -269,6 +269,11 @@ def make_noise_epochs(eeg_data, wanted_epochs, tmin, tmax, baseline, save_path, 
         wanted_events = {key: event_dict[key] for key in valid_ids}
         epochs = mne.Epochs(raw, events, event_id=wanted_events, tmin=tmin, tmax=tmax, baseline=baseline,preload=True, reject_by_annotation=True)
 
+        n_epochs = len(epochs)
+        n_channels = len(epochs.ch_names)
+        n_times = len(epochs.times)
+        print(f"Shape will be: ({n_epochs}, {n_channels}, {n_times})")
+
         # get the epoch data for this participant
         epoch_data = epochs.get_data() # (n_epochs, n_channels, n_times) appears in chronological time
 
@@ -276,10 +281,42 @@ def make_noise_epochs(eeg_data, wanted_epochs, tmin, tmax, baseline, save_path, 
         # epoch data is (n_events, n_channels, n_times) and event is ids is (n_events). ith event id = ith epoch data event id
         # just storing 2 numpy arrays in total 
         event_ids = epochs.events[:, 2] # NOTE: from here the events have been translated according to event_dict. so 100 -> 2, 104 -> 4 etc. this is fine 
+        print('event_ids: ', event_ids)
 
+        # append to the group
+        zarr_group['data'].append(epoch_data)
+        zarr_group['labels'].append(event_ids)
 
-
-
+def process_hearing(set_paths, l_freq, save_path, h_freq=None):
+    '''
+    Process hearing participant data: rename channels, filter, and save
+    input: list of .set paths, filter parameters, save directory
+    output: nothing
+    '''
+    # Create directory if it doesn't exist
+    Path(save_path).mkdir(parents=True, exist_ok=True)
+    
+    montage = mne.channels.make_standard_montage('standard_1020')
+    
+    # Process each hearing file
+    for idx, path in enumerate(set_paths):
+        raw = mne.io.read_raw_eeglab(path, preload=True)
+        
+        # Rename mastoids to match CI data
+        raw.rename_channels({'LMas': 'M1', 'RMas': 'M2'})
+        
+        # Set montage
+        raw.set_montage(montage)
+        
+        # Apply same filter as CI data for consistency
+        raw.filter(l_freq=l_freq, h_freq=h_freq)
+        
+        # Save
+        filename = os.path.join(save_path, f"hearing{idx}_raw.fif")
+        raw.save(filename, overwrite=True)
+        print(f"Saved hearing file {idx}")
+    
+    print(f"Processed and saved {len(set_paths)} hearing files")
         
 def main():
     '''
@@ -291,8 +328,11 @@ def main():
     # where to store noise once isolated
     noise_folder_path = '/quobyte/millerlmgrp/processed_data/noise/'
     noisy_epochs_folder_path = '/quobyte/millerlmgrp/processed_data/noisy_epochs/'
-    run_isolation = True # boolean to control if we actually run noise isolation or read in the data we already have
+    epoch_data_storage = '/quobyte/millerlmgrp/processed_data/epoch_data.zarr'
+    hearing_folder_path = '/quobyte/millerlmgrp/processed_data/hearing/'
+    run_isolation = False # boolean to control if we actually run noise isolation or read in the data we already have
     epoch_noise = False
+    run_hearing_process = True  # Set to True to process and save hearing data
     # preprocessing parameters:
     CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8'] # points where you would expect lots of CI noise from
     n_components = 0.99999 # tells ICA to use however many components explain %99.9999 of the data
@@ -333,16 +373,29 @@ def main():
             ci_paths.extend(permed_ci_paths[i])
             hearing_paths.extend(permed_hearing_paths[i])
 
-    #----------- Noise Isolation -----------#
+    #----------- Noise Isolation and Hearing -----------#
     # isolate the noise from the data via ICA, high pass it above 2 Hz with Butterwork, zero-phase
     if run_isolation:
         ci_raws = isolate_noise(set_paths=ci_paths, CI_chs=CI_chs, do_explain_variance=False, n_plot_components=None, 
                                 n_components=n_components, l_freq=l_freq, save_path=noise_folder_path)
     else:
         ci_raws = read_raws(read_path=noise_folder_path, truncation=3)
-    # save data of just the relevant epochs of interest for the CI Data
+
+    # run a similar process on the hearing data
+    if run_hearing_process:
+        process_hearing(set_paths=hearing_paths, l_freq=l_freq, save_path=hearing_folder_path)
+    else:
+        hearing_raws = read_raws(read_path=hearing_folder_path, truncation=3)
+
+    # save data of just the relevant epochs of interest for the data of both kinds of particpants
     if epoch_noise: 
-        make_noise_epochs(eeg_data=ci_raws, save_path=noisy_epochs_folder_path, tmin=tmin, tmax=tmax, baseline=baseline, wanted_epochs=wanted_epochs)
+        root = zarr.open_group(epoch_data_storage, mode='a')
+        ci_group = root['ci_trial_data']
+        hearing_group = root['hearing_trial_data']
+        # make epoch data for the raw CIs
+        make_epoch_data(eeg_data=ci_raws, zarr_group=ci_group, tmin=tmin, tmax=tmax, baseline=baseline, wanted_epochs=wanted_epochs)
+        # make epoch data for the hearing participants
+        make_epoch_data(eeg_data=hearing_raws, zarr_group=hearing_group, tmin=tmin, tmax=tmax, baseline=baseline, wanted_epochs=wanted_epochs)
     
     # create clean dirty pairs for the data via noise injection
 
