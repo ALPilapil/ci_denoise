@@ -319,7 +319,55 @@ def make_epoch_data(eeg_data, wanted_epochs, tmin, tmax, baseline, zarr_group):
         zarr_group['data'].append(epoch_data)
         zarr_group['labels'].append(event_ids)
 
+def make_pairs(zarr_root_read, zarr_root_save, batch_size=100, truncation=None):
+    '''
+    read in the epoch data. create pairs out of it by adding noise to the hearing epochs
+    '''
+    read_root = zarr.open_group(zarr_root_read, mode='r')
+    ci_data = read_root['ci_trial_data']['data']
+    hearing_data = read_root['hearing_trial_data']['data']
+    save_root = zarr.open_group(zarr_root_save, mode='a')
+
+
+    # load in the data for each group
+    if truncation is not None:
+        ci_data = ci_data[:truncation]
+        hearing_data = hearing_data[:truncation]
+    
+    clean_batch = []
+    dirty_batch = []
+    
+    # iterate through both groups to make pairs and save them
+    for clean_epoch in hearing_data:  # (21, 8193)
+        print("appending in process")
+        for noisy_epoch in ci_data:    # (21, 8193)
+            clean_batch.append(clean_epoch)
+            dirty_epoch = clean_epoch + noisy_epoch
+            dirty_batch.append(dirty_epoch)
+            
+            # When batch is full, save and clear
+            if len(clean_batch) >= batch_size:
+                # Convert to arrays and append
+                clean_arr = np.array(clean_batch)  # (batch_size, 21, 8193)
+                dirty_arr = np.array(dirty_batch)
+                
+                save_root['clean'].append(clean_arr)
+                save_root['dirty'].append(dirty_arr)
+                                
+                # Clear batch
+                clean_batch = []
+                dirty_batch = []
+    
+    # Save any remaining data
+    if len(clean_batch) > 0:
+        clean_arr = np.array(clean_batch)
+        dirty_arr = np.array(dirty_batch)
         
+        save_root['clean'].append(clean_arr)
+        save_root['dirty'].append(dirty_arr)
+        
+        print(f"Saved final batch. Total: {save_root['clean'].shape[0]}")
+
 def main():
     '''
     Isolates the CI noise from each CI kid via ICA and saves it to [path here]. Does this through running ICA on each datapoint
@@ -332,9 +380,11 @@ def main():
     noisy_epochs_folder_path = '/quobyte/millerlmgrp/processed_data/noisy_epochs/'
     epoch_data_storage = '/quobyte/millerlmgrp/processed_data/epoched_data.zarr'
     hearing_folder_path = '/quobyte/millerlmgrp/processed_data/hearing/'
+    epoch_pair_path = '/quobyte/millerlmgrp/processed_data/epoched_pairs.zarr'
     run_isolation = False # boolean to control if we actually run noise isolation or read in the data we already have
-    epoch_noise = True
+    epoch_noise = False
     run_hearing_process = False 
+    do_make_pairs = True
     # preprocessing parameters:
     CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8'] # points where you would expect lots of CI noise from
     n_components = 0.99999 # tells ICA to use however many components explain %99.9999 of the data
@@ -392,12 +442,7 @@ def main():
     # save data of just the relevant epochs of interest for the data of both kinds of particpants
     if epoch_noise: 
         root = zarr.open_group(epoch_data_storage, mode='a')
-        print(f"Root keys: {list(root.keys())}")
-        print(f"Root group keys: {list(root.group_keys())}")
-        print(f"Root array keys: {list(root.array_keys())}")
-        print(f"Root tree:\n{root.tree()}")
         ci_group = root['ci_trial_data']
-        print('found group 1')
         hearing_group = root['hearing_trial_data']
         # make epoch data for the raw CIs
         make_epoch_data(eeg_data=ci_raws, zarr_group=ci_group, tmin=tmin, tmax=tmax, baseline=baseline, wanted_epochs=wanted_epochs)
@@ -406,8 +451,8 @@ def main():
     
     # create clean dirty pairs for the data via noise injection
     # save this data as the final result of this script
+    if do_make_pairs:
+        make_pairs(zarr_root_read=epoch_data_storage, zarr_root_save=epoch_pair_path, truncation=100)
 
-
-    
 if __name__ == "__main__":
     main()
