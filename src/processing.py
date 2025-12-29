@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import zarr
 from pathlib import Path
 
+
 def list_file_paths(directory_path):
     '''
     given a directory list all the files in it in list form
@@ -229,6 +230,37 @@ def save_raws(list_raws, save_path, participant_type='noise'):
         print(raw_obj)
         raw_obj.save(filename, overwrite=True) # overwrite = True replaces folder of the same name
 
+def process_hearing(set_paths, l_freq, save_path, h_freq=None):
+    '''
+    Process hearing participant data: rename channels, filter, and save
+    input: list of .set paths, filter parameters, save directory
+    output: nothing
+    '''
+    # Create directory if it doesn't exist
+    Path(save_path).mkdir(parents=True, exist_ok=True)
+    
+    montage = mne.channels.make_standard_montage('standard_1020')
+    
+    # Process each hearing file
+    for idx, path in enumerate(set_paths):
+        raw = mne.io.read_raw_eeglab(path, preload=True)
+        
+        # Rename mastoids to match CI data
+        raw.rename_channels({'LMas': 'M1', 'RMas': 'M2'})
+        
+        # Set montage
+        raw.set_montage(montage)
+        
+        # Apply same filter as CI data for consistency
+        raw.filter(l_freq=l_freq, h_freq=h_freq)
+        
+        # Save
+        filename = os.path.join(save_path, f"hearing{idx}_raw.fif")
+        raw.save(filename, overwrite=True)
+        print(f"Saved hearing file {idx}")
+    
+    print(f"Processed and saved {len(set_paths)} hearing files")
+
 def read_raws(read_path, truncation=None, preload=False):
     '''
     input: path to read from
@@ -287,36 +319,6 @@ def make_epoch_data(eeg_data, wanted_epochs, tmin, tmax, baseline, zarr_group):
         zarr_group['data'].append(epoch_data)
         zarr_group['labels'].append(event_ids)
 
-def process_hearing(set_paths, l_freq, save_path, h_freq=None):
-    '''
-    Process hearing participant data: rename channels, filter, and save
-    input: list of .set paths, filter parameters, save directory
-    output: nothing
-    '''
-    # Create directory if it doesn't exist
-    Path(save_path).mkdir(parents=True, exist_ok=True)
-    
-    montage = mne.channels.make_standard_montage('standard_1020')
-    
-    # Process each hearing file
-    for idx, path in enumerate(set_paths):
-        raw = mne.io.read_raw_eeglab(path, preload=True)
-        
-        # Rename mastoids to match CI data
-        raw.rename_channels({'LMas': 'M1', 'RMas': 'M2'})
-        
-        # Set montage
-        raw.set_montage(montage)
-        
-        # Apply same filter as CI data for consistency
-        raw.filter(l_freq=l_freq, h_freq=h_freq)
-        
-        # Save
-        filename = os.path.join(save_path, f"hearing{idx}_raw.fif")
-        raw.save(filename, overwrite=True)
-        print(f"Saved hearing file {idx}")
-    
-    print(f"Processed and saved {len(set_paths)} hearing files")
         
 def main():
     '''
@@ -328,11 +330,11 @@ def main():
     # where to store noise once isolated
     noise_folder_path = '/quobyte/millerlmgrp/processed_data/noise/'
     noisy_epochs_folder_path = '/quobyte/millerlmgrp/processed_data/noisy_epochs/'
-    epoch_data_storage = '/quobyte/millerlmgrp/processed_data/epoch_data.zarr'
+    epoch_data_storage = '/quobyte/millerlmgrp/processed_data/epoched_data.zarr'
     hearing_folder_path = '/quobyte/millerlmgrp/processed_data/hearing/'
     run_isolation = False # boolean to control if we actually run noise isolation or read in the data we already have
-    epoch_noise = False
-    run_hearing_process = True  # Set to True to process and save hearing data
+    epoch_noise = True
+    run_hearing_process = False 
     # preprocessing parameters:
     CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8'] # points where you would expect lots of CI noise from
     n_components = 0.99999 # tells ICA to use however many components explain %99.9999 of the data
@@ -390,7 +392,12 @@ def main():
     # save data of just the relevant epochs of interest for the data of both kinds of particpants
     if epoch_noise: 
         root = zarr.open_group(epoch_data_storage, mode='a')
+        print(f"Root keys: {list(root.keys())}")
+        print(f"Root group keys: {list(root.group_keys())}")
+        print(f"Root array keys: {list(root.array_keys())}")
+        print(f"Root tree:\n{root.tree()}")
         ci_group = root['ci_trial_data']
+        print('found group 1')
         hearing_group = root['hearing_trial_data']
         # make epoch data for the raw CIs
         make_epoch_data(eeg_data=ci_raws, zarr_group=ci_group, tmin=tmin, tmax=tmax, baseline=baseline, wanted_epochs=wanted_epochs)
@@ -398,8 +405,8 @@ def main():
         make_epoch_data(eeg_data=hearing_raws, zarr_group=hearing_group, tmin=tmin, tmax=tmax, baseline=baseline, wanted_epochs=wanted_epochs)
     
     # create clean dirty pairs for the data via noise injection
+    # save this data as the final result of this script
 
-    # output this data as the final result of this script
 
     
 if __name__ == "__main__":
