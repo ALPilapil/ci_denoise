@@ -381,13 +381,16 @@ def main():
     epoch_data_storage = '/quobyte/millerlmgrp/processed_data/epoched_data.zarr'
     hearing_folder_path = '/quobyte/millerlmgrp/processed_data/hearing/'
     epoch_pair_path = '/quobyte/millerlmgrp/processed_data/epoched_pairs.zarr'
-    run_isolation = False # boolean to control if we actually run noise isolation or read in the data we already have
+
+    # define what to run
+    run_isolation = False 
     epoch_noise = False
     run_hearing_process = False 
-    do_make_pairs = True
-    # preprocessing parameters:
+    do_make_pairs = False
+
+    # preprocessing parameters
     CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8'] # points where you would expect lots of CI noise from
-    n_components = 0.99999 # tells ICA to use however many components explain %99.9999 of the data
+    n_components = 0.99999 # tells ICA to use however many components explain 99.9999% of the data
     l_freq = 2 # low frequency band 
     years = [2, 3, 4]
     wanted_epochs = [str(x) for x in list(range(98, 200, 1))] # needs to be a subset of event_dict
