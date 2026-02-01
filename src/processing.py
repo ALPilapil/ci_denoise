@@ -283,23 +283,25 @@ def read_raws(read_path, truncation=None, preload=False):
 
     return list_raws
 
-def make_epoch_data(eeg_data, wanted_epochs, tmin, tmax, baseline, zarr_group):
+def make_epoch_data(eeg_data, config, zarr_group):
     '''
     given a list of mne.raw objects create and save just the epochs that are relevant to us
     these relevant epochs are identified by their event name and come into this function via a list
     input: set_paths, save_path, wanted_events
     output: none, saves to zarr file
-    '''    
+    '''   
     for raw in eeg_data[:1]:
         events, event_dict = mne.events_from_annotations(raw)
         # sort the event_dict according to events of interest and those which are available
         valid_ids = []
-        for event_id in wanted_epochs:
+        for event_id in config.wanted_epochs:
             if event_id in event_dict:
                 valid_ids.append(event_id)
         # print(event_dict)
         wanted_events = {key: event_dict[key] for key in valid_ids}
-        epochs = mne.Epochs(raw, events, event_id=wanted_events, tmin=tmin, tmax=tmax, baseline=baseline,preload=True, reject_by_annotation=True)
+
+        epochs = mne.Epochs(raw, events, event_id=config.wanted_events, tmin=config.tmin, tmax=config.tmax, 
+                            baseline=config.baseline, preload=True, reject_by_annotation=True)
 
         n_epochs = len(epochs)
         n_channels = len(epochs.ch_names)
@@ -319,15 +321,14 @@ def make_epoch_data(eeg_data, wanted_epochs, tmin, tmax, baseline, zarr_group):
         zarr_group['data'].append(epoch_data)
         zarr_group['labels'].append(event_ids)
 
-def make_pairs(zarr_root_read, zarr_root_save, batch_size=100, truncation=None):
+def make_pairs(zarr_root_read, zarr_root_save, config, batch_size=100, truncation=None):
     '''
     read in the epoch data. create pairs out of it by adding noise to the hearing epochs
     '''
     read_root = zarr.open_group(zarr_root_read, mode='r')
     ci_data = read_root['ci_trial_data']['data']
     hearing_data = read_root['hearing_trial_data']['data']
-    save_root = zarr.open_group(zarr_root_save, mode='a')
-
+    save_root = zarr.open_group(zarr_root_save, mode='w')
 
     # load in the data for each group
     if truncation is not None:
@@ -342,7 +343,18 @@ def make_pairs(zarr_root_read, zarr_root_save, batch_size=100, truncation=None):
         print("appending in process")
         for noisy_epoch in ci_data:    # (21, 8193)
             clean_batch.append(clean_epoch)
-            dirty_epoch = clean_epoch + noisy_epoch
+            # multiply noise by some alpha
+            dirty_epoch = clean_epoch + config.alpha * noisy_epoch
+            # if config.channel_scaling:
+                # multiply the values in certain bands by a certain amount
+
+                
+            if config.gaussian_noise:
+                # add some gausian noise in addition to the CI noise to the data
+                gausian = np.random.normal(0, sigma, size=noisy_epoch.shape)
+                dirty_epoch += gausian
+            
+
             dirty_batch.append(dirty_epoch)
             
             # When batch is full, save and clear
@@ -368,6 +380,45 @@ def make_pairs(zarr_root_read, zarr_root_save, batch_size=100, truncation=None):
         
         print(f"Saved final batch. Total: {save_root['clean'].shape[0]}")
 
+class PreprocessConfig():
+    def __init__(self, channels, n_components, l_freq, years, wanted_epochs, 
+                tmin, tmax, baseline, alpha=1, channel_scaling=None, gaussian_noise=False):
+        '''
+        configuration class for what parameters to run the data with 
+        '''
+        self.channels = channels
+        self.n_components = n_components
+        self.l_freq = l_freq
+        self.years = years
+        self.wanted_epochs = wanted_epochs
+        self.baseline = baseline
+        self.alpha = alpha
+        self.gaussian_noise = gaussian_noise
+        default_dict = {'Fp1':1, 'Fz':1, 'F3':1, 'F7':1, 'T7':1, 'C3':1, 
+                             'Cz':1, 'Pz':1, 'P3':1, 'P7':1, 'O1':1, 'Fp2':1, 
+                             'F8':1, 'F4':1, 'C4':1, 'T8':1, 'P8':1, 'P4':1, 
+                             'O2':1, 'M1':1, 'M2':1}
+        if channel_scaling:
+            self.channel_scaling = {**default_dict, **channel_scaling}
+        else:
+            self.channel_scaling = channel_scaling
+        
+
+def get_metadata():
+    '''
+    just an easy way to get metadata about how the data is structured at any time
+    '''
+    # load in just one mne raw
+    path = '/quobyte/millerlmgrp/CMPy2/MarkerFixed/0901y2.set'
+    raw = mne.io.read_raw_eeglab(path, preload=True)
+    raw.rename_channels({
+            'LMas': 'M1',
+            'RMas': 'M2', 
+    })
+
+    return raw.info
+
+
 def main():
     '''
     Isolates the CI noise from each CI kid via ICA and saves it to [path here]. Does this through running ICA on each datapoint
@@ -381,23 +432,43 @@ def main():
     epoch_data_storage = '/quobyte/millerlmgrp/processed_data/epoched_data.zarr'
     hearing_folder_path = '/quobyte/millerlmgrp/processed_data/hearing/'
     epoch_pair_path = '/quobyte/millerlmgrp/processed_data/epoched_pairs.zarr'
+    metadata_path = '/quobyte/millerlmgrp/metadata.zarr'
 
     # define what to run
     run_isolation = False 
-    epoch_noise = False
+    run_epoch_noise = False
     run_hearing_process = False 
-    do_make_pairs = False
+    run_make_pairs = False
 
     # preprocessing parameters
     CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8'] # points where you would expect lots of CI noise from
     n_components = 0.99999 # tells ICA to use however many components explain 99.9999% of the data
     l_freq = 2 # low frequency band 
     years = [2, 3, 4]
-    wanted_epochs = [str(x) for x in list(range(98, 200, 1))] # needs to be a subset of event_dict
+    wanted_epochs = [100, 101] # needs to be a subset of event_dict
     tmin = 0.0
-    tmax = 0.5
+    tmax = 1.5
     baseline = (0,0)
-    # other parametesrs
+    alpha = 1 # amount to scale noise by, keep it [.1, 2.0], SNR
+    channel_scaling = {
+        'M1': 2.0, 'M2': 2.0,
+        'T7': 1.5, 'P7': 1.5,
+        'P8': 1.5,
+        # others will default to 1.0
+    }
+    gaussian_noise = False # adding more noise on top of the CI noise
+
+    config = PreprocessConfig(channels=CI_chs, # expect noise from here
+                            n_components=n_components, 
+                            l_freq=l_freq, 
+                            years=years, 
+                            wanted_epochs=wanted_epochs, 
+                            tmin=tmin, 
+                            tmax=tmax, 
+                            baseline=baseline, 
+                            alpha=alpha, 
+                            channel_scaling=channel_scaling, 
+                            gaussian_noise=gaussian_noise)
 
     # initialize empty lists to add to later
     ci_paths = []
@@ -429,6 +500,8 @@ def main():
             hearing_paths.extend(permed_hearing_paths[i])
 
     #----------- Noise Isolation and Hearing -----------#
+    get_metadata()
+
     # isolate the noise from the data via ICA, high pass it above 2 Hz with Butterwork, zero-phase
     if run_isolation:
         ci_raws = isolate_noise(set_paths=ci_paths, CI_chs=CI_chs, do_explain_variance=False, n_plot_components=None, 
@@ -443,19 +516,19 @@ def main():
         hearing_raws = read_raws(read_path=hearing_folder_path, truncation=3)
 
     # save data of just the relevant epochs of interest for the data of both kinds of particpants
-    if epoch_noise: 
-        root = zarr.open_group(epoch_data_storage, mode='a')
+    if run_epoch_noise: 
+        root = zarr.open_group(epoch_data_storage, mode='w')
         ci_group = root['ci_trial_data']
         hearing_group = root['hearing_trial_data']
         # make epoch data for the raw CIs
-        make_epoch_data(eeg_data=ci_raws, zarr_group=ci_group, tmin=tmin, tmax=tmax, baseline=baseline, wanted_epochs=wanted_epochs)
+        make_epoch_data(eeg_data=ci_raws, zarr_group=ci_group, config=config)
         # make epoch data for the hearing participants
-        make_epoch_data(eeg_data=hearing_raws, zarr_group=hearing_group, tmin=tmin, tmax=tmax, baseline=baseline, wanted_epochs=wanted_epochs)
+        make_epoch_data(eeg_data=hearing_raws, zarr_group=hearing_group, config=config)
     
     # create clean dirty pairs for the data via noise injection
     # save this data as the final result of this script
-    if do_make_pairs:
-        make_pairs(zarr_root_read=epoch_data_storage, zarr_root_save=epoch_pair_path, truncation=100)
+    if run_make_pairs:
+        make_pairs(zarr_root_read=epoch_data_storage, zarr_root_save=epoch_pair_path, config=config, truncation=100)
 
 if __name__ == "__main__":
     main()
