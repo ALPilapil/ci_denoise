@@ -1,6 +1,7 @@
 # random stuff
 notes.txt
 temp/
+.swp
 
 # slurm commands
 *.sh
