@@ -3,29 +3,23 @@ from pathlib import Path
 from process_util import PreprocessConfig, list_file_paths 
 import mne
 import argparse
+import gc
 
-
-def read_raws(read_path, truncation=None, preload=False):
+def list_raws(read_path, truncation=None, preload=False):
     '''
     input: path to read from
     output: list of raws
     '''
     file_paths = list_file_paths(read_path)
-    # print("list raws: ", file_paths)
-    list_raws = []
 
     if truncation is not None and not isinstance(truncation, int):
         raise TypeError("Function read_raws only accepts None or int as an argument")
 
     if truncation:
         file_paths = file_paths[:truncation]
+    
+    return file_paths
 
-    for filename in file_paths:
-        # print("filename: ", filename)
-        raw_loaded = mne.io.read_raw_fif(filename, preload=preload)
-        list_raws.append(raw_loaded)
-
-    return list_raws
 
 def get_dims(raw, config):
     '''
@@ -33,48 +27,54 @@ def get_dims(raw, config):
     output: the dimensions of the epoching of the data
     '''
     # process once
-    events, event_dict = mne.events_from_annotations(raw)
-    epochs = mne.Epochs(raw, events, event_id=config.wanted_epochs, tmin=config.tmin, tmax=config.tmax, 
-                            baseline=config.baseline, preload=True, reject_by_annotation=True)
+    n_channels = len(raw.ch_names)
+    n_times = int((config.tmax - config.tmin) * raw.info['sfreq']) + 1
 
-    n_epochs = len(epochs)
-    n_channels = len(epochs.ch_names)
-    n_times = len(epochs.times)
-    print(f"Shape will be: ({n_epochs}, {n_channels}, {n_times})")
-
-    return (n_epochs, n_channels, n_times)
+    return (n_channels, n_times)
 
 
-def make_epoch_data(eeg_data, config, zarr_group):
+def make_epoch_util(raw, config, zarr_group, preload):
     '''
     given a list of mne.raw objects create and save just the epochs that are relevant to us
     these relevant epochs are identified by their event name and come into this function via a list
     input: set_paths, save_path, wanted_events
     output: none, saves to zarr file
     '''   
-    # establish dimensions of the data
-    _, n_channels, n_times = get_dims(eeg_data[0], config)
+    events, event_dict = mne.events_from_annotations(raw)
+    epochs = mne.Epochs(raw, events, event_id=config.wanted_epochs, tmin=config.tmin, tmax=config.tmax, 
+                        baseline=config.baseline, preload=preload, reject_by_annotation=True)
+
+    # get the epoch data for this participant
+    epoch_data = epochs.get_data() # (n_epochs, n_channels, n_times) appears in chronological time
+
+    # store the data in an X, data array and Y, label array
+    # epoch data is (n_events, n_channels, n_times) and event is ids is (n_events). ith event id = ith epoch data event id
+    # just storing 2 numpy arrays in total 
+    event_ids = epochs.events[:, 2] # NOTE: from here the events have been translated according to event_dict. so 100 -> 2, 104 -> 4 etc. this is fine 
+
+    # append to the group
+    zarr_group['data'].append(epoch_data)
+    zarr_group['labels'].append(event_ids)
+
+def make_epoch_data(file_list, config, zarr_group, preload):
+    '''
+    just take on a filepath and run it through the util function
+    '''
+    # get dimensions
+    raw = mne.io.read_raw_fif(file_list[0], preload=preload)
+    n_channels, n_times = get_dims(raw=raw, config=config)
 
     # create datasets
     zarr_group.create_dataset('data', shape=(0, n_channels, n_times), chunks=(10, n_channels, n_times), dtype='float64')
     zarr_group.create_dataset('labels', shape=(0,), chunks=(10,), dtype='int64')
+    
+    for filename in file_list:
+        # load in the raw data
+        raw = mne.io.read_raw_fif(filename, preload=preload)
 
-    for raw in eeg_data:
-        events, event_dict = mne.events_from_annotations(raw)
-        epochs = mne.Epochs(raw, events, event_id=config.wanted_epochs, tmin=config.tmin, tmax=config.tmax, 
-                            baseline=config.baseline, preload=True, reject_by_annotation=True)
+        # process it into epochs
+        make_epoch_util(raw=raw, config=config, zarr_group=zarr_group, preload=preload)
 
-        # get the epoch data for this participant
-        epoch_data = epochs.get_data() # (n_epochs, n_channels, n_times) appears in chronological time
-
-        # store the data in an X, data array and Y, label array
-        # epoch data is (n_events, n_channels, n_times) and event is ids is (n_events). ith event id = ith epoch data event id
-        # just storing 2 numpy arrays in total 
-        event_ids = epochs.events[:, 2] # NOTE: from here the events have been translated according to event_dict. so 100 -> 2, 104 -> 4 etc. this is fine 
-
-        # append to the group
-        zarr_group['data'].append(epoch_data)
-        zarr_group['labels'].append(event_ids)
         
 def main():
     '''
@@ -91,6 +91,8 @@ def main():
     epoch_pair_path = '/quobyte/millerlmgrp/processed_data/epoched_pairs.zarr'
 
     # preprocessing parameters
+    preload = False
+    truncation = 1
     CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8'] # points where you would expect lots of CI noise from
     n_components = 0.99999 # tells ICA to use however many components explain 99.9999% of the data
     l_freq = 2 # low frequency band 
@@ -121,18 +123,21 @@ def main():
                             gaussian_noise=gaussian_noise)
 
 
-    # get raw data
-    ci_raws = read_raws(read_path=noise_folder_path, truncation=None)
-    hearing_raws = read_raws(read_path=hearing_folder_path, truncation=None)
+    # make lists of the data
+    ci_raw_list = list_raws(read_path=noise_folder_path, truncation=truncation)
+    hearing_raw_list = list_raws(read_path=hearing_folder_path, truncation=truncation)
 
-    # save data of just the relevant epochs of interest for the data of both kinds of particpants
+    # open up the storage
+    # open storage
     root = zarr.open_group(epoch_data_storage, mode='w')
     ci_group = root.create_group('ci_trial_data')
     hearing_group = root.create_group('hearing_trial_data')
-    # make epoch data for the raw CIs
-    make_epoch_data(eeg_data=ci_raws, zarr_group=ci_group, config=config)
-    # make epoch data for the hearing participants
-    make_epoch_data(eeg_data=hearing_raws, zarr_group=hearing_group, config=config)
+
+    # process each file
+    make_epoch_data(file_list=ci_raw_list, config=config, zarr_group=ci_group, preload=preload)
+    gc.collect()
+    make_epoch_data(file_list=hearing_raw_list, config=config, zarr_group=hearing_group, preload=preload)
+    gc.collect()
     
 if __name__ == "__main__":
     main()
