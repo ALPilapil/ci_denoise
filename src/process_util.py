@@ -37,3 +37,63 @@ def list_file_paths(directory_path):
         if os.path.isfile(full_path):
             file_names.append(directory_path + entry)
     return file_names
+
+
+def make_pairs(zarr_root_read, zarr_root_save, config, batch_size=100, truncation=None):
+    '''
+    read in the epoch data. create pairs out of it by adding noise to the hearing epochs
+    '''
+    read_root = zarr.open_group(zarr_root_read, mode='r')
+    ci_data = read_root['ci_trial_data']['data']
+    hearing_data = read_root['hearing_trial_data']['data']
+    save_root = zarr.open_group(zarr_root_save, mode='w')
+
+    # load in the data for each group
+    if truncation is not None:
+        ci_data = ci_data[:truncation]
+        hearing_data = hearing_data[:truncation]
+    
+    clean_batch = []
+    dirty_batch = []
+    
+    # iterate through both groups to make pairs and save them
+    for clean_epoch in hearing_data:  # (21, 8193)
+        print("appending in process")
+        for noisy_epoch in ci_data:    # (21, 8193)
+            clean_batch.append(clean_epoch)
+            # multiply noise by some alpha
+            dirty_epoch = clean_epoch + config.alpha * noisy_epoch
+            # if config.channel_scaling:
+                # multiply the values in certain bands by a certain amount
+
+                
+            if config.gaussian_noise:
+                # add some gausian noise in addition to the CI noise to the data
+                gausian = np.random.normal(0, sigma, size=noisy_epoch.shape)
+                dirty_epoch += gausian
+            
+
+            dirty_batch.append(dirty_epoch)
+            
+            # When batch is full, save and clear
+            if len(clean_batch) >= batch_size:
+                # Convert to arrays and append
+                clean_arr = np.array(clean_batch)  # (batch_size, 21, 8193)
+                dirty_arr = np.array(dirty_batch)
+                
+                save_root['clean'].append(clean_arr)
+                save_root['dirty'].append(dirty_arr)
+                                
+                # Clear batch
+                clean_batch = []
+                dirty_batch = []
+    
+    # Save any remaining data
+    if len(clean_batch) > 0:
+        clean_arr = np.array(clean_batch)
+        dirty_arr = np.array(dirty_batch)
+        
+        save_root['clean'].append(clean_arr)
+        save_root['dirty'].append(dirty_arr)
+        
+        print(f"Saved final batch. Total: {save_root['clean'].shape[0]}")

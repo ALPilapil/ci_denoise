@@ -14,7 +14,7 @@ def read_raws(read_path, truncation=None, preload=False):
     # print("list raws: ", file_paths)
     list_raws = []
 
-    if not isinstance(truncation, (int, None)):
+    if truncation is not None and not isinstance(truncation, int):
         raise TypeError("Function read_raws only accepts None or int as an argument")
 
     if truncation:
@@ -27,6 +27,24 @@ def read_raws(read_path, truncation=None, preload=False):
 
     return list_raws
 
+def get_dims(raw, config):
+    '''
+    input: a path to raw data
+    output: the dimensions of the epoching of the data
+    '''
+    # process once
+    events, event_dict = mne.events_from_annotations(raw)
+    epochs = mne.Epochs(raw, events, event_id=config.wanted_epochs, tmin=config.tmin, tmax=config.tmax, 
+                            baseline=config.baseline, preload=True, reject_by_annotation=True)
+
+    n_epochs = len(epochs)
+    n_channels = len(epochs.ch_names)
+    n_times = len(epochs.times)
+    print(f"Shape will be: ({n_epochs}, {n_channels}, {n_times})")
+
+    return (n_epochs, n_channels, n_times)
+
+
 def make_epoch_data(eeg_data, config, zarr_group):
     '''
     given a list of mne.raw objects create and save just the epochs that are relevant to us
@@ -34,15 +52,17 @@ def make_epoch_data(eeg_data, config, zarr_group):
     input: set_paths, save_path, wanted_events
     output: none, saves to zarr file
     '''   
-    for raw in eeg_data[:1]:
+    # establish dimensions of the data
+    _, n_channels, n_times = get_dims(eeg_data[0], config)
+
+    # create datasets
+    zarr_group.create_dataset('data', shape=(0, n_channels, n_times), chunks=(10, n_channels, n_times), dtype='float64')
+    zarr_group.create_dataset('labels', shape=(0,), chunks=(10,), dtype='int64')
+
+    for raw in eeg_data:
         events, event_dict = mne.events_from_annotations(raw)
         epochs = mne.Epochs(raw, events, event_id=config.wanted_epochs, tmin=config.tmin, tmax=config.tmax, 
                             baseline=config.baseline, preload=True, reject_by_annotation=True)
-
-        n_epochs = len(epochs)
-        n_channels = len(epochs.ch_names)
-        n_times = len(epochs.times)
-        print(f"Shape will be: ({n_epochs}, {n_channels}, {n_times})")
 
         # get the epoch data for this participant
         epoch_data = epochs.get_data() # (n_epochs, n_channels, n_times) appears in chronological time
@@ -55,65 +75,6 @@ def make_epoch_data(eeg_data, config, zarr_group):
         # append to the group
         zarr_group['data'].append(epoch_data)
         zarr_group['labels'].append(event_ids)
-
-def make_pairs(zarr_root_read, zarr_root_save, config, batch_size=100, truncation=None):
-    '''
-    read in the epoch data. create pairs out of it by adding noise to the hearing epochs
-    '''
-    read_root = zarr.open_group(zarr_root_read, mode='r')
-    ci_data = read_root['ci_trial_data']['data']
-    hearing_data = read_root['hearing_trial_data']['data']
-    save_root = zarr.open_group(zarr_root_save, mode='w')
-
-    # load in the data for each group
-    if truncation is not None:
-        ci_data = ci_data[:truncation]
-        hearing_data = hearing_data[:truncation]
-    
-    clean_batch = []
-    dirty_batch = []
-    
-    # iterate through both groups to make pairs and save them
-    for clean_epoch in hearing_data:  # (21, 8193)
-        print("appending in process")
-        for noisy_epoch in ci_data:    # (21, 8193)
-            clean_batch.append(clean_epoch)
-            # multiply noise by some alpha
-            dirty_epoch = clean_epoch + config.alpha * noisy_epoch
-            # if config.channel_scaling:
-                # multiply the values in certain bands by a certain amount
-
-                
-            if config.gaussian_noise:
-                # add some gausian noise in addition to the CI noise to the data
-                gausian = np.random.normal(0, sigma, size=noisy_epoch.shape)
-                dirty_epoch += gausian
-            
-
-            dirty_batch.append(dirty_epoch)
-            
-            # When batch is full, save and clear
-            if len(clean_batch) >= batch_size:
-                # Convert to arrays and append
-                clean_arr = np.array(clean_batch)  # (batch_size, 21, 8193)
-                dirty_arr = np.array(dirty_batch)
-                
-                save_root['clean'].append(clean_arr)
-                save_root['dirty'].append(dirty_arr)
-                                
-                # Clear batch
-                clean_batch = []
-                dirty_batch = []
-    
-    # Save any remaining data
-    if len(clean_batch) > 0:
-        clean_arr = np.array(clean_batch)
-        dirty_arr = np.array(dirty_batch)
-        
-        save_root['clean'].append(clean_arr)
-        save_root['dirty'].append(dirty_arr)
-        
-        print(f"Saved final batch. Total: {save_root['clean'].shape[0]}")
         
 def main():
     '''
@@ -121,16 +82,6 @@ def main():
     and saving the components that primarily come from points of interest: ['P7', 'T7', 'M2', 'M1', 'P8'] since these are the 
     closest to where CIs are placed
     '''
-    # command line args
-    parser = argparse.ArgumentParser(description='processing script')
-    parser.add_argument("process", help="define what to run. Options: 'make_epoch' or 'make_pairs' or 'both'")
-    args = parser.parse_args()
-
-    if args.process == 'make_epoch' or args.process == 'make_pairs' or args.process == 'both':
-        print("Processing: ", args.process)
-    else:
-        raise ValueError("Action must be either 'make_epoch' or 'make_pairs' or 'both'") 
-
     #----------- Parameters and Paths -----------#
     # where to store noise once isolated
     noise_folder_path = '/quobyte/millerlmgrp/processed_data/noise/'
@@ -146,7 +97,7 @@ def main():
     years = [2, 3, 4]
     wanted_epochs = [10, 11] # needs to be a subset of event_dict
     tmin = 0.0
-    tmax = 1.5
+    tmax = 60.0
     baseline = (0,0)
     alpha = 1 # amount to scale noise by, keep it [.1, 2.0], SNR
     channel_scaling = {
@@ -171,23 +122,17 @@ def main():
 
 
     # get raw data
-    ci_raws = read_raws(read_path=noise_folder_path, truncation=3)
-    hearing_raws = read_raws(read_path=hearing_folder_path, truncation=3)
+    ci_raws = read_raws(read_path=noise_folder_path, truncation=None)
+    hearing_raws = read_raws(read_path=hearing_folder_path, truncation=None)
 
     # save data of just the relevant epochs of interest for the data of both kinds of particpants
-    if parser.action == 'make_epoch' or parser.action == 'both': 
-        root = zarr.open_group(epoch_data_storage, mode='w')
-        ci_group = root['ci_trial_data']
-        hearing_group = root['hearing_trial_data']
-        # make epoch data for the raw CIs
-        make_epoch_data(eeg_data=ci_raws, zarr_group=ci_group, config=config)
-        # make epoch data for the hearing participants
-        make_epoch_data(eeg_data=hearing_raws, zarr_group=hearing_group, config=config)
+    root = zarr.open_group(epoch_data_storage, mode='w')
+    ci_group = root.create_group('ci_trial_data')
+    hearing_group = root.create_group('hearing_trial_data')
+    # make epoch data for the raw CIs
+    make_epoch_data(eeg_data=ci_raws, zarr_group=ci_group, config=config)
+    # make epoch data for the hearing participants
+    make_epoch_data(eeg_data=hearing_raws, zarr_group=hearing_group, config=config)
     
-    # create clean dirty pairs for the data via noise injection
-    # save this data as the final result of this script
-    if parser.action == 'make_pairs' or parser.action == 'both':
-        make_pairs(zarr_root_read=epoch_data_storage, zarr_root_save=epoch_pair_path, config=config, truncation=100)
-
 if __name__ == "__main__":
     main()
