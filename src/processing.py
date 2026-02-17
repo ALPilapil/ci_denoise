@@ -6,7 +6,7 @@ import sklearn
 import matplotlib.pyplot as plt
 import zarr
 from pathlib import Path
-
+from process_config import PreprocessConfig 
 
 def list_file_paths(directory_path):
     '''
@@ -292,15 +292,7 @@ def make_epoch_data(eeg_data, config, zarr_group):
     '''   
     for raw in eeg_data[:1]:
         events, event_dict = mne.events_from_annotations(raw)
-        # sort the event_dict according to events of interest and those which are available
-        valid_ids = []
-        for event_id in config.wanted_epochs:
-            if event_id in event_dict:
-                valid_ids.append(event_id)
-        # print(event_dict)
-        wanted_events = {key: event_dict[key] for key in valid_ids}
-
-        epochs = mne.Epochs(raw, events, event_id=config.wanted_events, tmin=config.tmin, tmax=config.tmax, 
+        epochs = mne.Epochs(raw, events, event_id=config.wanted_epochs, tmin=config.tmin, tmax=config.tmax, 
                             baseline=config.baseline, preload=True, reject_by_annotation=True)
 
         n_epochs = len(epochs)
@@ -315,7 +307,6 @@ def make_epoch_data(eeg_data, config, zarr_group):
         # epoch data is (n_events, n_channels, n_times) and event is ids is (n_events). ith event id = ith epoch data event id
         # just storing 2 numpy arrays in total 
         event_ids = epochs.events[:, 2] # NOTE: from here the events have been translated according to event_dict. so 100 -> 2, 104 -> 4 etc. this is fine 
-        print('event_ids: ', event_ids)
 
         # append to the group
         zarr_group['data'].append(epoch_data)
@@ -379,46 +370,7 @@ def make_pairs(zarr_root_read, zarr_root_save, config, batch_size=100, truncatio
         save_root['dirty'].append(dirty_arr)
         
         print(f"Saved final batch. Total: {save_root['clean'].shape[0]}")
-
-class PreprocessConfig():
-    def __init__(self, channels, n_components, l_freq, years, wanted_epochs, 
-                tmin, tmax, baseline, alpha=1, channel_scaling=None, gaussian_noise=False):
-        '''
-        configuration class for what parameters to run the data with 
-        '''
-        self.channels = channels
-        self.n_components = n_components
-        self.l_freq = l_freq
-        self.years = years
-        self.wanted_epochs = wanted_epochs
-        self.baseline = baseline
-        self.alpha = alpha
-        self.gaussian_noise = gaussian_noise
-        default_dict = {'Fp1':1, 'Fz':1, 'F3':1, 'F7':1, 'T7':1, 'C3':1, 
-                             'Cz':1, 'Pz':1, 'P3':1, 'P7':1, 'O1':1, 'Fp2':1, 
-                             'F8':1, 'F4':1, 'C4':1, 'T8':1, 'P8':1, 'P4':1, 
-                             'O2':1, 'M1':1, 'M2':1}
-        if channel_scaling:
-            self.channel_scaling = {**default_dict, **channel_scaling}
-        else:
-            self.channel_scaling = channel_scaling
         
-
-def get_metadata():
-    '''
-    just an easy way to get metadata about how the data is structured at any time
-    '''
-    # load in just one mne raw
-    path = '/quobyte/millerlmgrp/CMPy2/MarkerFixed/0901y2.set'
-    raw = mne.io.read_raw_eeglab(path, preload=True)
-    raw.rename_channels({
-            'LMas': 'M1',
-            'RMas': 'M2', 
-    })
-
-    return raw.info
-
-
 def main():
     '''
     Isolates the CI noise from each CI kid via ICA and saves it to [path here]. Does this through running ICA on each datapoint
@@ -445,7 +397,7 @@ def main():
     n_components = 0.99999 # tells ICA to use however many components explain 99.9999% of the data
     l_freq = 2 # low frequency band 
     years = [2, 3, 4]
-    wanted_epochs = [100, 101] # needs to be a subset of event_dict
+    wanted_epochs = [10, 11] # needs to be a subset of event_dict
     tmin = 0.0
     tmax = 1.5
     baseline = (0,0)
@@ -500,7 +452,6 @@ def main():
             hearing_paths.extend(permed_hearing_paths[i])
 
     #----------- Noise Isolation and Hearing -----------#
-    get_metadata()
 
     # isolate the noise from the data via ICA, high pass it above 2 Hz with Butterwork, zero-phase
     if run_isolation:
