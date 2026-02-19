@@ -2,7 +2,7 @@
 notes.txt
 temp/
 .swp
-/__pycache__
+__pycache__/
 
 # slurm commands
 *.sh

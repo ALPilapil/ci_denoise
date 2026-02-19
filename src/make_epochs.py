@@ -85,19 +85,17 @@ def main():
     #----------- Parameters and Paths -----------#
     # where to store noise once isolated
     noise_folder_path = '/quobyte/millerlmgrp/processed_data/noise/'
-    noisy_epochs_folder_path = '/quobyte/millerlmgrp/processed_data/noisy_epochs/'
     epoch_data_storage = '/quobyte/millerlmgrp/processed_data/epoched_data.zarr'
     hearing_folder_path = '/quobyte/millerlmgrp/processed_data/hearing/'
-    epoch_pair_path = '/quobyte/millerlmgrp/processed_data/epoched_pairs.zarr'
 
     # preprocessing parameters
     preload = False
-    truncation = 1
+    truncation = None
     CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8'] # points where you would expect lots of CI noise from
     n_components = 0.99999 # tells ICA to use however many components explain 99.9999% of the data
     l_freq = 2 # low frequency band 
     years = [2, 3, 4]
-    wanted_epochs = [10, 11] # needs to be a subset of event_dict
+    wanted_epochs = [10] # needs to be a subset of event_dict
     tmin = 0.0
     tmax = 60.0
     baseline = (0,0)
