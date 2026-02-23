@@ -97,3 +97,52 @@ def make_pairs(zarr_root_read, zarr_root_save, config, batch_size=100, truncatio
         save_root['dirty'].append(dirty_arr)
         
         print(f"Saved final batch. Total: {save_root['clean'].shape[0]}")
+
+def permutation_divider(log_paths, set_paths):
+    '''
+    divide a list of set files into their appropriate permutation
+    input: list of set files, corresponding logs file
+    output: a tuple of 3 lists of set files, ith element of tuple = list of ith permutation
+    '''
+    # initialize lists
+    perm1 = []
+    perm2 = []
+    perm3 = []
+
+    # Create a mapping from subject ID to permutation version
+    subject_to_perm = {}
+    
+    for log_path in log_paths:
+        # Extract filename from path
+        log_filename = os.path.basename(log_path)
+        
+        # Extract subject ID (first 4 digits)
+        subject_id = log_filename[:4]
+        
+        # Extract version (v1, v2, or v3)
+        if '_v1' in log_filename:
+            subject_to_perm[subject_id] = 1
+        elif '_v2' in log_filename:
+            subject_to_perm[subject_id] = 2
+        elif '_v3' in log_filename:
+            subject_to_perm[subject_id] = 3
+    
+    # Assign set files to appropriate permutation list
+    for set_path in set_paths:
+        # Extract filename from path
+        set_filename = os.path.basename(set_path)
+        
+        # Extract subject ID (first 4 digits)
+        subject_id = set_filename[:4]
+        
+        # Assign to correct permutation
+        if subject_id in subject_to_perm:
+            perm_num = subject_to_perm[subject_id]
+            if perm_num == 1:
+                perm1.append(set_path)
+            elif perm_num == 2:
+                perm2.append(set_path)
+            elif perm_num == 3:
+                perm3.append(set_path)
+    
+    return (perm1, perm2, perm3)
