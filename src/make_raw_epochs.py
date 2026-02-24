@@ -23,16 +23,13 @@ def make_epoch_util(raw, config, zarr_group, preload, perm_label):
     print("file processed")
 
 def make_epoch_data(file_list, config, zarr_group, preload, perm_label):
-    raw = mne.io.read_raw_eeglab(file_list[0], preload=preload)
-    n_channels, n_times = get_dims(raw=raw, config=config)
-
-    zarr_group.create_dataset('data', shape=(0, n_channels, n_times), chunks=(10, n_channels, n_times), dtype='float64')
-    zarr_group.create_dataset('labels', shape=(0,), chunks=(10,), dtype='int64')
-    zarr_group.create_dataset('perm', shape=(0,), chunks=(10,), dtype='int8')  # new
-    
     for filename in file_list:
-        raw = mne.io.read_raw_eeglab(filename, preload=preload)
-        make_epoch_util(raw=raw, config=config, zarr_group=zarr_group, preload=preload, perm_label=perm_label)
+        try:
+            raw = mne.io.read_raw_eeglab(filename, preload=preload)
+            make_epoch_util(raw=raw, config=config, zarr_group=zarr_group, preload=preload, perm_label=perm_label)
+        except Exception as e:
+            print(f"Skipping {filename}: {e}")
+            continue
 
     
 
@@ -40,7 +37,7 @@ def make_epoch_data(file_list, config, zarr_group, preload, perm_label):
 def main():
     noise_folder_path = '/quobyte/millerlmgrp/processed_data/noise/'
     hearing_folder_path = '/quobyte/millerlmgrp/processed_data/hearing/'
-    epoch_data_storage = '/quobyte/millerlmgrp/processed_data/raw_epoched_data.zarr'
+    epoch_data_storage = '/quobyte/millerlmgrp/processed_data/new_raw_epoched_data.zarr'
     years = [2, 3, 4]
 
     ci_paths = [[], [], []]
@@ -61,11 +58,6 @@ def main():
         for i in range(3):
             ci_paths[i].extend(permed_ci_paths[i])
             hearing_paths[i].extend(permed_hearing_paths[i])
-
-    # open storage
-    root = zarr.open_group(epoch_data_storage, mode='w')
-    ci_group = root.create_group('ci_trial_data')
-    hearing_group = root.create_group('hearing_trial_data')
 
     # config
     # preprocessing parameters
@@ -94,6 +86,23 @@ def main():
                             alpha=alpha, 
                             channel_scaling=channel_scaling, 
                             gaussian_noise=gaussian_noise)
+
+    # open storage
+    root = zarr.open_group(epoch_data_storage, mode='w')
+    ci_group = root.create_group('ci_trial_data')
+    hearing_group = root.create_group('hearing_trial_data')
+
+    # get dims once to initialize datasets
+    sample_raw = mne.io.read_raw_eeglab(ci_paths[0][0], preload=preload)
+    n_channels, n_times = get_dims(raw=sample_raw, config=config)
+
+    ci_group.create_dataset('data', shape=(0, n_channels, n_times), chunks=(10, n_channels, n_times), dtype='float64')
+    ci_group.create_dataset('labels', shape=(0,), chunks=(10,), dtype='int64')
+    ci_group.create_dataset('perm', shape=(0,), chunks=(10,), dtype='int8')
+
+    hearing_group.create_dataset('data', shape=(0, n_channels, n_times), chunks=(10, n_channels, n_times), dtype='float64')
+    hearing_group.create_dataset('labels', shape=(0,), chunks=(10,), dtype='int64')
+    hearing_group.create_dataset('perm', shape=(0,), chunks=(10,), dtype='int8')
 
     # process each permutation — perm_label is 1, 2, or 3
     for perm_idx in range(3):
