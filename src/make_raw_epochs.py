@@ -13,12 +13,14 @@ def make_epoch_util(raw, config, zarr_group, preload, perm_label):
     epoch_data = epochs.get_data()
     event_ids = epochs.events[:, 2]
     
-    n = epoch_data.shape[0]
-    perm_array = np.full(n, perm_label, dtype='int8')
+    n_epochs = epoch_data.shape[0]
+    perm_array = np.full(n_epochs, perm_label, dtype='int8')
+    block_array = list(range(n_epochs))
 
     zarr_group['data'].append(epoch_data)
     zarr_group['labels'].append(event_ids)
-    zarr_group['perm'].append(perm_array)  # new
+    zarr_group['perm'].append(perm_array) 
+    zarr_group['block'].append(block_array)
 
     print("file processed")
 
@@ -37,7 +39,7 @@ def make_epoch_data(file_list, config, zarr_group, preload, perm_label):
 def main():
     noise_folder_path = '/quobyte/millerlmgrp/processed_data/noise/'
     hearing_folder_path = '/quobyte/millerlmgrp/processed_data/hearing/'
-    epoch_data_storage = '/quobyte/millerlmgrp/processed_data/new_raw_epoched_data.zarr'
+    epoch_data_storage = '/quobyte/millerlmgrp/processed_data/raw_epoched_data.zarr'
     years = [2, 3, 4]
 
     ci_paths = [[], [], []]
@@ -99,10 +101,12 @@ def main():
     ci_group.create_dataset('data', shape=(0, n_channels, n_times), chunks=(10, n_channels, n_times), dtype='float64')
     ci_group.create_dataset('labels', shape=(0,), chunks=(10,), dtype='int64')
     ci_group.create_dataset('perm', shape=(0,), chunks=(10,), dtype='int8')
+    ci_group.create_dataset('block', shape=(0,), chunks=(10,), dtype='int64')
 
     hearing_group.create_dataset('data', shape=(0, n_channels, n_times), chunks=(10, n_channels, n_times), dtype='float64')
     hearing_group.create_dataset('labels', shape=(0,), chunks=(10,), dtype='int64')
     hearing_group.create_dataset('perm', shape=(0,), chunks=(10,), dtype='int8')
+    hearing_group.create_dataset('block', shape=(0,), chunks=(10,), dtype='int64')
 
     # process each permutation — perm_label is 1, 2, or 3
     for perm_idx in range(3):
