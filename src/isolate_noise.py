@@ -39,7 +39,7 @@ def explain_variance(ica, raw, n_components):
         explained_var_ratio = ica.get_explained_variance_ratio(raw, components=[i], ch_type="eeg")
         print(f"Ratio for componenent {i}: {explained_var_ratio}")
 
-def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_components, CI_chs, l_freq, save_path, save_dir=None, h_freq=None):
+def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_components, CI_chs, l_freq, save_path, perm_idx, save_dir=None, h_freq=None):
     '''
     given a list of .set paths, isolate the noise from each via ICA
     input: list of dirty .set paths
@@ -148,7 +148,7 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
         raw_noise_sensor._data = raw.get_data() - raw_clean.get_data() # subtract the clean components
 
         # save the data
-        filename = os.path.join(save_path, f"noise{idx}_raw.fif")
+        filename = os.path.join(save_path, f"noise{idx}_raw_perm{perm_idx}.fif")
         raw_noise_sensor.save(filename, overwrite=True)
 
 
@@ -156,7 +156,7 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
     print(f"{len(bad_ch_list)} for bad channels", bad_ch_list)
     print(f"{len(bad_comp_list)} for bad components", bad_comp_list)
 
-def process_hearing(set_paths, l_freq, save_path, h_freq=None):
+def process_hearing(set_paths, l_freq, save_path, perm_idx, h_freq=None):
     '''
     Process hearing participant data: rename channels, filter, and save
     input: list of .set paths, filter parameters, save directory
@@ -181,7 +181,7 @@ def process_hearing(set_paths, l_freq, save_path, h_freq=None):
         raw.filter(l_freq=l_freq, h_freq=h_freq)
         
         # Save
-        filename = os.path.join(save_path, f"hearing{idx}_raw.fif")
+        filename = os.path.join(save_path, f"hearing{idx}_raw_perm{perm_idx}.fif")
         raw.save(filename, overwrite=True)
         print(f"Saved hearing file {idx}")
     
@@ -202,8 +202,8 @@ def main():
 
 
     # initialize empty lists to add to later
-    ci_paths = []
-    hearing_paths = []
+    ci_paths = [[],[],[]]
+    hearing_paths = [[],[],[]]
 
     # this will all be absolute paths from quobyte
     for year in years:
@@ -225,13 +225,18 @@ def main():
 
         # extend to appropriate places
         for i in range(3):
-            ci_paths.extend(permed_ci_paths[i])
-            hearing_paths.extend(permed_hearing_paths[i])
+            ci_paths[i].extend(permed_ci_paths[i])
+            hearing_paths[i].extend(permed_hearing_paths[i])
 
     # run isolation
-    isolate_noise(set_paths=ci_paths, CI_chs=CI_chs, do_explain_variance=False, n_plot_components=None, 
-                                n_components=n_components, l_freq=l_freq, save_path=noise_folder_path)
-    process_hearing(set_paths=hearing_paths, l_freq=l_freq, save_path=hearing_folder_path)
+    for perm_idx in range(3):
+        perm_label = perm_idx + 1
+
+        isolate_noise(set_paths=ci_paths[perm_idx], CI_chs=CI_chs, do_explain_variance=False, n_plot_components=None, 
+                                n_components=n_components, l_freq=l_freq, save_path=noise_folder_path, perm_idx=perm_label)
+        
+        process_hearing(set_paths=hearing_paths[perm_idx], l_freq=l_freq, save_path=hearing_folder_path, perm_idx=perm_label)
+    
 
 if __name__ == "__main__":
     main()
