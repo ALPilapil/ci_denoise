@@ -4,8 +4,15 @@ import gc
 import zarr
 import numpy as np
 import mne
+import re
+import os
 
-def make_epoch_util(raw, config, zarr_group, preload, perm_label):
+def extract_participant_id(filepath):
+    year = re.search(r'CMPy(\d)', filepath).group(1)
+    participant = re.search(r'(0[89]\d+)', os.path.basename(filepath)).group(1)  # 08xx or 09xx
+    return f"y{year}_{participant}"
+
+def make_epoch_util(raw, config, zarr_group, preload, perm_label, participant_id):
     events, event_dict = mne.events_from_annotations(raw)
     epochs = mne.Epochs(raw, events, event_id=config.wanted_epochs, tmin=config.tmin, tmax=config.tmax, 
                         baseline=config.baseline, preload=preload, reject_by_annotation=True)
@@ -17,10 +24,12 @@ def make_epoch_util(raw, config, zarr_group, preload, perm_label):
     perm_array = np.full(n_epochs, perm_label, dtype='int8')
     block_array = list(range(n_epochs))
 
+    participant_array = np.full(n_epochs, participant_id, dtype='U10')
     zarr_group['data'].append(epoch_data)
     zarr_group['labels'].append(event_ids)
     zarr_group['perm'].append(perm_array) 
     zarr_group['block'].append(block_array)
+    zarr_group['participant'].append(participant_array)
 
     print("file processed")
 
@@ -28,18 +37,17 @@ def make_epoch_data(file_list, config, zarr_group, preload, perm_label):
     for filename in file_list:
         try:
             raw = mne.io.read_raw_eeglab(filename, preload=preload)
-            make_epoch_util(raw=raw, config=config, zarr_group=zarr_group, preload=preload, perm_label=perm_label)
+            participant_id = extract_participant_id(filename)
+            make_epoch_util(raw=raw, config=config, zarr_group=zarr_group, preload=preload, 
+                            perm_label=perm_label, participant_id=participant_id)
         except Exception as e:
             print(f"Skipping {filename}: {e}")
             continue
 
-    
-
-
 def main():
     noise_folder_path = '/quobyte/millerlmgrp/processed_data/noise/'
     hearing_folder_path = '/quobyte/millerlmgrp/processed_data/hearing/'
-    epoch_data_storage = '/quobyte/millerlmgrp/processed_data/raw_epoched_data.zarr'
+    epoch_data_storage = '/quobyte/millerlmgrp/processed_data/new_raw_epoched_data.zarr'
     years = [2, 3, 4]
 
     ci_paths = [[], [], []]
@@ -102,11 +110,13 @@ def main():
     ci_group.create_dataset('labels', shape=(0,), chunks=(10,), dtype='int64')
     ci_group.create_dataset('perm', shape=(0,), chunks=(10,), dtype='int8')
     ci_group.create_dataset('block', shape=(0,), chunks=(10,), dtype='int64')
+    ci_group.create_dataset('participant', shape=(0,), chunks=(10,), dtype='U10')
 
     hearing_group.create_dataset('data', shape=(0, n_channels, n_times), chunks=(10, n_channels, n_times), dtype='float64')
     hearing_group.create_dataset('labels', shape=(0,), chunks=(10,), dtype='int64')
     hearing_group.create_dataset('perm', shape=(0,), chunks=(10,), dtype='int8')
     hearing_group.create_dataset('block', shape=(0,), chunks=(10,), dtype='int64')
+    hearing_group.create_dataset('participant', shape=(0,), chunks=(10,), dtype='U10')
 
     # process each permutation — perm_label is 1, 2, or 3
     for perm_idx in range(3):
