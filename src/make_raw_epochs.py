@@ -7,10 +7,6 @@ import mne
 import re
 import os
 
-def extract_participant_id(filepath):
-    year = re.search(r'CMPy(\d)', filepath).group(1)
-    participant = re.search(r'(0[89]\d+)', os.path.basename(filepath)).group(1)  # 08xx or 09xx
-    return f"y{year}_{participant}"
 
 def make_epoch_util(raw, config, zarr_group, preload, perm_label, participant_id):
     events, event_dict = mne.events_from_annotations(raw)
@@ -23,21 +19,23 @@ def make_epoch_util(raw, config, zarr_group, preload, perm_label, participant_id
     n_epochs = epoch_data.shape[0]
     perm_array = np.full(n_epochs, perm_label, dtype='int8')
     block_array = list(range(n_epochs))
+    participant_id_arr = np.full(n_epochs, participant_id, dtype='int32')
 
-    participant_array = np.full(n_epochs, participant_id, dtype='U10')
     zarr_group['data'].append(epoch_data)
     zarr_group['labels'].append(event_ids)
     zarr_group['perm'].append(perm_array) 
     zarr_group['block'].append(block_array)
-    zarr_group['participant'].append(participant_array)
+    zarr_group['participant'].append(participant_id_arr)
 
     print("file processed")
 
 def make_epoch_data(file_list, config, zarr_group, preload, perm_label):
+    participant_id = 0
+    
     for filename in file_list:
+        participant_id += 1
         try:
             raw = mne.io.read_raw_eeglab(filename, preload=preload)
-            participant_id = extract_participant_id(filename)
             make_epoch_util(raw=raw, config=config, zarr_group=zarr_group, preload=preload, 
                             perm_label=perm_label, participant_id=participant_id)
         except Exception as e:
@@ -45,8 +43,6 @@ def make_epoch_data(file_list, config, zarr_group, preload, perm_label):
             continue
 
 def main():
-    noise_folder_path = '/quobyte/millerlmgrp/processed_data/noise/'
-    hearing_folder_path = '/quobyte/millerlmgrp/processed_data/hearing/'
     epoch_data_storage = '/quobyte/millerlmgrp/processed_data/new_raw_epoched_data.zarr'
     years = [2, 3, 4]
 
@@ -110,13 +106,13 @@ def main():
     ci_group.create_dataset('labels', shape=(0,), chunks=(10,), dtype='int64')
     ci_group.create_dataset('perm', shape=(0,), chunks=(10,), dtype='int8')
     ci_group.create_dataset('block', shape=(0,), chunks=(10,), dtype='int64')
-    ci_group.create_dataset('participant', shape=(0,), chunks=(10,), dtype='U10')
+    ci_group.create_dataset('participant', shape=(0,), chunks=(10,), dtype='int32')
 
     hearing_group.create_dataset('data', shape=(0, n_channels, n_times), chunks=(10, n_channels, n_times), dtype='float64')
     hearing_group.create_dataset('labels', shape=(0,), chunks=(10,), dtype='int64')
     hearing_group.create_dataset('perm', shape=(0,), chunks=(10,), dtype='int8')
     hearing_group.create_dataset('block', shape=(0,), chunks=(10,), dtype='int64')
-    hearing_group.create_dataset('participant', shape=(0,), chunks=(10,), dtype='U10')
+    hearing_group.create_dataset('participant', shape=(0,), chunks=(10,), dtype='int32')
 
     # process each permutation — perm_label is 1, 2, or 3
     for perm_idx in range(3):
