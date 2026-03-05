@@ -3,7 +3,7 @@ import numpy as np
 import os
 from mne.preprocessing import ICA
 from process_util import list_file_paths, permutation_divider
-
+from pathlib import Path
 
 def plot_ica(n_plot_components, ica, save_dir, idx):
     '''
@@ -56,101 +56,105 @@ def isolate_noise(set_paths, n_components, do_explain_variance, n_plot_component
         raise ValueError("n_plot_components cannot be greater than n_components")
 
     # loop through each file and get the noise
-    for idx, path in enumerate(set_paths): 
-        raw = mne.io.read_raw_eeglab(path, preload=True)
-        # rename mastoids
-        raw.rename_channels({
-            'LMas': 'M1',
-            'RMas': 'M2',
-        })
-        # get m1 and m2 indexes
-        m1_idx = raw.ch_names.index('M1')
-        m2_idx = raw.ch_names.index('M2')
+    for idx, path in enumerate(set_paths):
+        try:  
+            raw = mne.io.read_raw_eeglab(path, preload=True)
+            # rename mastoids
+            raw.rename_channels({
+                'LMas': 'M1',
+                'RMas': 'M2',
+            })
+            # get m1 and m2 indexes
+            m1_idx = raw.ch_names.index('M1')
+            m2_idx = raw.ch_names.index('M2')
 
-        # set montage
-        raw.set_montage(montage)
+            # set montage
+            raw.set_montage(montage)
 
-        # apply filter
-        raw.filter(l_freq=l_freq, h_freq=h_freq)
+            # apply filter
+            raw.filter(l_freq=l_freq, h_freq=h_freq)
 
-        # detect and drop bad channels
-        data = raw.get_data()
-        bad_channels = []
-        
-        for i, ch_name in enumerate(raw.ch_names):
-            ch_data = data[i, :]
+            # detect and drop bad channels
+            data = raw.get_data()
+            bad_channels = []
             
-            # check for NaN/Inf
-            if np.any(np.isnan(ch_data)) or np.any(np.isinf(ch_data)):
-                bad_channels.append(ch_name)
-                print(f"  File {idx}: {ch_name} has NaN/Inf - marking as bad")
-            # check for flat channels (std very close to 0)
-            elif np.std(ch_data) < 1e-10:
-                bad_channels.append(ch_name)
-                print(f"  File {idx}: {ch_name} is flat - marking as bad")
+            for i, ch_name in enumerate(raw.ch_names):
+                ch_data = data[i, :]
+                
+                # check for NaN/Inf
+                if np.any(np.isnan(ch_data)) or np.any(np.isinf(ch_data)):
+                    bad_channels.append(ch_name)
+                    print(f"  File {idx}: {ch_name} has NaN/Inf - marking as bad")
+                # check for flat channels (std very close to 0)
+                elif np.std(ch_data) < 1e-10:
+                    bad_channels.append(ch_name)
+                    print(f"  File {idx}: {ch_name} is flat - marking as bad")
+            
+            # drop bad channels
+            if bad_channels:
+                print(f"File {idx}: Dropping {len(bad_channels)} bad channels: {bad_channels}")
+                raw.info['bads'] = bad_channels
+                raw.interpolate_bads(reset_bads=True)
+            
+            # check if we have enough channels left for ICA
+            if len(raw.ch_names) < n_components:
+                print(f"File {idx}: Not enough channels ({len(raw.ch_names)}) for {n_components} components, skip")
+                bad_ch_list.append(f"File {path}, bad ch")
+                continue
+            
+            # Get updated channel indices after dropping
+            m1_idx = raw.ch_names.index('M1') if 'M1' in raw.ch_names else None
+            m2_idx = raw.ch_names.index('M2') if 'M2' in raw.ch_names else None
+
+            # run ICA on it and store the data itself
+            ica = ICA(n_components=n_components, max_iter="auto", random_state=97)
+            ica.fit(raw)
+            sources = ica.get_sources(raw)
+
+            # explain each component
+            if do_explain_variance:
+                explain_variance(ica=ica, raw=raw, n_components=n_components)
+
+            # plot where components are coming from
+            if n_plot_components is not None:
+                plot_ica(n_plot_components=n_plot_components, ica=ica, save_dir=save_dir, idx=idx)
+            
+            # save the ICAs that have some threshold percentage of their weight coming from around the point of
+            # where the cochlear implant is placed
+            component_matrix = ica.get_components()  # (n_channels, n_components)
+
+            # get the top channels for each component
+            top_components = []
+            for i, column in enumerate(component_matrix.T):
+                ranked = np.argsort(np.abs(column))[::-1]
+                # convert into channel names
+                ranked_ch = [raw.ch_names[index] for index in ranked]
+                # print(f"{i}th component: {ranked_ch}")
+                # if the top component is one that corresponds to being around the implant, include it as noise
+                if (ranked_ch[0] in CI_chs) or (ranked_ch[1] in CI_chs):
+                    # store this component index as one to add later
+                    top_components.append(i)
+            
+            # account for no good components found
+            if not top_components:
+                print(f"no good components found for file {idx}, skip")
+                bad_comp_list.append(f"File {path}, bad comp")
+                continue
+
+            # reconstruct the data back into its original form
+            raw_clean = raw.copy() # copy original data
+            ica.apply(raw_clean, exclude=top_components) # exclude the noisy components from it
+
+            raw_noise_sensor = raw.copy() # copy the original data
+            raw_noise_sensor._data = raw.get_data() - raw_clean.get_data() # subtract the clean components
+
+            # save the data
+            filename = os.path.join(save_path, f"noise{idx}_raw_perm{perm_idx}.fif")
+            raw_noise_sensor.save(filename, overwrite=True)
         
-        # drop bad channels
-        if bad_channels:
-            print(f"File {idx}: Dropping {len(bad_channels)} bad channels: {bad_channels}")
-            raw.info['bads'] = bad_channels
-            raw.interpolate_bads(reset_bads=True)
-        
-        # check if we have enough channels left for ICA
-        if len(raw.ch_names) < n_components:
-            print(f"File {idx}: Not enough channels ({len(raw.ch_names)}) for {n_components} components, skip")
-            bad_ch_list.append(f"File {path}, bad ch")
+        except Exception as e: 
+            print(f"ERROR on file {idx} ({path}): {e}")
             continue
-        
-        # Get updated channel indices after dropping
-        m1_idx = raw.ch_names.index('M1') if 'M1' in raw.ch_names else None
-        m2_idx = raw.ch_names.index('M2') if 'M2' in raw.ch_names else None
-
-        # run ICA on it and store the data itself
-        ica = ICA(n_components=n_components, max_iter="auto", random_state=97)
-        ica.fit(raw)
-        sources = ica.get_sources(raw)
-
-        # explain each component
-        if do_explain_variance:
-            explain_variance(ica=ica, raw=raw, n_components=n_components)
-
-        # plot where components are coming from
-        if n_plot_components is not None:
-            plot_ica(n_plot_components=n_plot_components, ica=ica, save_dir=save_dir, idx=idx)
-        
-        # save the ICAs that have some threshold percentage of their weight coming from around the point of
-        # where the cochlear implant is placed
-        component_matrix = ica.get_components()  # (n_channels, n_components)
-
-        # get the top channels for each component
-        top_components = []
-        for i, column in enumerate(component_matrix.T):
-            ranked = np.argsort(np.abs(column))[::-1]
-            # convert into channel names
-            ranked_ch = [raw.ch_names[index] for index in ranked]
-            # print(f"{i}th component: {ranked_ch}")
-            # if the top component is one that corresponds to being around the implant, include it as noise
-            if (ranked_ch[0] in CI_chs) or (ranked_ch[1] in CI_chs):
-                # store this component index as one to add later
-                top_components.append(i)
-        
-        # account for no good components found
-        if not top_components:
-            print(f"no good components found for file {idx}, skip")
-            bad_comp_list.append(f"File {path}, bad comp")
-            continue
-
-        # reconstruct the data back into its original form
-        raw_clean = raw.copy() # copy original data
-        ica.apply(raw_clean, exclude=top_components) # exclude the noisy components from it
-
-        raw_noise_sensor = raw.copy() # copy the original data
-        raw_noise_sensor._data = raw.get_data() - raw_clean.get_data() # subtract the clean components
-
-        # save the data
-        filename = os.path.join(save_path, f"noise{idx}_raw_perm{perm_idx}.fif")
-        raw_noise_sensor.save(filename, overwrite=True)
-
 
     print(f"skipped {len(bad_comp_list) + len(bad_ch_list)} files out of {len(set_paths)}: ")
     print(f"{len(bad_ch_list)} for bad channels", bad_ch_list)
@@ -169,21 +173,26 @@ def process_hearing(set_paths, l_freq, save_path, perm_idx, h_freq=None):
     
     # Process each hearing file
     for idx, path in enumerate(set_paths):
-        raw = mne.io.read_raw_eeglab(path, preload=True)
-        
-        # Rename mastoids to match CI data
-        raw.rename_channels({'LMas': 'M1', 'RMas': 'M2'})
-        
-        # Set montage
-        raw.set_montage(montage)
-        
-        # Apply same filter as CI data for consistency
-        raw.filter(l_freq=l_freq, h_freq=h_freq)
-        
-        # Save
-        filename = os.path.join(save_path, f"hearing{idx}_raw_perm{perm_idx}.fif")
-        raw.save(filename, overwrite=True)
-        print(f"Saved hearing file {idx}")
+        try:
+            raw = mne.io.read_raw_eeglab(path, preload=True)
+            
+            # Rename mastoids to match CI data
+            raw.rename_channels({'LMas': 'M1', 'RMas': 'M2'})
+            
+            # Set montage
+            raw.set_montage(montage)
+            
+            # Apply same filter as CI data for consistency
+            raw.filter(l_freq=l_freq, h_freq=h_freq)
+            
+            # Save
+            filename = os.path.join(save_path, f"hearing{idx}_raw_perm{perm_idx}.fif")
+            raw.save(filename, overwrite=True)
+            print(f"Saved hearing file {idx}")
+
+        except Exception as e: 
+            print(f"ERROR on file {idx} ({path}): {e}")
+            continue
     
     print(f"Processed and saved {len(set_paths)} hearing files")
 
