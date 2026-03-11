@@ -9,8 +9,10 @@ import os
 
 
 # ─── Switch between paradigms here ───────────────────────────────────────────
+# use fif for ica processed data and set for non
 DATA_MODE = 'fif'   # 'set'  →  .set/.fdt files organized by year
                     # 'fif'  →  .fif files with perm encoded in filename
+storage_directory = '/quobyte/millerlmgrp/processed_data/epoched_data.zarr'
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -173,7 +175,7 @@ def build_path_lists(config):
 
 
 def main():
-    epoch_data_storage = '/quobyte/millerlmgrp/processed_data/raw_epoched_data.zarr'
+    epoch_data_storage = storage_directory
 
     # ── config ────────────────────────────────────────────────────────────────
     preload          = False
