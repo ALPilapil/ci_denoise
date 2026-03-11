@@ -5,6 +5,6 @@ temp/
 __pycache__/
 
 # slurm commands
-*.sh
+.sh
 *.err
 *.out
