@@ -12,7 +12,7 @@ import os
 # use fif for ica processed data and set for non
 DATA_MODE = 'fif'   # 'set'  →  .set/.fdt files organized by year
                     # 'fif'  →  .fif files with perm encoded in filename
-storage_directory = '/quobyte/millerlmgrp/processed_data/epoched_data.zarr'
+storage_directory = '/mnt/data/PilapilData/processed_data/epoched_data.zarr'
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -144,9 +144,9 @@ def build_path_lists(config):
         hearing_paths = [[], [], []]
 
         for year in config.years:
-            raw_directory       = f'/quobyte/millerlmgrp/CMPy{year}/MarkerFixed/'
+            raw_directory       = f'/mnt/data/PilapilData/CMPy{year}/MarkerFixed/'
             raw_data_file_paths = list_file_paths(raw_directory)
-            log_paths           = f'/quobyte/millerlmgrp/CMPy{year}/Logs/'
+            log_paths           = f'/mnt/data/PilapilData/CMPy{year}/Logs/'
             log_files           = list_file_paths(log_paths)
 
             hearing_data_paths = [p for p in raw_data_file_paths if '/08' in p and '.set' in p]
@@ -162,8 +162,8 @@ def build_path_lists(config):
         return ci_paths, hearing_paths, None, None   # None → sequential ids
 
     elif DATA_MODE == 'fif':
-        noise_dir   = '/quobyte/millerlmgrp/processed_data/noise/'
-        hearing_dir = '/quobyte/millerlmgrp/processed_data/hearing/'
+        noise_dir   = '/mnt/data/PilapilData/processed_data/noise/'
+        hearing_dir = '/mnt/data/PilapilData/processed_data/hearing/'
 
         ci_paths,      ci_pids      = build_fif_path_lists(noise_dir,   prefix='noise')
         hearing_paths, hearing_pids = build_fif_path_lists(hearing_dir, prefix='hearing')

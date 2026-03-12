@@ -202,8 +202,8 @@ def main():
     isolate noise from data
     '''
     # params and paths
-    noise_folder_path = '/quobyte/millerlmgrp/processed_data/noise/'
-    hearing_folder_path = '/quobyte/millerlmgrp/processed_data/hearing/'
+    noise_folder_path = '/mnt/data/PilapilData/processed_data/noise/'
+    hearing_folder_path = '/mnt/data/PilapilData/processed_data/hearing/'
     CI_chs = ['P7', 'T7', 'M2', 'M1', 'P8'] # points where you would expect lots of CI noise from
     n_components = 0.99999
     years = [2, 3, 4]
@@ -217,9 +217,9 @@ def main():
     # this will all be absolute paths from quobyte
     for year in years:
         # set paths to raw EEG data and their log paths
-        raw_directory = f'/quobyte/millerlmgrp/CMPy{year}/MarkerFixed/'
+        raw_directory = f'/mnt/data/PilapilData/CMPy{year}/MarkerFixed/'
         raw_data_file_paths = list_file_paths(raw_directory)
-        log_paths = f'/quobyte/millerlmgrp/CMPy{year}/Logs/'
+        log_paths = f'/mnt/data/PilapilData/CMPy{year}/Logs/'
         log_files = list_file_paths(log_paths)
 
         # specify to set paths for hearing vs CI kids

@@ -9,11 +9,11 @@ from unet import UNet
 
 
 # ─── Config ───────────────────────────────────────────────────────────────────
-ZARR_PATH       = '/quobyte/millerlmgrp/processed_data/processed_raw_epoched_data.zarr'
+ZARR_PATH       = '/mnt/data/PilapilData/processed_data/processed_raw_epoched_data.zarr'
 CLEAN_GROUP     = 'hearing_trial_data'
 NOISE_GROUP     = 'ci_trial_data'
-CHECKPOINT_PATH = '/quobyte/millerlmgrp/checkpoints/best.pt'
-RESULTS_PATH    = '/quobyte/millerlmgrp/processed_data/results.zarr'
+CHECKPOINT_PATH = '/mnt/data/PilapilData/checkpoints/best.pt'
+RESULTS_PATH    = '/mnt/data/PilapilData/processed_data/results.zarr'
 
 ALPHA           = 1.0
 NUM_PAIRINGS    = 3

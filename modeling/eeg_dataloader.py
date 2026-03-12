@@ -82,7 +82,7 @@ class EEGDataset(Dataset):
 
 
 def main():
-    root = '/quobyte/millerlmgrp/processed_data/processed_raw_epoched_data.zarr'
+    root = '/mnt/data/PilapilData/processed_data/processed_raw_epoched_data.zarr'
 
     eeg_data = EEGDataset(
         zarr_path=root,

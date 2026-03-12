@@ -12,10 +12,10 @@ from unet import UNet
 
 
 # ─── Config ───────────────────────────────────────────────────────────────────
-ZARR_PATH       = '/quobyte/millerlmgrp/processed_data/processed_raw_epoched_data.zarr'
+ZARR_PATH       = '/mnt/data/PilapilData/processed_data/processed_raw_epoched_data.zarr'
 CLEAN_GROUP     = 'hearing_trial_data'
 NOISE_GROUP     = 'ci_trial_data'
-CHECKPOINT_DIR  = '/quobyte/millerlmgrp/checkpoints/'
+CHECKPOINT_DIR  = '/mnt/data/PilapilData/checkpoints/'
 
 ALPHA           = 1.0
 NUM_PAIRINGS    = 3
