@@ -12,7 +12,7 @@ from unet import UNet
 
 
 # ─── Config ───────────────────────────────────────────────────────────────────
-ZARR_PATH       = '/mnt/data/PilapilData/processed_data/processed_raw_epoched_data.zarr'
+ZARR_PATH       = '/mnt/data/PilapilData/processed_data/raw_epoched_data.zarr'
 CLEAN_GROUP     = 'hearing_trial_data'
 NOISE_GROUP     = 'ci_trial_data'
 CHECKPOINT_DIR  = '/mnt/data/PilapilData/checkpoints/'
@@ -22,7 +22,7 @@ NUM_PAIRINGS    = 3
 SEED            = 42
 MIX             = True
 
-BATCH_SIZE      = 32
+BATCH_SIZE      = 2 # has to be low due to size of each sample
 NUM_EPOCHS      = 50
 LR              = 1e-3
 TRAIN_SPLIT     = 0.8
@@ -111,7 +111,7 @@ def main():
     model     = UNet().to(DEVICE)
     criterion = nn.MSELoss()
     optimizer = Adam(model.parameters(), lr=LR)
-    scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=5, factor=0.5, verbose=True)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=5, factor=0.5)
 
     # ── training loop ─────────────────────────────────────────────────────────
     best_val_loss = float('inf')
