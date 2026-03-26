@@ -93,7 +93,7 @@ def main():
         zarr_path=ZARR_PATH,
         clean_group=CLEAN_GROUP,
         noise_group=NOISE_GROUP,
-        alpha=NUM_PAIRINGS,
+        alpha=ALPHA,
         num_pairings=NUM_PAIRINGS,
         seed=SEED,
         mix=MIX,
