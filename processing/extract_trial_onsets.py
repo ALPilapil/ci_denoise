@@ -372,12 +372,14 @@ def extract_trial_onsets(subject_id, output_dir=None, study_dir=None):
     # ── 6. Load raw EEG via MNE ────────────────────────────────────────────────
     raw = mne.io.read_raw_eeglab(set_path, preload=True, verbose=False)
 
+    study_label = f"CMPy{year}" if year else "CMPy2"
+
     raw.info["subject_info"] = {"his_id": subject_id}
     raw.info["description"] = (
-        f"CMPy2 SSVEP/speech dataset | subject {subject_id} | "
+        f"{study_label} SSVEP/speech dataset | subject {subject_id} | "
         f"trial codes: A=191 AV=192 V=193"
     )
-    raw.info["proj_name"] = "CMPy2"
+    raw.info["proj_name"] = study_label
     raw.info["experimenter"] = "Miller Lab"
 
     # ── 7. Add A / AV / V annotations to the raw ─────────────────────────────
