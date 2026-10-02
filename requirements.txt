@@ -1,0 +1,12 @@
+# Core dependencies for ci_denoise
+mne>=1.8.0
+numpy>=2.0.0
+scipy>=1.15.0
+zarr>=3.0.0
+numcodecs
+matplotlib>=3.9.0
+ipykernel
+pooch
+tqdm
+requests
+pyyaml
