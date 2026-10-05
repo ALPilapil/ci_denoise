@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EEG Waveform Comparison Studio - ci_denoise</title>
+  <style>
+    :root {
+      --bg-primary: #0f141c;
+      --bg-secondary: #171f2c;
+      --bg-card: #1c2637;
+      --bg-card-hover: #233046;
+      --border-color: #2b3952;
+      --border-color-focus: #3b82f6;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #3b82f6;
+      --accent-blue-hover: #2563eb;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-cyan: #06b6d4;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    .app-header {
+      background-color: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #3b82f6, #06b6d4);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    /* Container */
+    .app-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 58px);
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 330px;
+      min-width: 310px;
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar-section {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-title {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.15rem 0.45rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border-radius: 9999px;
+      background-color: var(--bg-card);
+      color: var(--accent-blue);
+      border: 1px solid var(--border-color);
+    }
+
+    /* Dropzone */
+    .dropzone {
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem 0.75rem;
+      text-align: center;
+      background-color: rgba(28, 38, 55, 0.4);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--accent-blue);
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    .dropzone-icon { font-size: 1.5rem; margin-bottom: 0.25rem; display: block; }
+    .dropzone-text { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.15rem; }
+    .dropzone-hint { font-size: 0.7rem; color: var(--text-muted); }
+
+    .quick-samples {
+      margin-top: 0.6rem;
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .btn-sample {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      padding: 0.35rem 0.5rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .btn-sample:hover { background: var(--bg-card-hover); color: #fff; border-color: var(--accent-blue); }
+
+    /* Preset buttons */
+    .preset-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .btn-preset {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.3rem 0.55rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-preset:hover { background-color: var(--bg-card-hover); color: var(--text-primary); border-color: var(--accent-blue); }
+    .btn-preset.active { background-color: rgba(59, 130, 246, 0.25); border-color: var(--accent-blue); color: #fff; }
+
+    /* Wave Checklist */
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.4rem 0.6rem;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+    .check-item:hover { background-color: var(--bg-card-hover); }
+    .check-item.checked { border-color: rgba(59, 130, 246, 0.4); }
+
+    .check-item input[type="checkbox"] {
+      accent-color: var(--accent-blue);
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+
+    .color-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: inline-block;
+    }
+
+    .check-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .check-tag {
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    /* Channel Pills */
+    .pill-group { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .channel-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.3rem 0.6rem;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.15s ease;
+    }
+    .channel-pill:hover { background-color: var(--bg-card-hover); color: var(--text-primary); }
+    .channel-pill.active { background-color: rgba(59, 130, 246, 0.25); border-color: var(--accent-blue); color: #fff; }
+
+    /* Form Controls */
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.6rem;
+      font-size: 0.8rem;
+    }
+    .control-label { color: var(--text-secondary); }
+    .control-input {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 0.25rem 0.45rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      width: 75px;
+      text-align: right;
+    }
+    .control-input:focus { outline: none; border-color: var(--accent-blue); }
+    .control-select {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 0.25rem 0.45rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+    }
+
+    /* Main Area */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background-color: #0b0f17;
+    }
+
+    .toolbar {
+      background-color: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.55rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 0.6rem; }
+    .graph-status { font-size: 0.8rem; color: var(--text-secondary); }
+
+    .graph-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .canvas-wrapper {
+      background-color: #ffffff;
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      padding: 0.85rem;
+      margin: 0 auto;
+      max-width: 1350px;
+      width: 100%;
+    }
+
+    canvas#eegCanvas { display: block; width: 100%; height: auto; cursor: crosshair; }
+
+    /* Summary Table */
+    .summary-container {
+      margin-top: 1rem;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 0.85rem;
+      max-width: 1350px;
+      width: 100%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .summary-header {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .metrics-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left; }
+    .metrics-table th { padding: 0.45rem 0.65rem; background-color: var(--bg-card); color: var(--text-secondary); font-weight: 600; border-bottom: 1px solid var(--border-color); }
+    .metrics-table td { padding: 0.45rem 0.65rem; border-bottom: 1px solid rgba(43, 57, 82, 0.5); font-family: var(--font-mono); color: var(--text-primary); }
+    .metrics-table tr:hover td { background-color: rgba(35, 48, 70, 0.4); }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.38rem 0.75rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-primary { background-color: var(--accent-blue); color: #fff; }
+    .btn-primary:hover { background-color: var(--accent-blue-hover); }
+    .btn-secondary { background-color: var(--bg-card); color: var(--text-primary); border-color: var(--border-color); }
+    .btn-secondary:hover { background-color: var(--bg-card-hover); border-color: var(--accent-blue); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.75);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-dialog {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      width: 90%; max-width: 600px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .modal-header { padding: 0.85rem 1.15rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; font-weight: 700; }
+    .modal-body { padding: 1.15rem; }
+    .modal-footer { padding: 0.75rem 1.15rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.6rem; }
+    .csv-textarea {
+      width: 100%; height: 220px; background-color: var(--bg-card);
+      border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+      color: var(--text-primary); font-family: var(--font-mono); font-size: 0.78rem;
+      padding: 0.65rem; resize: vertical;
+    }
+    .csv-textarea:focus { outline: none; border-color: var(--accent-blue); }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div class="brand-title">EEG Waveform Comparison Studio</div>
+        <div class="brand-subtitle">Minimal Standalone HTML · No server needed · Double-click to run</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="btnLoadDemo" class="btn btn-secondary" title="Restore Tier 1 Benchmark Demo">
+        <span>📂</span> Reset Demo Data
+      </button>
+      <button id="btnPasteModal" class="btn btn-secondary" title="Paste raw CSV text">
+        <span>📋</span> Paste CSV
+      </button>
+      <button id="btnExportCSV" class="btn btn-secondary" title="Export visible traces to CSV">
+        <span>💾</span> Export CSV
+      </button>
+      <button id="btnExportPNG" class="btn btn-primary" title="Export High-Res PNG">
+        <span>📸</span> Export PNG (200 DPI)
+      </button>
+    </div>
+  </header>
+
+  <!-- App Layout -->
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <!-- 1. CSV Data Input -->
+      <section class="sidebar-section">
+        <div class="section-title">
+          <span>Data Input</span>
+          <span id="dataStatusBadge" class="badge">Demo loaded</span>
+        </div>
+        
+        <div id="dropzone" class="dropzone">
+          <span class="dropzone-icon">📥</span>
+          <div class="dropzone-text">Drop CSV file here</div>
+          <div class="dropzone-hint">or click to browse (.csv, .tsv, .txt)</div>
+          <input type="file" id="fileInput" accept=".csv,.tsv,.txt" style="display: none;">
+        </div>
+
+        <div class="quick-samples">
+          <button class="btn-sample" id="sampleTier1">Demo (Tier 1 Benchmark)</button>
+        </div>
+      </section>
+
+      <!-- 2. Wave Selection Checklist -->
+      <section class="sidebar-section">
+        <div class="section-title">
+          <span>Wave Checklist</span>
+          <span id="waveCountBadge" class="badge">0 / 0</span>
+        </div>
+
+        <!-- Preset Filters -->
+        <div class="preset-bar">
+          <button class="btn-preset active" id="presetAll" title="Show all waves">All Waves</button>
+          <button class="btn-preset" id="presetDirtyClean" title="Select Dirty Input & Clean Ground Truth only">🎯 Dirty &amp; Clean Only</button>
+          <button class="btn-preset" id="presetCleanDenoised" title="Show Clean and all denoised methods">Clean &amp; Denoised</button>
+          <button class="btn-preset" id="presetDenoisedOnly" title="Show only denoised methods">Denoised Only</button>
+        </div>
+
+        <div style="display: flex; gap: 0.4rem; margin-bottom: 0.6rem;">
+          <button class="btn-preset" id="btnSelectAllWaves" style="flex: 1;">Select All</button>
+          <button class="btn-preset" id="btnDeselectAllWaves" style="flex: 1;">Deselect All</button>
+        </div>
+
+        <!-- Dynamic Wave Checklist Items -->
+        <div id="waveChecklist" class="checklist"></div>
+      </section>
+
+      <!-- 3. Channels Selector -->
+      <section class="sidebar-section">
+        <div class="section-title">
+          <span>Channels</span>
+          <span id="channelCountBadge" class="badge">0 / 0</span>
+        </div>
+        <div style="display: flex; gap: 0.35rem; margin-bottom: 0.6rem;">
+          <button class="btn-preset" id="btnSelectAllChannels">All</button>
+          <button class="btn-preset" id="btnSelectCIChannels" title="P7, T7, M1, M2, P8">CI Channels</button>
+          <button class="btn-preset" id="btnSelectScalpChannels" title="Cz, Fz, Pz">Midline (Cz, Fz)</button>
+        </div>
+        <div id="channelPills" class="pill-group"></div>
+      </section>
+
+      <!-- 4. Graph & Display Settings -->
+      <section class="sidebar-section">
+        <div class="section-title">
+          <span>Display Settings</span>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Time Window</span>
+          <div style="display: flex; align-items: center; gap: 0.25rem;">
+            <input type="number" id="timeMin" class="control-input" value="0.0" step="0.1" min="0">
+            <span style="color: var(--text-muted); font-size: 0.75rem;">to</span>
+            <input type="number" id="timeMax" class="control-input" value="3.0" step="0.1" min="0.1">
+            <span style="color: var(--text-muted); font-size: 0.75rem;">s</span>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Y-Axis Scale</span>
+          <select id="scaleMode" class="control-select">
+            <option value="per_channel" selected>Per Channel (Independent)</option>
+            <option value="unified">Unified (Shared Scale)</option>
+          </select>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Line Thickness</span>
+          <input type="range" id="lineWidthRange" min="1" max="3.5" value="1.8" step="0.2" style="width: 90px; accent-color: var(--accent-blue);">
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Show Grid</span>
+          <input type="checkbox" id="showGridCheck" checked style="accent-color: var(--accent-blue); width: 15px; height: 15px;">
+        </div>
+      </section>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <span id="activeFileInfo" class="graph-status" style="font-weight: 600; color: #fff;">
+            Tier 1 Screening Benchmark Sample
+          </span>
+          <span id="metaStats" class="badge" style="background: rgba(59, 130, 246, 0.15); border: none;">
+            750 samples · 4 channels · 6 waves
+          </span>
+        </div>
+        <div class="toolbar-right">
+          <span id="hoverInfo" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-cyan);">
+            Hover cursor over graph to inspect values
+          </span>
+          <button id="btnResetView" class="btn btn-secondary" title="Reset Time Window">↺ Reset</button>
+        </div>
+      </div>
+
+      <!-- Graph Canvas -->
+      <div class="graph-container">
+        <div class="canvas-wrapper">
+          <canvas id="eegCanvas" width="1200" height="700"></canvas>
+        </div>
+
+        <!-- Metrics Table -->
+        <div class="summary-container">
+          <div class="summary-header">
+            <span>📈 Denoising Objective Metrics (Window: <span id="timeSpanBadge">0.0 – 3.0s</span>)</span>
+            <span style="font-size: 0.72rem; color: var(--text-muted);">Calculated against Clean Ground Truth (Hearing)</span>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="metrics-table">
+              <thead>
+                <tr>
+                  <th>Method / Wave</th>
+                  <th>Channel</th>
+                  <th>RRMSE (Lower is better)</th>
+                  <th>Correlation (r)</th>
+                  <th>Peak-to-Peak (μV)</th>
+                  <th>RMS (μV)</th>
+                </tr>
+              </thead>
+              <tbody id="metricsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Paste CSV Modal -->
+  <div id="pasteModal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <span>Paste CSV / TSV Data</span>
+        <button id="btnCloseModal" class="btn btn-secondary" style="padding: 0.2rem 0.5rem;">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.6rem;">
+          Paste raw CSV lines below. Supports comma, tab, or semicolon separated columns.
+        </p>
+        <textarea id="pasteTextarea" class="csv-textarea" placeholder="time,channel,dirty,clean,ica,pca...&#10;0.000,Cz,14.2,12.0,-260.1,20.4&#10;..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button id="btnCancelModal" class="btn btn-secondary">Cancel</button>
+        <button id="btnApplyPaste" class="btn btn-primary">Load Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Embedded Standalone Logic -->
+  <script>
+    // ── Synthetic Tier 1 Generator for 100% Zero-Dependency Standalone Mode ──
+    function createTier1SampleData() {
+      const sfreq = 250.0;
+      const duration_s = 3.0;
+      const n_samples = Math.floor(duration_s * sfreq);
+      const channels = ['Cz', 'Fz', 'P7', 'T7'];
+      const waves = ['dirty', 'clean', 'ica', 'pca', 'ssp', 'wavelet'];
+      
+      const times = [];
+      for (let i = 0; i < n_samples; i++) times.push(i / sfreq);
+
+      const series = {};
+      channels.forEach(ch => {
+        series[ch] = {};
+        waves.forEach(w => { series[ch][w] = new Float64Array(n_samples); });
+
+        for (let i = 0; i < n_samples; i++) {
+          const t = times[i];
+          const hfNoise = 0.5 * Math.sin(2 * Math.PI * 70 * t) + 0.3 * Math.sin(2 * Math.PI * 110 * t) + 0.15 * Math.sin(193 * t);
+
+          let clean = 0, dirty = 0, ica = 0, pca = 0, ssp = 0, wavelet = 0;
+
+          if (ch === 'Cz') {
+            clean = 12.0 * Math.sin(2 * Math.PI * 9 * t) + 6.0 * Math.cos(2 * Math.PI * 4 * t);
+            const ci = 25.0 * Math.sin(2 * Math.PI * 0.8 * t) + 40.0 * hfNoise;
+            dirty = clean + ci;
+            ica = -260.0 + 8.0 * Math.sin(2 * Math.PI * 1.5 * t);
+            pca = 20.0 + 10.0 * Math.sin(2 * Math.PI * 8 * t) + 12.0 * hfNoise;
+            ssp = 140.0 + 40.0 * Math.sin(2 * Math.PI * 0.7 * t) + 45.0 * hfNoise;
+            wavelet = clean + 3.0 * Math.sin(2 * Math.PI * 8 * t);
+          } else if (ch === 'Fz') {
+            clean = -10.0 * Math.cos(2 * Math.PI * 1.2 * t) + 8.0 * Math.sin(2 * Math.PI * 6 * t);
+            const ci = 15.0 * Math.sin(2 * Math.PI * 2.5 * t) + 35.0 * hfNoise;
+            dirty = clean + ci;
+            ica = 750.0 + 35.0 * Math.sin(2 * Math.PI * 0.9 * t);
+            pca = 15.0 + 8.0 * Math.sin(2 * Math.PI * 6 * t) + 12.0 * hfNoise;
+            const dip = -150.0 * Math.exp(-Math.pow((t - 0.3) / 0.02, 2));
+            ssp = -240.0 + 50.0 * Math.sin(2 * Math.PI * 0.6 * t) + 70.0 * hfNoise + dip;
+            wavelet = clean + 2.0 * Math.sin(17 * t);
+          } else if (ch === 'P7') {
+            clean = 8.0 * Math.sin(2 * Math.PI * 7 * t) + 5.0 * Math.cos(2 * Math.PI * 2 * t);
+            const ciSlow = 1000.0 * Math.sin(2 * Math.PI * 0.95 * t - Math.PI / 4) + 850.0;
+            dirty = clean + ciSlow + 250.0 * hfNoise;
+            ica = 670.0 + 50.0 * Math.sin(2 * Math.PI * 1.1 * t);
+            pca = 5.0 + 4.0 * Math.sin(2 * Math.PI * 7 * t);
+            ssp = ciSlow * 0.9 + 280.0 * hfNoise;
+            wavelet = clean + 4.0 * Math.sin(2 * Math.PI * 0.95 * t);
+          } else if (ch === 'T7') {
+            clean = 2500.0 * Math.sin(2 * Math.PI * 0.92 * t - Math.PI / 2) + 2650.0 + 30.0 * Math.sin(2 * Math.PI * 10 * t);
+            dirty = clean + 600.0 * hfNoise;
+            ica = 2460.0 + 8.0 * Math.sin(33 * t);
+            pca = 5.0 + 3.0 * Math.sin(47 * t);
+            ssp = 650.0 + 450.0 * Math.sin(2 * Math.PI * 0.92 * t - Math.PI / 2) + 180.0 * hfNoise;
+            wavelet = 2400.0 * Math.sin(2 * Math.PI * 0.92 * t - Math.PI / 2) + 2800.0;
+          }
+
+          series[ch]['clean'][i] = clean;
+          series[ch]['dirty'][i] = dirty;
+          series[ch]['ica'][i] = ica;
+          series[ch]['pca'][i] = pca;
+          series[ch]['ssp'][i] = ssp;
+          series[ch]['wavelet'][i] = wavelet;
+        }
+      });
+
+      return { times, channels, waves, series };
+    }
+
+    // ── Color Palette ──
+    const PALETTE = {
+      'dirty': '#b0b0b0', 'dirty input': '#b0b0b0',
+      'clean': '#2ca02c', 'clean ground truth': '#2ca02c',
+      'ica': '#1f77b4', 'pca': '#d62728', 'ssp': '#e377c2', 'wavelet': '#17becf',
+      'unet': '#ff7f0e', 'iva': '#8c564b', 'emd_ica': '#9467bd', 'emd_cca': '#bcbd22'
+    };
+    const FALLBACK_COLORS = ['#1f77b4', '#d62728', '#2ca02c', '#e377c2', '#17becf', '#ff7f0e', '#9467bd', '#8c564b'];
+
+    function getWaveColor(name, idx) {
+      const norm = name.toLowerCase().replace(/^denoised:\s*/, '').trim();
+      return PALETTE[norm] || FALLBACK_COLORS[idx % FALLBACK_COLORS.length];
+    }
+
+    function getWaveDisplayName(name) {
+      const norm = name.toLowerCase().trim();
+      if (norm.includes('dirty')) return 'Dirty Input (Clean + CI Noise)';
+      if (norm.includes('clean')) return 'Clean Ground Truth (Hearing)';
+      if (norm.startsWith('denoised:')) return name;
+      return `Denoised: ${name}`;
+    }
+
+    // ── State ──
+    const state = {
+      fileName: 'Tier 1 Screening Benchmark Sample',
+      channels: [],
+      waves: [],
+      waveLabels: {},
+      waveColors: {},
+      checkedWaves: new Set(),
+      checkedChannels: new Set(),
+      times: [],
+      data: {},
+      timeMin: 0.0,
+      timeMax: 3.0,
+      scaleMode: 'per_channel',
+      lineWidth: 1.8,
+      showGrid: true,
+      sfreq: 250.0
+    };
+
+    // ── DOM ──
+    const dom = {
+      fileInput: document.getElementById('fileInput'),
+      dropzone: document.getElementById('dropzone'),
+      sampleTier1: document.getElementById('sampleTier1'),
+      btnLoadDemo: document.getElementById('btnLoadDemo'),
+      btnExportPNG: document.getElementById('btnExportPNG'),
+      btnExportCSV: document.getElementById('btnExportCSV'),
+      btnResetView: document.getElementById('btnResetView'),
+      btnPasteModal: document.getElementById('btnPasteModal'),
+      pasteModal: document.getElementById('pasteModal'),
+      btnCloseModal: document.getElementById('btnCloseModal'),
+      btnCancelModal: document.getElementById('btnCancelModal'),
+      btnApplyPaste: document.getElementById('btnApplyPaste'),
+      pasteTextarea: document.getElementById('pasteTextarea'),
+      waveChecklist: document.getElementById('waveChecklist'),
+      channelPills: document.getElementById('channelPills'),
+      waveCountBadge: document.getElementById('waveCountBadge'),
+      channelCountBadge: document.getElementById('channelCountBadge'),
+      dataStatusBadge: document.getElementById('dataStatusBadge'),
+      activeFileInfo: document.getElementById('activeFileInfo'),
+      metaStats: document.getElementById('metaStats'),
+      hoverInfo: document.getElementById('hoverInfo'),
+      timeMin: document.getElementById('timeMin'),
+      timeMax: document.getElementById('timeMax'),
+      scaleMode: document.getElementById('scaleMode'),
+      lineWidthRange: document.getElementById('lineWidthRange'),
+      showGridCheck: document.getElementById('showGridCheck'),
+      canvas: document.getElementById('eegCanvas'),
+      metricsBody: document.getElementById('metricsBody'),
+      timeSpanBadge: document.getElementById('timeSpanBadge'),
+      presetAll: document.getElementById('presetAll'),
+      presetDirtyClean: document.getElementById('presetDirtyClean'),
+      presetCleanDenoised: document.getElementById('presetCleanDenoised'),
+      presetDenoisedOnly: document.getElementById('presetDenoisedOnly'),
+      btnSelectAllWaves: document.getElementById('btnSelectAllWaves'),
+      btnDeselectAllWaves: document.getElementById('btnDeselectAllWaves'),
+      btnSelectAllChannels: document.getElementById('btnSelectAllChannels'),
+      btnSelectCIChannels: document.getElementById('btnSelectCIChannels'),
+      btnSelectScalpChannels: document.getElementById('btnSelectScalpChannels'),
+    };
+
+    // ── CSV Parser ──
+    function parseCSV(content) {
+      const lines = content.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0 && !l.startsWith('#'));
+      if (lines.length < 2) throw new Error('CSV is empty or missing headers.');
+
+      let delim = ',';
+      if (lines[0].includes('\t')) delim = '\t';
+      else if (lines[0].includes(';') && !lines[0].includes(',')) delim = ';';
+
+      const rawHeaders = lines[0].split(delim).map(h => h.trim().replace(/^["']|["']$/g, ''));
+      const lower = rawHeaders.map(h => h.toLowerCase());
+
+      const timeIdx = lower.findIndex(h => ['time', 'time_s', 'timestamp', 't', 'seconds'].includes(h));
+      const channelIdx = lower.findIndex(h => ['channel', 'ch', 'chan', 'channel_name'].includes(h));
+      const waveIdx = lower.findIndex(h => ['wave', 'method', 'type', 'signal_type', 'trace'].includes(h));
+      const valIdx = lower.findIndex(h => ['value', 'amplitude', 'uv', 'amplitude_uv', 'val', 'data'].includes(h));
+
+      let parsed = { times: [], channels: [], waves: [], series: {} };
+
+      const getOrCreate = (ch, w) => {
+        if (!parsed.series[ch]) {
+          parsed.series[ch] = {};
+          if (!parsed.channels.includes(ch)) parsed.channels.push(ch);
+        }
+        if (!parsed.series[ch][w]) {
+          parsed.series[ch][w] = [];
+          if (!parsed.waves.includes(w)) parsed.waves.push(w);
+        }
+        return parsed.series[ch][w];
+      };
+
+      if (channelIdx !== -1 && waveIdx !== -1 && valIdx !== -1) {
+        // Tidy long format
+        const timeSet = new Set();
+        for (let i = 1; i < lines.length; i++) {
+          const parts = lines[i].split(delim).map(p => p.trim());
+          if (parts.length <= Math.max(timeIdx, channelIdx, waveIdx, valIdx)) continue;
+          const t = timeIdx !== -1 ? parseFloat(parts[timeIdx]) : (i - 1) / state.sfreq;
+          const ch = parts[channelIdx];
+          const w = parts[waveIdx];
+          const v = parseFloat(parts[valIdx]);
+          if (!isNaN(v)) { getOrCreate(ch, w).push(v); timeSet.add(t); }
+        }
+        parsed.times = Array.from(timeSet).sort((a, b) => a - b);
+      } else if (channelIdx !== -1) {
+        // Per-channel multi-column
+        const valCols = [];
+        rawHeaders.forEach((h, idx) => { if (idx !== timeIdx && idx !== channelIdx) valCols.push({ name: h, idx }); });
+        const timeMap = {};
+        for (let i = 1; i < lines.length; i++) {
+          const parts = lines[i].split(delim).map(p => p.trim());
+          if (parts.length <= channelIdx) continue;
+          const t = timeIdx !== -1 ? parseFloat(parts[timeIdx]) : (i - 1) / state.sfreq;
+          const ch = parts[channelIdx];
+          if (!ch) continue;
+          if (!timeMap[ch]) timeMap[ch] = [];
+          timeMap[ch].push(t);
+          valCols.forEach(col => {
+            const v = parseFloat(parts[col.idx]);
+            getOrCreate(ch, col.name).push(isNaN(v) ? 0 : v);
+          });
+        }
+        parsed.times = timeMap[parsed.channels[0]] || [];
+      } else {
+        // Wide format
+        const valCols = [];
+        rawHeaders.forEach((h, idx) => { if (idx !== timeIdx) valCols.push({ header: h, idx }); });
+        const times = [];
+        const rows = [];
+        for (let i = 1; i < lines.length; i++) {
+          const parts = lines[i].split(delim).map(p => p.trim());
+          const t = timeIdx !== -1 ? parseFloat(parts[timeIdx]) : (i - 1) / state.sfreq;
+          times.push(t);
+          rows.push(parts);
+        }
+        parsed.times = times;
+
+        valCols.forEach(col => {
+          let ch = 'Cz', wave = col.header;
+          const splits = col.header.split(/[_: \t-]+/);
+          if (splits.length >= 2) {
+            const c1 = splits[0].toUpperCase(), c2 = splits[splits.length - 1].toUpperCase();
+            const known = ['CZ', 'FZ', 'P7', 'T7', 'PZ', 'P3', 'P4', 'C3', 'C4', 'O1', 'O2', 'M1', 'M2', 'F3', 'F4', 'F7', 'F8'];
+            if (known.includes(c1)) { ch = splits[0]; wave = splits.slice(1).join('_'); }
+            else if (known.includes(c2)) { ch = splits[splits.length - 1]; wave = splits.slice(0, -1).join('_'); }
+            else { ch = splits[0]; wave = splits.slice(1).join('_'); }
+          }
+          const arr = getOrCreate(ch, wave);
+          for (let i = 0; i < rows.length; i++) {
+            const v = parseFloat(rows[i][col.idx]);
+            arr.push(isNaN(v) ? 0 : v);
+          }
+        });
+      }
+
+      // Volts to uV auto conversion if values are < 0.05
+      let maxAbs = 0;
+      for (const ch of parsed.channels) {
+        for (const w of parsed.waves) {
+          const arr = parsed.series[ch][w];
+          for (let i = 0; i < Math.min(arr.length, 80); i++) {
+            const a = Math.abs(arr[i]);
+            if (a > maxAbs) maxAbs = a;
+          }
+        }
+      }
+      if (maxAbs > 0 && maxAbs < 0.05) {
+        for (const ch of parsed.channels) {
+          for (const w of parsed.waves) {
+            parsed.series[ch][w] = parsed.series[ch][w].map(v => v * 1e6);
+          }
+        }
+      }
+
+      return parsed;
+    }
+
+    // ── Load Dataset ──
+    function loadDataset(parsed, label) {
+      state.fileName = label;
+      state.times = parsed.times;
+      state.channels = parsed.channels.length > 0 ? parsed.channels : ['Cz'];
+      state.waves = parsed.waves;
+      state.data = parsed.series;
+
+      state.waveLabels = {};
+      state.waveColors = {};
+      state.waves.forEach((w, idx) => {
+        state.waveLabels[w] = getWaveDisplayName(w);
+        state.waveColors[w] = getWaveColor(w, idx);
+      });
+
+      state.checkedWaves = new Set(state.waves);
+
+      const priority = ['Cz', 'Fz', 'P7', 'T7'];
+      const initial = priority.filter(c => state.channels.includes(c));
+      state.checkedChannels = new Set(initial.length > 0 ? initial : state.channels.slice(0, 4));
+
+      if (state.times.length > 0) {
+        state.timeMin = Math.max(0, state.times[0]);
+        state.timeMax = Math.min(state.times[state.times.length - 1], state.timeMin + 3.0);
+        dom.timeMin.value = state.timeMin.toFixed(2);
+        dom.timeMax.value = state.timeMax.toFixed(2);
+      }
+
+      renderWaveChecklist();
+      renderChannelPills();
+      updateHeaderBadges();
+      renderGraph();
+      updateMetricsTable();
+    }
+
+    // ── Wave Checklist UI ──
+    function renderWaveChecklist() {
+      dom.waveChecklist.innerHTML = '';
+      state.waves.forEach(w => {
+        const checked = state.checkedWaves.has(w);
+        const label = state.waveLabels[w] || w;
+        const color = state.waveColors[w] || '#3b82f6';
+        const isClean = w.toLowerCase().includes('clean');
+
+        const item = document.createElement('label');
+        item.className = `check-item ${checked ? 'checked' : ''}`;
+        item.title = `Toggle ${label}`;
+        item.innerHTML = `
+          <input type="checkbox" data-wave="${w}" ${checked ? 'checked' : ''}>
+          <span class="color-dot" style="background-color: ${color}; ${isClean ? 'box-shadow: 0 0 0 1.5px #fff, 0 0 0 2.5px #2ca02c;' : ''}"></span>
+          <span class="check-label">${label}</span>
+          <span class="check-tag">${w}</span>
+        `;
+
+        item.querySelector('input').addEventListener('change', (e) => {
+          if (e.target.checked) {
+            state.checkedWaves.add(w);
+            item.classList.add('checked');
+          } else {
+            state.checkedWaves.delete(w);
+            item.classList.remove('checked');
+          }
+          updateHeaderBadges();
+          renderGraph();
+          updateMetricsTable();
+        });
+
+        dom.waveChecklist.appendChild(item);
+      });
+      updateHeaderBadges();
+    }
+
+    // ── Presets ──
+    function applyPreset(type) {
+      document.querySelectorAll('.preset-bar .btn-preset').forEach(b => b.classList.remove('active'));
+
+      if (type === 'dirty_clean') {
+        dom.presetDirtyClean.classList.add('active');
+        state.checkedWaves.clear();
+        state.waves.forEach(w => {
+          const l = w.toLowerCase();
+          if (l.includes('dirty') || l.includes('clean')) state.checkedWaves.add(w);
+        });
+      } else if (type === 'clean_denoised') {
+        dom.presetCleanDenoised.classList.add('active');
+        state.checkedWaves.clear();
+        state.waves.forEach(w => {
+          if (!w.toLowerCase().includes('dirty')) state.checkedWaves.add(w);
+        });
+      } else if (type === 'denoised_only') {
+        dom.presetDenoisedOnly.classList.add('active');
+        state.checkedWaves.clear();
+        state.waves.forEach(w => {
+          const l = w.toLowerCase();
+          if (!l.includes('dirty') && !l.includes('clean')) state.checkedWaves.add(w);
+        });
+      } else {
+        dom.presetAll.classList.add('active');
+        state.checkedWaves = new Set(state.waves);
+      }
+
+      dom.waveChecklist.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        const w = cb.dataset.wave;
+        const c = state.checkedWaves.has(w);
+        cb.checked = c;
+        cb.closest('.check-item').classList.toggle('checked', c);
+      });
+
+      updateHeaderBadges();
+      renderGraph();
+      updateMetricsTable();
+    }
+
+    // ── Channel Pills ──
+    function renderChannelPills() {
+      dom.channelPills.innerHTML = '';
+      state.channels.forEach(ch => {
+        const active = state.checkedChannels.has(ch);
+        const pill = document.createElement('button');
+        pill.className = `channel-pill ${active ? 'active' : ''}`;
+        pill.textContent = ch;
+        pill.addEventListener('click', () => {
+          if (state.checkedChannels.has(ch)) {
+            if (state.checkedChannels.size > 1) {
+              state.checkedChannels.delete(ch);
+              pill.classList.remove('active');
+            }
+          } else {
+            state.checkedChannels.add(ch);
+            pill.classList.add('active');
+          }
+          updateHeaderBadges();
+          renderGraph();
+          updateMetricsTable();
+        });
+        dom.channelPills.appendChild(pill);
+      });
+    }
+
+    function updateHeaderBadges() {
+      dom.waveCountBadge.textContent = `${state.checkedWaves.size} / ${state.waves.length}`;
+      dom.channelCountBadge.textContent = `${state.checkedChannels.size} / ${state.channels.length}`;
+      dom.dataStatusBadge.textContent = state.fileName.includes('Demo') ? 'Demo Loaded' : 'CSV Loaded';
+      dom.activeFileInfo.textContent = state.fileName;
+      dom.metaStats.textContent = `${state.times.length} samples · ${state.channels.length} channels · ${state.waves.length} waves`;
+    }
+
+    // ── Graph Render matching tier1_screening.py ──
+    function renderGraph() {
+      const canvas = dom.canvas;
+      const ctx = canvas.getContext('2d');
+      const visibleChannels = Array.from(state.checkedChannels);
+      const visibleWaves = Array.from(state.checkedWaves);
+
+      const containerWidth = canvas.parentElement.clientWidth || 1100;
+      const rowHeight = 170;
+      const headerHeight = 65;
+      const footerHeight = 60;
+      const nRows = Math.max(1, visibleChannels.length);
+      const totalHeight = headerHeight + (nRows * rowHeight) + footerHeight;
+
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = containerWidth * dpr;
+      canvas.height = totalHeight * dpr;
+      canvas.style.width = `${containerWidth}px`;
+      canvas.style.height = `${totalHeight}px`;
+      ctx.scale(dpr, dpr);
+
+      // Clean white background matching paper
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, containerWidth, totalHeight);
+
+      if (visibleChannels.length === 0 || visibleWaves.length === 0 || state.times.length === 0) {
+        ctx.fillStyle = '#64748b';
+        ctx.font = '15px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Select at least one channel and wave to display.', containerWidth / 2, totalHeight / 2);
+        return;
+      }
+
+      const marginLeft = 85;
+      const marginRight = 35;
+      const plotWidth = containerWidth - marginLeft - marginRight;
+
+      const tMin = parseFloat(dom.timeMin.value) || 0.0;
+      const tMax = parseFloat(dom.timeMax.value) || 3.0;
+
+      let startIdx = 0, endIdx = state.times.length - 1;
+      for (let i = 0; i < state.times.length; i++) {
+        if (state.times[i] >= tMin) { startIdx = i; break; }
+      }
+      for (let i = state.times.length - 1; i >= 0; i--) {
+        if (state.times[i] <= tMax) { endIdx = i; break; }
+      }
+      if (endIdx <= startIdx) endIdx = Math.min(startIdx + 10, state.times.length - 1);
+
+      const duration = Math.max(0.001, state.times[endIdx] - state.times[startIdx]);
+      dom.timeSpanBadge.textContent = `${state.times[startIdx].toFixed(2)}s – ${state.times[endIdx].toFixed(2)}s`;
+
+      // Title
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`EEG Waveform Denoising Comparison (Sample Epoch, first ${duration.toFixed(1)}s)`, containerWidth / 2, 28);
+
+      // Unified scale calculation
+      let globalMinY = Infinity, globalMaxY = -Infinity;
+      if (state.scaleMode === 'unified') {
+        visibleChannels.forEach(ch => {
+          visibleWaves.forEach(w => {
+            const arr = state.data[ch]?.[w];
+            if (arr) {
+              for (let i = startIdx; i <= endIdx; i++) {
+                const v = arr[i];
+                if (v < globalMinY) globalMinY = v;
+                if (v > globalMaxY) globalMaxY = v;
+              }
+            }
+          });
+        });
+        const pad = (globalMaxY - globalMinY) * 0.1 || 10;
+        globalMinY -= pad; globalMaxY += pad;
+      }
+
+      const subplots = [];
+
+      visibleChannels.forEach((ch, rowIndex) => {
+        const plotTop = headerHeight + (rowIndex * rowHeight);
+        const plotBottom = plotTop + rowHeight - 20;
+        const currentPlotHeight = plotBottom - plotTop;
+
+        let yMin = Infinity, yMax = -Infinity;
+        if (state.scaleMode === 'unified') {
+          yMin = globalMinY; yMax = globalMaxY;
+        } else {
+          visibleWaves.forEach(w => {
+            const arr = state.data[ch]?.[w];
+            if (arr) {
+              for (let i = startIdx; i <= endIdx; i++) {
+                const v = arr[i];
+                if (v < yMin) yMin = v;
+                if (v > yMax) yMax = v;
+              }
+            }
+          });
+          if (yMin === Infinity || yMax === -Infinity) { yMin = -50; yMax = 50; }
+          const pad = (yMax - yMin) * 0.12 || 10;
+          yMin -= pad; yMax += pad;
+        }
+
+        subplots.push({ ch, plotTop, plotBottom, yMin, yMax });
+
+        // Box
+        ctx.strokeStyle = '#2b3952';
+        ctx.lineWidth = 1.0;
+        ctx.strokeRect(marginLeft, plotTop, plotWidth, currentPlotHeight);
+
+        // Grid
+        if (state.showGrid) {
+          ctx.strokeStyle = '#e2e8f0';
+          ctx.lineWidth = 0.8;
+          ctx.setLineDash([2, 4]);
+          for (let t = 0; t <= 6; t++) {
+            const x = marginLeft + (t / 6) * plotWidth;
+            ctx.beginPath(); ctx.moveTo(x, plotTop); ctx.lineTo(x, plotBottom); ctx.stroke();
+          }
+          for (let yStep = 0; yStep <= 4; yStep++) {
+            const y = plotBottom - (yStep / 4) * currentPlotHeight;
+            ctx.beginPath(); ctx.moveTo(marginLeft, y); ctx.lineTo(marginLeft + plotWidth, y); ctx.stroke();
+          }
+          ctx.setLineDash([]);
+        }
+
+        // Y-Axis Channel Label (rotated)
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 11px -apple-system, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.save();
+        ctx.translate(28, (plotTop + plotBottom) / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText(`${ch} (μV)`, 0, 0);
+        ctx.restore();
+
+        // Ticks
+        ctx.font = '10px -apple-system, sans-serif';
+        ctx.fillStyle = '#475569';
+        for (let k = 0; k <= 4; k++) {
+          const val = yMin + (k / 4) * (yMax - yMin);
+          const yPos = plotBottom - (k / 4) * currentPlotHeight;
+          ctx.fillText(Math.round(val).toString(), marginLeft - 8, yPos);
+        }
+
+        // Draw traces (Dirty first, then Denoised, then Clean dashed green on top)
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(marginLeft, plotTop, plotWidth, currentPlotHeight);
+        ctx.clip();
+
+        const sortedWaves = [...visibleWaves].sort((a, b) => {
+          const dA = a.toLowerCase().includes('dirty'), cA = a.toLowerCase().includes('clean');
+          const dB = b.toLowerCase().includes('dirty'), cB = b.toLowerCase().includes('clean');
+          if (dA) return -1; if (dB) return 1;
+          if (cA) return 1; if (cB) return -1;
+          return 0;
+        });
+
+        sortedWaves.forEach(w => {
+          const arr = state.data[ch]?.[w];
+          if (!arr || arr.length === 0) return;
+
+          const color = state.waveColors[w] || '#1f77b4';
+          const isClean = w.toLowerCase().includes('clean');
+          const isDirty = w.toLowerCase().includes('dirty');
+
+          ctx.beginPath();
+          ctx.strokeStyle = color;
+
+          if (isClean) {
+            ctx.lineWidth = 2.2;
+            ctx.setLineDash([6, 4]); // Clean thick dashed green line
+            ctx.globalAlpha = 1.0;
+          } else if (isDirty) {
+            ctx.lineWidth = 1.0;
+            ctx.setLineDash([]);
+            ctx.globalAlpha = 0.75;
+          } else {
+            ctx.lineWidth = parseFloat(dom.lineWidthRange.value) || 1.4;
+            ctx.setLineDash([]);
+            ctx.globalAlpha = 0.9;
+          }
+
+          let started = false;
+          for (let i = startIdx; i <= endIdx; i++) {
+            const tVal = state.times[i];
+            const val = arr[i];
+            const x = marginLeft + ((tVal - state.times[startIdx]) / duration) * plotWidth;
+            const y = plotBottom - ((val - yMin) / (yMax - yMin)) * currentPlotHeight;
+
+            if (!started) { ctx.moveTo(x, y); started = true; }
+            else { ctx.lineTo(x, y); }
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.globalAlpha = 1.0;
+        });
+        ctx.restore();
+      });
+
+      // Legend
+      drawLegend(ctx, visibleWaves, marginLeft, headerHeight - 15, plotWidth);
+
+      // X-Axis
+      const xAxisY = subplots[subplots.length - 1].plotBottom;
+      ctx.strokeStyle = '#2b3952';
+      ctx.lineWidth = 1.0;
+      ctx.beginPath();
+      ctx.moveTo(marginLeft, xAxisY);
+      ctx.lineTo(marginLeft + plotWidth, xAxisY);
+      ctx.stroke();
+
+      ctx.fillStyle = '#334155';
+      ctx.font = '11px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+
+      for (let t = 0; t <= 6; t++) {
+        const frac = t / 6;
+        const x = marginLeft + frac * plotWidth;
+        const tVal = (state.times[startIdx] + frac * duration).toFixed(1);
+        ctx.beginPath(); ctx.moveTo(x, xAxisY); ctx.lineTo(x, xAxisY + 5); ctx.stroke();
+        ctx.fillText(`${tVal}`, x, xAxisY + 8);
+      }
+
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 12px -apple-system, sans-serif';
+      ctx.fillText('Time (seconds)', marginLeft + plotWidth / 2, xAxisY + 28);
+    }
+
+    function drawLegend(ctx, visibleWaves, startX, legendY, availableWidth) {
+      ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      const items = visibleWaves.map(w => {
+        const label = state.waveLabels[w] || w;
+        return {
+          label,
+          color: state.waveColors[w] || '#1f77b4',
+          isClean: w.toLowerCase().includes('clean'),
+          width: ctx.measureText(label).width + 34
+        };
+      });
+
+      const totalWidth = items.reduce((s, it) => s + it.width, 0);
+      let curX = startX + Math.max(0, (availableWidth - totalWidth) / 2);
+
+      items.forEach(it => {
+        ctx.strokeStyle = it.color;
+        ctx.lineWidth = it.isClean ? 2.2 : 1.6;
+        if (it.isClean) ctx.setLineDash([4, 3]); else ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(curX, legendY); ctx.lineTo(curX + 16, legendY); ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#1e293b';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(it.label, curX + 20, legendY);
+        curX += it.width;
+      });
+    }
+
+    // ── Metrics Calculation ──
+    function updateMetricsTable() {
+      const visibleChannels = Array.from(state.checkedChannels);
+      const visibleWaves = Array.from(state.checkedWaves);
+      if (visibleChannels.length === 0 || visibleWaves.length === 0) {
+        dom.metricsBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:1rem;">No active selection</td></tr>`;
+        return;
+      }
+
+      const cleanKey = state.waves.find(w => w.toLowerCase().includes('clean'));
+      const tMin = parseFloat(dom.timeMin.value) || 0.0;
+      const tMax = parseFloat(dom.timeMax.value) || 3.0;
+
+      let startIdx = 0, endIdx = state.times.length - 1;
+      for (let i = 0; i < state.times.length; i++) { if (state.times[i] >= tMin) { startIdx = i; break; } }
+      for (let i = state.times.length - 1; i >= 0; i--) { if (state.times[i] <= tMax) { endIdx = i; break; } }
+
+      const rows = [];
+      visibleChannels.forEach(ch => {
+        const cleanArr = cleanKey ? state.data[ch]?.[cleanKey] : null;
+
+        visibleWaves.forEach(w => {
+          const arr = state.data[ch]?.[w];
+          if (!arr) return;
+          const slice = arr.slice(startIdx, endIdx + 1);
+          if (slice.length === 0) return;
+
+          let min = Infinity, max = -Infinity, sum = 0, sumSq = 0;
+          for (let i = 0; i < slice.length; i++) {
+            const v = slice[i];
+            if (v < min) min = v; if (v > max) max = v;
+            sum += v; sumSq += v * v;
+          }
+          const peakToPeak = max - min;
+          const rms = Math.sqrt(sumSq / slice.length);
+
+          let rrmseStr = '—', corrStr = '—';
+          if (cleanArr && cleanKey !== w) {
+            const cSlice = cleanArr.slice(startIdx, endIdx + 1);
+            let errSq = 0, cSq = 0, cMean = 0, dMean = 0;
+            for (let i = 0; i < slice.length; i++) {
+              cMean += cSlice[i]; dMean += slice[i];
+              errSq += Math.pow(slice[i] - cSlice[i], 2);
+              cSq += Math.pow(cSlice[i], 2);
+            }
+            cMean /= slice.length; dMean /= slice.length;
+            const rrmse = Math.sqrt(errSq) / (Math.sqrt(cSq) + 1e-12);
+            rrmseStr = rrmse.toFixed(4);
+
+            let num = 0, denC = 0, denD = 0;
+            for (let i = 0; i < slice.length; i++) {
+              const dc = cSlice[i] - cMean, dd = slice[i] - dMean;
+              num += dc * dd; denC += dc * dc; denD += dd * dd;
+            }
+            const den = Math.sqrt(denC * denD);
+            if (den > 1e-12) corrStr = (num / den).toFixed(4);
+          } else if (cleanKey === w) {
+            rrmseStr = '0.0000 (Ref)';
+            corrStr = '1.0000';
+          }
+
+          rows.push(`
+            <tr>
+              <td><span class="color-dot" style="background-color:${state.waveColors[w]}; margin-right:5px;"></span><strong>${state.waveLabels[w] || w}</strong></td>
+              <td><span class="badge">${ch}</span></td>
+              <td style="${rrmseStr.startsWith('0.') ? 'color:var(--accent-green);' : ''}">${rrmseStr}</td>
+              <td style="${parseFloat(corrStr) > 0.7 ? 'color:var(--accent-cyan);' : ''}">${corrStr}</td>
+              <td>${peakToPeak.toFixed(1)}</td>
+              <td>${rms.toFixed(1)}</td>
+            </tr>
+          `);
+        });
+      });
+
+      dom.metricsBody.innerHTML = rows.join('');
+    }
+
+    // ── Hover Tooltip ──
+    dom.canvas.addEventListener('mousemove', (e) => {
+      if (state.times.length === 0) return;
+      const rect = dom.canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const marginLeft = 85, marginRight = 35;
+      const plotWidth = rect.width - marginLeft - marginRight;
+      if (mouseX < marginLeft || mouseX > marginLeft + plotWidth) {
+        dom.hoverInfo.textContent = 'Hover cursor over graph to inspect values';
+        return;
+      }
+      const frac = (mouseX - marginLeft) / plotWidth;
+      const tMin = parseFloat(dom.timeMin.value) || 0.0;
+      const tMax = parseFloat(dom.timeMax.value) || 3.0;
+      const hoverTime = tMin + frac * (tMax - tMin);
+
+      let idx = 0, diff = Infinity;
+      for (let i = 0; i < state.times.length; i++) {
+        const d = Math.abs(state.times[i] - hoverTime);
+        if (d < diff) { diff = d; idx = i; }
+      }
+      const actualT = state.times[idx];
+      const ch = Array.from(state.checkedChannels)[0] || 'Cz';
+      const readouts = Array.from(state.checkedWaves).slice(0, 3).map(w => {
+        const v = state.data[ch]?.[w]?.[idx];
+        return `${w}: ${v !== undefined ? v.toFixed(1) : '?'}μV`;
+      }).join(' | ');
+      dom.hoverInfo.textContent = `t=${actualT.toFixed(3)}s [${ch}] → ${readouts}`;
+    });
+
+    dom.canvas.addEventListener('mouseleave', () => {
+      dom.hoverInfo.textContent = 'Hover cursor over graph to inspect values';
+    });
+
+    // ── Export High-Res PNG (Client-side, 200 DPI) ──
+    dom.btnExportPNG.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = `eeg_waveform_comparison_${Date.now()}.png`;
+      link.href = dom.canvas.toDataURL('image/png', 1.0);
+      link.click();
+    });
+
+    // ── Export Filtered CSV ──
+    dom.btnExportCSV.addEventListener('click', () => {
+      const visibleChannels = Array.from(state.checkedChannels);
+      const visibleWaves = Array.from(state.checkedWaves);
+      const tMin = parseFloat(dom.timeMin.value) || 0.0;
+      const tMax = parseFloat(dom.timeMax.value) || 3.0;
+
+      let startIdx = 0, endIdx = state.times.length - 1;
+      for (let i = 0; i < state.times.length; i++) { if (state.times[i] >= tMin) { startIdx = i; break; } }
+      for (let i = state.times.length - 1; i >= 0; i--) { if (state.times[i] <= tMax) { endIdx = i; break; } }
+
+      const lines = [['time', 'channel', ...visibleWaves].join(',')];
+      visibleChannels.forEach(ch => {
+        for (let i = startIdx; i <= endIdx; i++) {
+          const row = [state.times[i].toFixed(4), ch];
+          visibleWaves.forEach(w => {
+            const val = state.data[ch]?.[w]?.[i];
+            row.push(val !== undefined ? val.toFixed(3) : '');
+          });
+          lines.push(row.join(','));
+        }
+      });
+
+      const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = `eeg_waveforms_filtered_${Date.now()}.csv`;
+      a.href = url;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // ── File Upload Handlers (Standard HTML5 FileReader, no server) ──
+    dom.dropzone.addEventListener('click', () => dom.fileInput.click());
+    dom.fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) handleFile(file);
+    });
+    dom.dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dom.dropzone.classList.add('dragover'); });
+    dom.dropzone.addEventListener('dragleave', () => dom.dropzone.classList.remove('dragover'));
+    dom.dropzone.addEventListener('drop', (e) => {
+      e.preventDefault(); dom.dropzone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+
+    function handleFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = parseCSV(e.target.result);
+          loadDataset(parsed, file.name);
+        } catch (err) { alert(`Error parsing CSV: ${err.message}`); }
+      };
+      reader.readAsText(file);
+    }
+
+    // ── Presets & Action Buttons ──
+    dom.presetAll.addEventListener('click', () => applyPreset('all'));
+    dom.presetDirtyClean.addEventListener('click', () => applyPreset('dirty_clean'));
+    dom.presetCleanDenoised.addEventListener('click', () => applyPreset('clean_denoised'));
+    dom.presetDenoisedOnly.addEventListener('click', () => applyPreset('denoised_only'));
+
+    dom.btnSelectAllWaves.addEventListener('click', () => {
+      state.checkedWaves = new Set(state.waves);
+      renderWaveChecklist(); renderGraph(); updateMetricsTable();
+    });
+    dom.btnDeselectAllWaves.addEventListener('click', () => {
+      state.checkedWaves.clear();
+      renderWaveChecklist(); renderGraph(); updateMetricsTable();
+    });
+
+    dom.btnSelectAllChannels.addEventListener('click', () => {
+      state.checkedChannels = new Set(state.channels);
+      renderChannelPills(); renderGraph(); updateMetricsTable();
+    });
+    dom.btnSelectCIChannels.addEventListener('click', () => {
+      const ciList = ['P7', 'T7', 'M1', 'M2', 'P8'];
+      state.checkedChannels = new Set(state.channels.filter(c => ciList.includes(c)));
+      renderChannelPills(); renderGraph(); updateMetricsTable();
+    });
+    dom.btnSelectScalpChannels.addEventListener('click', () => {
+      const scalpList = ['Cz', 'Fz', 'Pz', 'C3', 'C4'];
+      state.checkedChannels = new Set(state.channels.filter(c => scalpList.includes(c)));
+      renderChannelPills(); renderGraph(); updateMetricsTable();
+    });
+
+    dom.timeMin.addEventListener('input', () => { renderGraph(); updateMetricsTable(); });
+    dom.timeMax.addEventListener('input', () => { renderGraph(); updateMetricsTable(); });
+    dom.scaleMode.addEventListener('change', (e) => { state.scaleMode = e.target.value; renderGraph(); });
+    dom.lineWidthRange.addEventListener('input', () => renderGraph());
+    dom.showGridCheck.addEventListener('change', (e) => { state.showGrid = e.target.checked; renderGraph(); });
+
+    dom.btnResetView.addEventListener('click', () => {
+      if (state.times.length > 0) {
+        dom.timeMin.value = (0.0).toFixed(2);
+        dom.timeMax.value = Math.min(3.0, state.times[state.times.length - 1]).toFixed(2);
+        renderGraph(); updateMetricsTable();
+      }
+    });
+
+    // ── Reset Demo Data ──
+    dom.btnLoadDemo.addEventListener('click', () => {
+      const demo = createTier1SampleData();
+      loadDataset(demo, 'Tier 1 Screening Benchmark Sample');
+    });
+    dom.sampleTier1.addEventListener('click', () => {
+      const demo = createTier1SampleData();
+      loadDataset(demo, 'Tier 1 Screening Benchmark Sample');
+    });
+
+    // ── Paste CSV Modal ──
+    dom.btnPasteModal.addEventListener('click', () => {
+      dom.pasteModal.classList.add('active');
+      dom.pasteTextarea.focus();
+    });
+    dom.btnCloseModal.addEventListener('click', () => dom.pasteModal.classList.remove('active'));
+    dom.btnCancelModal.addEventListener('click', () => dom.pasteModal.classList.remove('active'));
+    dom.btnApplyPaste.addEventListener('click', () => {
+      const text = dom.pasteTextarea.value.trim();
+      if (!text) { alert('Please paste CSV text.'); return; }
+      try {
+        const parsed = parseCSV(text);
+        loadDataset(parsed, 'Pasted Data.csv');
+        dom.pasteModal.classList.remove('active');
+      } catch (err) { alert(`Failed to parse CSV: ${err.message}`); }
+    });
+
+    window.addEventListener('resize', () => renderGraph());
+
+    // ── Initialize with default demo on launch ──
+    document.addEventListener('DOMContentLoaded', () => {
+      const demo = createTier1SampleData();
+      loadDataset(demo, 'Tier 1 Screening Benchmark Sample');
+    });
+  </script>
+</body>
+</html>

@@ -5,8 +5,14 @@ scipy>=1.15.0
 zarr>=3.0.0
 numcodecs
 matplotlib>=3.9.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+torch>=2.0.0
+PyWavelets>=1.4.0
+EMD-signal>=1.5.0
 ipykernel
 pooch
 tqdm
 requests
 pyyaml
+

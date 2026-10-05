@@ -10,7 +10,10 @@ class EEGDataset(Dataset):
         self.rng = np.random.default_rng(seed)
         self.mix = mix
 
-        root = zarr.open_group(zarr_path, mode='r')
+        try:
+            root = zarr.open(zarr_path, mode='r')
+        except Exception:
+            root = zarr.open_group(zarr_path, mode='r')
         self.clean_data = root[clean_group]
         self.noise_data = root[noise_group]
 

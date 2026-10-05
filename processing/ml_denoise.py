@@ -267,7 +267,7 @@ class CCADenoiseMethod(DenoiseMethod):
 
         W_noise = x_weights[:, noise_cols]
         # Project noise-component subspace out via orthogonal projection
-        proj = W_noise @ np.linalg.pinv(W_noise).T  # (n_channels, n_channels)
+        proj = W_noise @ np.linalg.pinv(W_noise)  # (n_channels, n_channels)
         noise_data = proj.T @ data
         clean_data = data - noise_data
 
@@ -532,14 +532,14 @@ class SSPDenoiseMethod(DenoiseMethod):
 
     name = "ssp"
 
-    def __init__(self, variance_threshold: float = 0.99999, duration: float = 1.0):
-        self.variance_threshold = variance_threshold
+    def __init__(self, n_eeg: int = 2, duration: float = 1.0):
+        self.n_eeg = n_eeg
         self.duration = duration
 
     def fit_transform(self, raw: mne.io.Raw) -> Tuple[mne.io.Raw, mne.io.Raw]:
-        n_eeg = self._pca_n_components(raw.get_data().T, self.variance_threshold)
+        n_proj = min(self.n_eeg, len(raw.ch_names) - 1)
         projectors = compute_proj_raw(
-            raw, n_grad=0, n_mag=0, n_eeg=n_eeg,
+            raw, n_grad=0, n_mag=0, n_eeg=n_proj,
             duration=self.duration, verbose=False,
         )
         clean_raw = raw.copy()
@@ -552,7 +552,7 @@ class SSPDenoiseMethod(DenoiseMethod):
     def get_metadata(self) -> dict:
         return {
             "method": self.name,
-            "variance_threshold": self.variance_threshold,
+            "n_eeg": self.n_eeg,
             "duration_s": self.duration,
             "filter_params": f"l_freq={HPF_FREQ}",
         }

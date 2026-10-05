@@ -1,11 +1,29 @@
-# random stuff
-notes.txt
-temp/
-.swp
+# Python virtual environments
+.venv/
+venv/
+denoiseenv/
+ENV/
+env/
+
+# Python bytecode & cache
 __pycache__/
+*.py[cod]
+*$py.class
 .env
 
-# slurm commands
-.sh
+# Jupyter Notebooks checkpoints
+.ipynb_checkpoints/
+
+# System files
+.DS_Store
+
+# Temporary & editor files
+notes.txt
+temp/
+*.swp
+
+# Slurm outputs
 *.err
 *.out
+
+.sh
