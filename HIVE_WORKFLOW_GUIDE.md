@@ -22,45 +22,48 @@ A step-by-step reference for syncing code, connecting via SSH, managing environm
 
 Run these commands from your **local Mac terminal** (not inside an SSH session):
 
-### Option A: Transfer ONLY Python (`.py`) and Shell (`.sh`) Scripts (Recommended)
-This syncs all Python scripts and SLURM shell scripts across your subdirectories (e.g. `benchmarking/`, `modeling/`, `processing/`, `src/`) while completely skipping datasets, `.venv`, notebooks, git history, and temporary files:
+### Option A: Transfer All Project Scripts (Excluding `.venv` and datasets) (Recommended)
+This syncs all Python scripts, SLURM shell scripts, and markdown docs across all subdirectories (including `track_a_deep_learning/` and `track_b_adaptive_subtraction/`) while **strictly excluding** `.venv`, raw datasets, git history, and caches:
+
+> [!IMPORTANT]
+> In `rsync`, `--exclude` patterns for `.venv` and `venv` **must come before** `--include='*/'`. Otherwise, `rsync` will traverse into `.venv` and sync thousands of site-packages files.
 
 ```bash
 rsync -avzP \
+  --exclude='.venv' \
+  --exclude='venv' \
+  --exclude='.git' \
+  --exclude='__pycache__' \
+  --exclude='*.pyc' \
   --include='*/' \
   --include='*.py' \
   --include='*.sh' \
+  --include='*.md' \
   --exclude='*' \
   /Users/evanywliang/Documents/cidenoise/ci_denoise/ \
-  evliang@<hive-hostname>:~/cidenoise/
+  evliang@hive.hpc.ucdavis.edu:~/cidenoise/
 ```
 
-```bash
-rsync -avzP \
-  /Users/evanywliang/Documents/cidenoise/ci_denoise/benchmarking/ \
-  evliang@hive.hpc.ucdavis.edu:~/cidenoise/benchmarking/
-```
-
-### Option B: Transfer Only Specific Folders (e.g., Just `benchmarking/` or `modeling/`)
-If you only want to push the newly created benchmarking suite or modeling code:
+### Option B: Transfer Only Track A or Track B Folders
+If you are developing one track at a time:
 
 ```bash
-# Transfer just the benchmarking scripts:
+# Transfer Track A (Deep Learning):
 rsync -avzP \
-  /Users/evanywliang/Documents/cidenoise/ci_denoise/benchmarking/ \
-  evliang@<hive-hostname>:~/cidenoise/benchmarking/
+  /Users/evanywliang/Documents/cidenoise/ci_denoise/track_a_deep_learning/ \
+  evliang@hive.hpc.ucdavis.edu:~/cidenoise/track_a_deep_learning/
 
-# Or transfer just the modeling training scripts:
+# Transfer Track B (Adaptive Template Subtraction):
 rsync -avzP \
-  /Users/evanywliang/Documents/cidenoise/ci_denoise/modeling/ \
-  evliang@<hive-hostname>:~/cidenoise/modeling/
+  /Users/evanywliang/Documents/cidenoise/ci_denoise/track_b_adaptive_subtraction/ \
+  evliang@hive.hpc.ucdavis.edu:~/cidenoise/track_b_adaptive_subtraction/
 ```
 
 ### Option C: Transfer a Single Script
 ```bash
 rsync -avzP \
-  /Users/evanywliang/Documents/cidenoise/ci_denoise/benchmarking/tier1_screening.py \
-  evliang@<hive-hostname>:~/cidenoise/benchmarking/
+  /Users/evanywliang/Documents/cidenoise/ci_denoise/track_a_deep_learning/train.py \
+  evliang@hive.hpc.ucdavis.edu:~/cidenoise/track_a_deep_learning/
 ```
 
 ### Useful `rsync` Flags:
@@ -141,14 +144,35 @@ exit
 ### Option B: Batch Job Submission (`sbatch`)
 Use this for full experiments, training, or long benchmarks:
 
+#### 1. Track A: Deep Learning (Composite Loss U-Net)
+- **Requires GPU for training** (1–2 hrs on A6000 vs. 24–48 hrs on CPU):
+  ```bash
+  # Submit GPU training (high partition, 1x A6000 GPU):
+  sbatch track_a_deep_learning/submit_train_gpu.sh
+
+  # CPU fallback training (cmb-grp partition, 16 CPUs):
+  sbatch track_a_deep_learning/submit_train_cpu.sh
+  ```
+
+#### 2. Track B: Adaptive Template Subtraction (AATS)
+- **Does NOT need a GPU (100% CPU-bound)**:
+  ```bash
+  # Submit full pipeline (denoise + evaluate ERPs):
+  sbatch track_b_adaptive_subtraction/submit_aats_cpu.sh
+
+  # Or submit fast ERP evaluation only (when files are already cleaned, ~2 mins):
+  sbatch track_b_adaptive_subtraction/submit_evaluate_erp.sh
+  ```
+
+#### 3. Original Benchmarking Suite (Tier 1–3)
 ```bash
-# Submit Tier 1 screening:
+# Tier 1 synthetic benchmark:
 sbatch benchmarking/submit_tier1.sh
 
-# Submit Tier 2 ERP evaluation:
+# Tier 2 real ERP benchmark:
 sbatch benchmarking/submit_tier2.sh
 
-# Submit Tier 3 deep learning evaluation:
+# Tier 3 downstream benchmark:
 sbatch benchmarking/submit_tier3.sh
 ```
 
@@ -189,13 +213,39 @@ scancel -u evliang
 
 ## 7. Step 6: Pull Results Back to Your Local Mac (`rsync`)
 
-When jobs finish on Hive, run this from your **local Mac terminal** to copy CSV reports, summaries, or plots back to your laptop:
+Run these commands from your **local Mac terminal** (not inside the SSH session) to copy CSV reports, summaries, plots, and logs back to your laptop:
+
+### Option A: Pull ALL Benchmark Results (Track A, Track B, Tier 1–3) (Recommended)
+This downloads all output CSVs, summaries, and figures from Hive into your local `benchmark_results/` folder:
 
 ```bash
-# Download Tier 1 benchmark results to your local Mac:
 rsync -avzP \
-  evliang@<hive-hostname>:/quobyte/millerlmgrp/benchmarking/ \
+  evliang@hive.hpc.ucdavis.edu:~/cidenoise/benchmark_results/ \
   /Users/evanywliang/Documents/cidenoise/ci_denoise/benchmark_results/
+```
+
+### Option B: Pull Job Output Logs
+To view full stdout/stderr execution logs from Hive SLURM jobs:
+
+```bash
+# Pull local project logs directory:
+rsync -avzP \
+  evliang@hive.hpc.ucdavis.edu:~/cidenoise/logs/ \
+  /Users/evanywliang/Documents/cidenoise/ci_denoise/logs/
+
+# Or pull Quobyte central logs (if using /quobyte/millerlmgrp/logs/):
+rsync -avzP \
+  evliang@hive.hpc.ucdavis.edu:/quobyte/millerlmgrp/logs/ \
+  /Users/evanywliang/Documents/cidenoise/ci_denoise/logs/
+```
+
+### Option C: Pull Trained Model Checkpoints (Optional)
+If you want to pull the trained Track A U-Net weights (`best.pt`, `latest.pt`) back locally:
+
+```bash
+rsync -avzP \
+  evliang@hive.hpc.ucdavis.edu:/quobyte/millerlmgrp/checkpoints/track_a/ \
+  /Users/evanywliang/Documents/cidenoise/ci_denoise/checkpoints/track_a/
 ```
 
 ---

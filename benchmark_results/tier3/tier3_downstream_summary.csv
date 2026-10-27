@@ -1,0 +1,2 @@
+checkpoint,test_mse,test_mae,waveform_corr,eval_time_s,throughput_samples_per_s,spec_err_delta_db,spec_err_theta_db,spec_err_alpha_db,spec_err_beta_db,spec_err_gamma_db,spec_err_ci_high_freq_db
+best.pt,3.4486295669466925e-05,0.0005627367296256125,0.05468946558041515,138.1865062713623,0.6512936930561327,9.24334186680429,3.6273052754916075,4.8316916678038275,9.247944620011863,23.261905184935685,27.946264138271665

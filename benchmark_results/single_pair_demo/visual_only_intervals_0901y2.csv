@@ -1,0 +1,2 @@
+trial_idx,condition,onset_s,end_s,duration_s,description
+1,V,0.000,1.500,1.500,Visual-Only Silent Baseline (No CI Electrical Stimulation)

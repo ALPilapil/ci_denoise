@@ -5,54 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EEG Denoising Benchmark &amp; Waveform Studio (Tier 1 &amp; Tier 2)</title>
   <style>
-    :root {
-      --bg-primary: #0f141c;
-      --bg-secondary: #171f2c;
-      --bg-card: #1c2637;
-      --bg-card-hover: #233046;
-      --border-color: #2b3952;
-      --border-color-focus: #3b82f6;
-      --text-primary: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --accent-blue: #3b82f6;
-      --accent-blue-hover: #2563eb;
-      --accent-green: #22c55e;
-      --accent-red: #ef4444;
-      --accent-purple: #a855f7;
-      --accent-cyan: #06b6d4;
-      --accent-amber: #f59e0b;
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-    }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: var(--font-sans);
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #ffffff;
+      color: #111111;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow-x: hidden;
+      font-size: 13px;
     }
 
-    /* Header & Navigation Tabs */
+    /* Header */
     .app-header {
-      background-color: var(--bg-secondary);
-      border-bottom: 1px solid var(--border-color);
-      padding: 0.65rem 1.25rem;
+      background-color: #ffffff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 0.55rem 1rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      position: sticky;
-      top: 0;
-      z-index: 100;
     }
 
     .header-left {
@@ -61,191 +34,180 @@
       gap: 1.25rem;
     }
 
-    .header-brand {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .brand-icon {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #3b82f6, #06b6d4);
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-      font-weight: bold;
-    }
-
     .brand-title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #111111;
+      letter-spacing: -0.01em;
     }
 
-    .brand-subtitle {
-      font-size: 0.72rem;
-      color: var(--text-secondary);
-    }
-
-    /* Main Tab Navigation Buttons */
+    /* Navigation Tabs */
     .nav-tabs {
       display: flex;
-      background-color: var(--bg-card);
-      padding: 3px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-color);
-      gap: 4px;
+      gap: 0.4rem;
     }
 
     .nav-tab-btn {
-      padding: 0.45rem 0.95rem;
+      padding: 0.35rem 0.75rem;
       font-size: 0.8rem;
-      font-weight: 600;
-      border: none;
-      background: transparent;
-      color: var(--text-secondary);
-      border-radius: var(--radius-sm);
+      font-weight: 500;
+      border: 1px solid #dcdcdc;
+      background: #ffffff;
+      color: #555555;
+      border-radius: 4px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      transition: all 0.15s ease;
+      transition: all 0.1s ease;
     }
 
     .nav-tab-btn:hover {
-      color: var(--text-primary);
+      color: #111111;
+      border-color: #999999;
     }
 
     .nav-tab-btn.active {
-      background-color: var(--accent-blue);
-      color: #fff;
-      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+      background: #111111;
+      color: #ffffff;
+      border-color: #111111;
+      font-weight: 600;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.4rem;
     }
 
-    /* Main Container */
+    /* Layout */
     .app-container {
       display: flex;
       flex: 1;
-      height: calc(100vh - 58px);
+      height: calc(100vh - 49px);
       overflow: hidden;
+      background: #ffffff;
     }
 
     /* Sidebar */
     .sidebar {
-      width: 330px;
-      min-width: 310px;
-      background-color: var(--bg-secondary);
-      border-right: 1px solid var(--border-color);
+      width: 310px;
+      min-width: 290px;
+      background-color: #ffffff;
+      border-right: 1px solid #e0e0e0;
       display: flex;
       flex-direction: column;
       overflow-y: auto;
     }
 
     .sidebar-section {
-      padding: 1rem;
-      border-bottom: 1px solid var(--border-color);
+      padding: 0.8rem;
+      border-bottom: 1px solid #e0e0e0;
     }
 
     .section-title {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--text-secondary);
-      font-weight: 700;
-      margin-bottom: 0.75rem;
+      color: #666666;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
     .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.15rem 0.45rem;
       font-size: 0.7rem;
-      font-weight: 600;
-      border-radius: 9999px;
-      background-color: var(--bg-card);
-      color: var(--accent-blue);
-      border: 1px solid var(--border-color);
+      font-weight: 500;
+      padding: 0.1rem 0.35rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 3px;
+      background: #ffffff;
+      color: #444444;
     }
 
     /* Dropzone */
     .dropzone {
-      border: 2px dashed var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 0.9rem 0.75rem;
+      border: 1px dashed #b0b0b0;
+      border-radius: 4px;
+      padding: 0.75rem;
       text-align: center;
-      background-color: rgba(28, 38, 55, 0.4);
+      background: #fafafa;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }
 
     .dropzone:hover, .dropzone.dragover {
-      border-color: var(--accent-blue);
-      background-color: rgba(59, 130, 246, 0.1);
+      border-color: #111111;
+      background: #f0f0f0;
     }
 
-    .dropzone-icon { font-size: 1.4rem; margin-bottom: 0.2rem; display: block; }
-    .dropzone-text { font-size: 0.8rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.1rem; }
-    .dropzone-hint { font-size: 0.68rem; color: var(--text-muted); }
+    .dropzone-text {
+      font-size: 0.78rem;
+      color: #222222;
+      margin-bottom: 0.15rem;
+    }
+
+    .dropzone-hint {
+      font-size: 0.68rem;
+      color: #777777;
+    }
 
     .quick-samples {
-      margin-top: 0.6rem;
+      margin-top: 0.5rem;
       display: flex;
-      gap: 0.4rem;
+      gap: 0.35rem;
     }
 
     .btn-sample {
       flex: 1;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      color: var(--text-secondary);
+      background: #ffffff;
+      border: 1px solid #dcdcdc;
+      color: #333333;
       font-size: 0.72rem;
-      padding: 0.35rem 0.5rem;
-      border-radius: var(--radius-sm);
+      padding: 0.3rem 0.45rem;
+      border-radius: 3px;
       cursor: pointer;
       text-align: center;
-      transition: all 0.15s ease;
     }
-    .btn-sample:hover { background: var(--bg-card-hover); color: #fff; border-color: var(--accent-blue); }
 
-    /* Preset buttons */
+    .btn-sample:hover {
+      background: #f5f5f5;
+      border-color: #999999;
+    }
+
+    /* Presets */
     .preset-bar {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.35rem;
-      margin-bottom: 0.75rem;
+      gap: 0.3rem;
+      margin-bottom: 0.65rem;
     }
 
     .btn-preset {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      color: var(--text-secondary);
+      background: #ffffff;
+      border: 1px solid #dcdcdc;
+      color: #444444;
       font-size: 0.72rem;
-      font-weight: 600;
-      padding: 0.3rem 0.55rem;
-      border-radius: var(--radius-sm);
+      padding: 0.28rem 0.5rem;
+      border-radius: 3px;
       cursor: pointer;
-      transition: all 0.15s ease;
     }
-    .btn-preset:hover { background-color: var(--bg-card-hover); color: var(--text-primary); border-color: var(--accent-blue); }
-    .btn-preset.active { background-color: rgba(59, 130, 246, 0.25); border-color: var(--accent-blue); color: #fff; }
+
+    .btn-preset:hover {
+      background: #f5f5f5;
+      border-color: #999999;
+    }
+
+    .btn-preset.active {
+      background: #111111;
+      color: #ffffff;
+      border-color: #111111;
+    }
 
     /* Checklist */
     .checklist {
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
+      gap: 0.3rem;
       max-height: 220px;
       overflow-y: auto;
     }
@@ -253,37 +215,39 @@
     .check-item {
       display: flex;
       align-items: center;
-      gap: 0.55rem;
-      padding: 0.4rem 0.6rem;
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
+      gap: 0.45rem;
+      padding: 0.3rem 0.45rem;
+      border: 1px solid #e5e5e5;
+      border-radius: 3px;
       cursor: pointer;
+      background: #ffffff;
       user-select: none;
-      transition: background-color 0.15s ease, border-color 0.15s ease;
     }
-    .check-item:hover { background-color: var(--bg-card-hover); }
-    .check-item.checked { border-color: rgba(59, 130, 246, 0.4); }
+
+    .check-item:hover {
+      background: #f9f9f9;
+    }
+
+    .check-item.checked {
+      border-color: #b0b0b0;
+    }
 
     .check-item input[type="checkbox"] {
-      accent-color: var(--accent-blue);
-      width: 14px;
-      height: 14px;
+      width: 13px;
+      height: 13px;
       cursor: pointer;
     }
 
     .color-dot {
-      width: 9px;
-      height: 9px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       flex-shrink: 0;
-      display: inline-block;
     }
 
     .check-label {
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--text-primary);
+      font-size: 0.78rem;
+      color: #111111;
       flex: 1;
       white-space: nowrap;
       overflow: hidden;
@@ -292,148 +256,168 @@
 
     .check-tag {
       font-size: 0.65rem;
-      font-family: var(--font-mono);
-      color: var(--text-muted);
+      font-family: monospace;
+      color: #777777;
     }
 
     /* Channel Pills */
-    .pill-group { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-    .channel-pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.3rem 0.6rem;
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
-      color: var(--text-secondary);
-      transition: all 0.15s ease;
+    .pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
     }
-    .channel-pill:hover { background-color: var(--bg-card-hover); color: var(--text-primary); }
-    .channel-pill.active { background-color: rgba(59, 130, 246, 0.25); border-color: var(--accent-blue); color: #fff; }
 
-    /* Form Controls */
+    .channel-pill {
+      padding: 0.25rem 0.5rem;
+      background: #ffffff;
+      border: 1px solid #dcdcdc;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      color: #333333;
+    }
+
+    .channel-pill:hover {
+      background: #f5f5f5;
+      border-color: #999999;
+    }
+
+    .channel-pill.active {
+      background: #111111;
+      color: #ffffff;
+      border-color: #111111;
+    }
+
+    /* Form controls */
     .control-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 0.6rem;
-      font-size: 0.8rem;
-    }
-    .control-label { color: var(--text-secondary); }
-    .control-input {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      color: var(--text-primary);
-      padding: 0.25rem 0.45rem;
-      border-radius: var(--radius-sm);
+      margin-bottom: 0.55rem;
       font-size: 0.78rem;
-      width: 75px;
-      text-align: right;
+      color: #333333;
     }
-    .control-input:focus { outline: none; border-color: var(--accent-blue); }
-    .control-select {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      color: var(--text-primary);
-      padding: 0.25rem 0.45rem;
-      border-radius: var(--radius-sm);
+
+    .control-input, .control-select {
+      background: #ffffff;
+      border: 1px solid #cccccc;
+      color: #111111;
+      padding: 0.25rem 0.4rem;
+      border-radius: 3px;
       font-size: 0.78rem;
     }
 
-    /* Main Area */
+    .control-input {
+      width: 70px;
+      text-align: right;
+    }
+
+    .control-input:focus, .control-select:focus {
+      outline: none;
+      border-color: #111111;
+    }
+
+    /* Main area */
     .main-content {
       flex: 1;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      background-color: #0b0f17;
+      background: #ffffff;
     }
 
     .toolbar {
-      background-color: var(--bg-secondary);
-      border-bottom: 1px solid var(--border-color);
-      padding: 0.55rem 1.25rem;
+      background: #ffffff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 0.45rem 1rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
     }
 
-    .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 0.6rem; }
-    .graph-status { font-size: 0.8rem; color: var(--text-secondary); }
+    .toolbar-left, .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .graph-status {
+      font-size: 0.78rem;
+      color: #222222;
+    }
 
     .content-area {
       flex: 1;
       overflow-y: auto;
-      padding: 1rem;
+      padding: 0.85rem;
       display: flex;
       flex-direction: column;
+      background: #ffffff;
     }
 
     .canvas-wrapper {
-      background-color: #ffffff;
-      border-radius: var(--radius-md);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-      padding: 0.85rem;
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 0.5rem;
       margin: 0 auto;
       max-width: 1350px;
       width: 100%;
     }
 
-    canvas.benchmark-canvas { display: block; width: 100%; height: auto; }
+    canvas.benchmark-canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
 
-    /* Cards for Tier 2 Summary */
+    /* Stat cards */
     .tier2-stat-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 0.85rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.65rem;
       max-width: 1350px;
       width: 100%;
-      margin: 0 auto 1rem auto;
+      margin: 0 auto 0.85rem auto;
     }
 
     .stat-card {
-      background-color: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 0.85rem 1rem;
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 0.65rem 0.85rem;
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 0.2rem;
     }
 
     .stat-card-title {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #666666;
+      font-weight: 600;
     }
 
     .stat-card-val {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #fff;
-      display: flex;
-      align-items: baseline;
-      gap: 0.4rem;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #111111;
     }
 
     .stat-card-sub {
-      font-size: 0.72rem;
-      color: var(--text-secondary);
+      font-size: 0.7rem;
+      color: #666666;
     }
 
-    /* Summary & Data Tables */
+    /* Tables */
     .summary-container {
-      margin-top: 1rem;
-      background-color: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 0.85rem;
+      margin-top: 0.85rem;
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 0.75rem;
       max-width: 1350px;
       width: 100%;
       margin-left: auto;
@@ -441,87 +425,114 @@
     }
 
     .summary-header {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 0.6rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #111111;
+      margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .metrics-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left; }
-    .metrics-table th { padding: 0.45rem 0.65rem; background-color: var(--bg-card); color: var(--text-secondary); font-weight: 600; border-bottom: 1px solid var(--border-color); }
-    .metrics-table td { padding: 0.45rem 0.65rem; border-bottom: 1px solid rgba(43, 57, 82, 0.5); font-family: var(--font-mono); color: var(--text-primary); }
-    .metrics-table tr:hover td { background-color: rgba(35, 48, 70, 0.4); }
+    .metrics-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+
+    .metrics-table th {
+      padding: 0.4rem 0.5rem;
+      background: #ffffff;
+      color: #111111;
+      font-weight: 600;
+      border-bottom: 2px solid #111111;
+      text-align: left;
+    }
+
+    .metrics-table td {
+      padding: 0.4rem 0.5rem;
+      border-bottom: 1px solid #e5e5e5;
+      font-family: monospace;
+      color: #222222;
+    }
+
+    .metrics-table tr:hover td {
+      background: #fafafa;
+    }
 
     /* Buttons */
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
-      padding: 0.38rem 0.75rem;
-      border-radius: var(--radius-sm);
+      padding: 0.32rem 0.65rem;
+      border-radius: 3px;
       font-size: 0.78rem;
-      font-weight: 600;
-      border: 1px solid transparent;
+      font-weight: 500;
+      border: 1px solid #cccccc;
+      background: #ffffff;
+      color: #111111;
       cursor: pointer;
-      transition: all 0.15s ease;
     }
-    .btn-primary { background-color: var(--accent-blue); color: #fff; }
-    .btn-primary:hover { background-color: var(--accent-blue-hover); }
-    .btn-secondary { background-color: var(--bg-card); color: var(--text-primary); border-color: var(--border-color); }
-    .btn-secondary:hover { background-color: var(--bg-card-hover); border-color: var(--accent-blue); }
+
+    .btn:hover {
+      background: #f5f5f5;
+      border-color: #999999;
+    }
+
+    .btn-primary {
+      background: #111111;
+      color: #ffffff;
+      border-color: #111111;
+    }
+
+    .btn-primary:hover {
+      background: #333333;
+      color: #ffffff;
+    }
 
     /* Modal */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background-color: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.35);
       display: flex; align-items: center; justify-content: center;
       z-index: 999; opacity: 0; pointer-events: none;
-      transition: opacity 0.2s ease;
     }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-dialog {
-      background-color: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
-      width: 90%; max-width: 600px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      background: #ffffff;
+      border: 1px solid #999999;
+      border-radius: 4px;
+      width: 90%; max-width: 580px;
       display: flex; flex-direction: column; overflow: hidden;
     }
-    .modal-header { padding: 0.85rem 1.15rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; font-weight: 700; }
-    .modal-body { padding: 1.15rem; }
-    .modal-footer { padding: 0.75rem 1.15rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.6rem; }
+    .modal-header { padding: 0.75rem 1rem; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: space-between; font-weight: 600; }
+    .modal-body { padding: 1rem; }
+    .modal-footer { padding: 0.65rem 1rem; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; gap: 0.5rem; }
     .csv-textarea {
-      width: 100%; height: 220px; background-color: var(--bg-card);
-      border: 1px solid var(--border-color); border-radius: var(--radius-sm);
-      color: var(--text-primary); font-family: var(--font-mono); font-size: 0.78rem;
-      padding: 0.65rem; resize: vertical;
+      width: 100%; height: 200px; background: #ffffff;
+      border: 1px solid #cccccc; border-radius: 3px;
+      color: #111111; font-family: monospace; font-size: 0.78rem;
+      padding: 0.5rem; resize: vertical;
     }
-    .csv-textarea:focus { outline: none; border-color: var(--accent-blue); }
+    .csv-textarea:focus { outline: none; border-color: #111111; }
+
   </style>
 </head>
 <body>
   <!-- Header -->
   <header class="app-header">
     <div class="header-left">
-      <div class="header-brand">
-        <div class="brand-icon">⚡</div>
-        <div>
-          <div class="brand-title">CI EEG Denoising Studio</div>
-          <div class="brand-subtitle">Minimal Standalone HTML · No server needed</div>
-        </div>
+      <div class="brand-title">CI EEG Denoising Studio</div>
       </div>
 
       <!-- Navigation Tabs: Tier 1 vs Tier 2 -->
       <nav class="nav-tabs">
         <button id="tabTier1" class="nav-tab-btn active">
-          <span>⚡</span> Tier 1: Waveforms (Epoch Denoising)
+          <span></span> Tier 1: Waveforms (Epoch Denoising)
         </button>
         <button id="tabTier2" class="nav-tab-btn">
-          <span>📊</span> Tier 2: ERP Benchmark (CI Cohort)
+          <span></span> Tier 2: ERP Benchmark (CI Cohort)
         </button>
       </nav>
     </div>
@@ -530,26 +541,26 @@
       <!-- Tier 1 actions -->
       <div id="tier1Actions" style="display: flex; gap: 0.5rem;">
         <button id="btnLoadDemo" class="btn btn-secondary" title="Restore Tier 1 Benchmark Demo">
-          <span>📂</span> Reset Demo
+          Reset Demo
         </button>
         <button id="btnPasteModal" class="btn btn-secondary" title="Paste raw CSV text">
-          <span>📋</span> Paste CSV
+          Paste CSV
         </button>
         <button id="btnExportCSV" class="btn btn-secondary" title="Export visible traces to CSV">
-          <span>💾</span> Export CSV
+          Export CSV
         </button>
         <button id="btnExportPNG" class="btn btn-primary" title="Export High-Res PNG">
-          <span>📸</span> Export PNG (200 DPI)
+          Export PNG
         </button>
       </div>
 
       <!-- Tier 2 actions -->
       <div id="tier2Actions" style="display: none; gap: 0.5rem;">
         <button id="btnExportTier2CSV" class="btn btn-secondary" title="Export Tier 2 Metrics CSV">
-          <span>💾</span> Export Metrics CSV
+          Export Metrics CSV
         </button>
         <button id="btnExportTier2PNG" class="btn btn-primary" title="Export Tier 2 High-Res PNG">
-          <span>📸</span> Export Chart PNG
+          Export Chart PNG
         </button>
       </div>
     </div>
@@ -567,9 +578,8 @@
         </div>
         
         <div id="dropzone" class="dropzone">
-          <span class="dropzone-icon">📥</span>
-          <div class="dropzone-text">Drop CSV file here</div>
-          <div class="dropzone-hint">or click to browse (.csv, .tsv, .txt)</div>
+          <div class="dropzone-text">Drop CSV file here, or click to browse</div>
+          <div class="dropzone-hint">Supports .csv, .tsv, .txt</div>
           <input type="file" id="fileInput" accept=".csv,.tsv,.txt" style="display: none;">
         </div>
 
@@ -588,7 +598,7 @@
         <!-- Preset Filters -->
         <div class="preset-bar">
           <button class="btn-preset active" id="presetAll" title="Show all waves">All Waves</button>
-          <button class="btn-preset" id="presetDirtyClean" title="Select Dirty Input & Clean Ground Truth only">🎯 Dirty &amp; Clean Only</button>
+          <button class="btn-preset" id="presetDirtyClean" title="Select Dirty Input & Clean Ground Truth only">Dirty &amp; Clean Only</button>
           <button class="btn-preset" id="presetCleanDenoised" title="Show Clean and all denoised methods">Clean &amp; Denoised</button>
           <button class="btn-preset" id="presetDenoisedOnly" title="Show only denoised methods">Denoised Only</button>
         </div>
@@ -642,12 +652,17 @@
 
         <div class="control-row">
           <span class="control-label">Line Thickness</span>
-          <input type="range" id="lineWidthRange" min="1" max="3.5" value="1.8" step="0.2" style="width: 90px; accent-color: var(--accent-blue);">
+          <input type="range" id="lineWidthRange" min="1" max="3.5" value="1.8" step="0.2" style="width: 90px; accent-">
         </div>
 
         <div class="control-row">
           <span class="control-label">Show Grid</span>
-          <input type="checkbox" id="showGridCheck" checked style="accent-color: var(--accent-blue); width: 15px; height: 15px;">
+          <input type="checkbox" id="showGridCheck" checked style="width: 15px; height: 15px;">
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Trial Segments</span>
+          <input type="checkbox" id="showTrialSegmentsCheck" checked style="width: 15px; height: 15px;" title="Label interleaved [non-AV (1.5s), AV (1.5s)] trial cadence and Code 25 trigger onsets">
         </div>
       </section>
     </aside>
@@ -658,15 +673,14 @@
       <section class="sidebar-section">
         <div class="section-title">
           <span>Tier 2 Benchmark</span>
-          <span class="badge" style="color: var(--accent-green);">Loaded</span>
+          <span class="badge" style="">Loaded</span>
         </div>
         <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.4;">
           Evaluates <strong>neural preservation</strong> of auditory cortical responses (N1-P2) across real CI participants.
         </p>
         <div id="dropzoneTier2" class="dropzone">
-          <span class="dropzone-icon">📥</span>
-          <div class="dropzone-text">Drop tier2_*.csv file</div>
-          <div class="dropzone-hint">to load custom ERP evaluation</div>
+          <div class="dropzone-text">Drop tier2_*.csv file here</div>
+          <div class="dropzone-hint">Load custom ERP evaluation</div>
           <input type="file" id="fileInputTier2" accept=".csv" style="display: none;">
         </div>
       </section>
@@ -678,10 +692,10 @@
         </div>
         <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.75rem;">
           <button class="btn-preset active" id="viewTier2Bar" style="text-align: left; padding: 0.5rem 0.65rem;">
-            📊 4-Panel Summary Bar Charts (Mean ± Std)
+            Summary Bar Charts (Mean ± Std)
           </button>
           <button class="btn-preset" id="viewTier2Box" style="text-align: left; padding: 0.5rem 0.65rem;">
-            📦 Distribution Boxplots (CI Subjects)
+            Distribution Boxplots (CI Subjects)
           </button>
         </div>
 
@@ -732,15 +746,15 @@
             <span id="activeFileInfo" class="graph-status" style="font-weight: 600; color: #fff;">
               Tier 1 Screening Benchmark Sample
             </span>
-            <span id="metaStats" class="badge" style="background: rgba(59, 130, 246, 0.15); border: none;">
+            <span id="metaStats" class="badge" >
               750 samples · 4 channels · 6 waves
             </span>
           </div>
           <div class="toolbar-right">
-            <span id="hoverInfo" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-cyan);">
+            <span id="hoverInfo" style="font-family: var(--font-mono); font-size: 0.75rem; ">
               Hover cursor over graph to inspect values
             </span>
-            <button id="btnResetView" class="btn btn-secondary" title="Reset Time Window">↺ Reset</button>
+            <button id="btnResetView" class="btn btn-secondary" title="Reset Time Window">Reset</button>
           </div>
         </div>
 
@@ -751,7 +765,7 @@
 
           <div class="summary-container">
             <div class="summary-header">
-              <span>📈 Denoising Objective Metrics (Window: <span id="timeSpanBadge">0.0 – 3.0s</span>)</span>
+              <span>Denoising Objective Metrics (Window: <span id="timeSpanBadge">0.0 – 3.0s</span>)</span>
               <span style="font-size: 0.72rem; color: var(--text-muted);">Calculated against Clean Ground Truth (Hearing)</span>
             </div>
             <div style="overflow-x: auto;">
@@ -780,7 +794,7 @@
             <span class="graph-status" style="font-weight: 600; color: #fff;">
               Tier 2 ERP Benchmark: Neural Signal Preservation
             </span>
-            <span class="badge" style="background: rgba(34, 197, 94, 0.15); color: var(--accent-green); border: none;">
+            <span class="badge" >
               37 CI Participants · 77 Evaluated Recordings
             </span>
           </div>
@@ -797,7 +811,7 @@
             <div class="stat-card">
               <span class="stat-card-title">Top Auditory SNR</span>
               <div class="stat-card-val">
-                <span style="color: var(--accent-cyan);">14.97 dB</span>
+                <span style="">14.97 dB</span>
                 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">± 5.88 dB</span>
               </div>
               <span class="stat-card-sub">Wavelet Denoising (Highest evoked SNR)</span>
@@ -806,7 +820,7 @@
             <div class="stat-card">
               <span class="stat-card-title">Lowest Baseline Noise</span>
               <div class="stat-card-val">
-                <span style="color: var(--accent-green);">0.31 μV</span>
+                <span style="">0.31 μV</span>
                 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">± 0.16 μV</span>
               </div>
               <span class="stat-card-sub">Wavelet &amp; SSP (90% noise attenuation)</span>
@@ -815,7 +829,7 @@
             <div class="stat-card">
               <span class="stat-card-title">Template Correlation</span>
               <div class="stat-card-val">
-                <span style="color: var(--accent-blue);">r = 0.046</span>
+                <span style="">r = 0.046</span>
                 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">± 0.16</span>
               </div>
               <span class="stat-card-sub">CCA (Best alignment with hearing template)</span>
@@ -824,7 +838,7 @@
             <div class="stat-card">
               <span class="stat-card-title">Evaluated CI Cohort</span>
               <div class="stat-card-val">
-                <span style="color: var(--accent-purple);">37 Subjects</span>
+                <span style="">37 Subjects</span>
               </div>
               <span class="stat-card-sub">Real CI user EEG datasets</span>
             </div>
@@ -838,7 +852,7 @@
           <!-- Full Tier 2 Subject Data Table -->
           <div class="summary-container" style="margin-top: 1rem;">
             <div class="summary-header">
-              <span>📋 CI Subject ERP Metrics Breakdown (N1, P2, SNR, Baseline Noise)</span>
+              <span>CI Subject ERP Metrics Breakdown (N1, P2, SNR, Baseline Noise)</span>
               <span id="tier2RowCount" style="font-size: 0.72rem; color: var(--text-muted);">Showing 77 rows</span>
             </div>
             <div style="overflow-x: auto; max-height: 380px;">
@@ -998,6 +1012,7 @@
       scaleMode: 'per_channel',
       lineWidth: 1.8,
       showGrid: true,
+      showTrialSegments: true,
       sfreq: 250.0,
 
       // Tier 2 state
@@ -1047,6 +1062,7 @@
       scaleMode: document.getElementById('scaleMode'),
       lineWidthRange: document.getElementById('lineWidthRange'),
       showGridCheck: document.getElementById('showGridCheck'),
+      showTrialSegmentsCheck: document.getElementById('showTrialSegmentsCheck'),
       canvas: document.getElementById('eegCanvas'),
       metricsBody: document.getElementById('metricsBody'),
       timeSpanBadge: document.getElementById('timeSpanBadge'),
@@ -1373,7 +1389,7 @@
 
       const containerWidth = canvas.parentElement.clientWidth || 1100;
       const rowHeight = 170;
-      const headerHeight = 65;
+      const headerHeight = state.showTrialSegments ? 90 : 65;
       const footerHeight = 60;
       const nRows = Math.max(1, visibleChannels.length);
       const totalHeight = headerHeight + (nRows * rowHeight) + footerHeight;
@@ -1584,6 +1600,130 @@
       ctx.fillStyle = '#000000';
       ctx.font = 'bold 12px -apple-system, sans-serif';
       ctx.fillText('Time (seconds)', marginLeft + plotWidth / 2, xAxisY + 28);
+    }
+
+    
+    function drawTrialSegments(ctx, tMin, tMax, duration, marginLeft, plotWidth, subplots, headerHeight) {
+      if (!state.showTrialSegments || subplots.length === 0) return;
+
+      const plotTopAll = subplots[0].plotTop;
+      const plotBottomAll = subplots[subplots.length - 1].plotBottom;
+      const bannerY = 32;
+      const bannerH = 20;
+
+      // Cadence: [non-AV (1.5s), AV (1.5s)]
+      // Non-AV: [3k, 3k + 1.5s)
+      // AV: [3k + 1.5s, 3k + 3.0s)
+      // AV Onset = Code 25 = 3k + 1.5s
+      // Non-AV Onset = Code 25 - 1.5s = 3k
+      const startCycle = Math.floor(tMin / 3.0);
+      const endCycle = Math.ceil(tMax / 3.0);
+
+      ctx.save();
+
+      for (let c = startCycle; c <= endCycle; c++) {
+        const tNonAV = c * 3.0;
+        const tAV = tNonAV + 1.5;
+        const tNext = tNonAV + 3.0;
+
+        // 1. Non-AV Segment [tNonAV, tAV)
+        const nonAVStart = Math.max(tNonAV, tMin);
+        const nonAVEnd = Math.min(tAV, tMax);
+        if (nonAVEnd > nonAVStart) {
+          const x0 = marginLeft + ((nonAVStart - tMin) / duration) * plotWidth;
+          const x1 = marginLeft + ((nonAVEnd - tMin) / duration) * plotWidth;
+          const w = Math.max(1, x1 - x0);
+
+          // Top Banner
+          ctx.fillStyle = '#fafafa';
+          ctx.fillRect(x0, bannerY, w, bannerH);
+          ctx.strokeStyle = '#d5d5d5';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x0, bannerY, w, bannerH);
+
+          ctx.fillStyle = '#111111';
+          ctx.font = '600 10px -apple-system, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          if (w > 160) {
+            ctx.fillText(`Non-AV: Auditory (A) / Visual (V) [${tNonAV.toFixed(1)}s – ${tAV.toFixed(1)}s]`, x0 + w / 2, bannerY + bannerH / 2);
+          } else if (w > 70) {
+            ctx.fillText(`Non-AV (A/V)`, x0 + w / 2, bannerY + bannerH / 2);
+          }
+        }
+
+        // 2. AV Segment [tAV, tNext)
+        const avStart = Math.max(tAV, tMin);
+        const avEnd = Math.min(tNext, tMax);
+        if (avEnd > avStart) {
+          const x0 = marginLeft + ((avStart - tMin) / duration) * plotWidth;
+          const x1 = marginLeft + ((avEnd - tMin) / duration) * plotWidth;
+          const w = Math.max(1, x1 - x0);
+
+          // Subtle plot background tint for AV trial
+          subplots.forEach(sp => {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+            ctx.fillRect(x0, sp.plotTop, w, sp.plotBottom - sp.plotTop);
+          });
+
+          // Top Banner
+          ctx.fillStyle = '#f0f0f0';
+          ctx.fillRect(x0, bannerY, w, bannerH);
+          ctx.strokeStyle = '#bbbbbb';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x0, bannerY, w, bannerH);
+
+          ctx.fillStyle = '#111111';
+          ctx.font = '600 10px -apple-system, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          if (w > 160) {
+            ctx.fillText(`AV: AudioVisual (AV) • Code 25 [${tAV.toFixed(1)}s – ${tNext.toFixed(1)}s]`, x0 + w / 2, bannerY + bannerH / 2);
+          } else if (w > 70) {
+            ctx.fillText(`AV (Code 25)`, x0 + w / 2, bannerY + bannerH / 2);
+          }
+        }
+
+        // Vertical Trigger Line at tAV (Code 25)
+        if (tAV >= tMin && tAV <= tMax) {
+          const xAV = marginLeft + ((tAV - tMin) / duration) * plotWidth;
+          ctx.strokeStyle = '#555555';
+          ctx.lineWidth = 1.2;
+          ctx.setLineDash([4, 3]);
+          ctx.beginPath();
+          ctx.moveTo(xAV, plotTopAll - 14);
+          ctx.lineTo(xAV, plotBottomAll);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.fillStyle = '#111111';
+          ctx.font = 'bold 9px -apple-system, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(`t_AV = Code 25 (${tAV.toFixed(1)}s)`, xAV, plotTopAll - 2);
+        }
+
+        // Vertical Divider Line at tNonAV
+        if (tNonAV >= tMin && tNonAV <= tMax && tNonAV > tMin) {
+          const xNon = marginLeft + ((tNonAV - tMin) / duration) * plotWidth;
+          ctx.strokeStyle = '#aaaaaa';
+          ctx.lineWidth = 1.0;
+          ctx.setLineDash([2, 3]);
+          ctx.beginPath();
+          ctx.moveTo(xNon, plotTopAll - 14);
+          ctx.lineTo(xNon, plotBottomAll);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.fillStyle = '#555555';
+          ctx.font = '9px -apple-system, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(`t_non-AV (${tNonAV.toFixed(1)}s)`, xNon, plotTopAll - 2);
+        }
+      }
+
+      ctx.restore();
     }
 
     function drawLegend(ctx, visibleWaves, startX, legendY, availableWidth) {
@@ -2111,10 +2251,10 @@
           <td><span class="badge" style="color: ${PALETTE[r.method] || '#fff'};">${r.method.toUpperCase()}</span></td>
           <td><strong>${r.subject_id}</strong></td>
           <td>${r.channel || 'Cz'}</td>
-          <td style="${r.erp_snr_db > 14 ? 'color: var(--accent-cyan); font-weight:600;' : ''}">${r.erp_snr_db !== null ? r.erp_snr_db.toFixed(2) : '—'}</td>
-          <td style="${r.template_corr > 0.05 ? 'color: var(--accent-green);' : ''}">${r.template_corr !== null ? r.template_corr.toFixed(4) : '—'}</td>
+          <td style="${r.erp_snr_db > 14 ? ' font-weight:600;' : ''}">${r.erp_snr_db !== null ? r.erp_snr_db.toFixed(2) : '—'}</td>
+          <td style="${r.template_corr > 0.05 ? '' : ''}">${r.template_corr !== null ? r.template_corr.toFixed(4) : '—'}</td>
           <td>${r.p2p_uv !== null ? r.p2p_uv.toFixed(2) : '—'}</td>
-          <td style="${r.base_rms_uv < 1.0 ? 'color: var(--accent-green);' : ''}">${r.base_rms_uv !== null ? r.base_rms_uv.toFixed(2) : '—'}</td>
+          <td style="${r.base_rms_uv < 1.0 ? '' : ''}">${r.base_rms_uv !== null ? r.base_rms_uv.toFixed(2) : '—'}</td>
           <td>${r.n1_lat_ms !== null ? r.n1_lat_ms.toFixed(1) : '—'}</td>
           <td>${r.p2_lat_ms !== null ? r.p2_lat_ms.toFixed(1) : '—'}</td>
         </tr>
@@ -2270,7 +2410,10 @@
         const v = state.data[ch]?.[w]?.[idx];
         return `${w}: ${v !== undefined ? v.toFixed(1) : '?'}μV`;
       }).join(' | ');
-      dom.hoverInfo.textContent = `t=${actualT.toFixed(3)}s [${ch}] → ${readouts}`;
+      const cycleT = actualT % 3.0;
+      const isAV = (cycleT >= 1.5);
+      const trialDesc = isAV ? 'AV Trial (Code 25)' : 'Non-AV Trial (A/V)';
+      dom.hoverInfo.textContent = `t=${actualT.toFixed(3)}s [${ch}] • ${trialDesc} : ${readouts}`;
     });
 
     dom.canvas.addEventListener('mouseleave', () => {
@@ -2376,6 +2519,11 @@
     dom.timeMax.addEventListener('input', () => { renderGraph(); updateMetricsTable(); });
     dom.scaleMode.addEventListener('change', (e) => { state.scaleMode = e.target.value; renderGraph(); });
     dom.lineWidthRange.addEventListener('input', () => renderGraph());
+    dom.showTrialSegmentsCheck.addEventListener('change', (e) => {
+      state.showTrialSegments = e.target.checked;
+      renderGraph();
+    });
+
     dom.showGridCheck.addEventListener('change', (e) => { state.showGrid = e.target.checked; renderGraph(); });
 
     dom.btnResetView.addEventListener('click', () => {

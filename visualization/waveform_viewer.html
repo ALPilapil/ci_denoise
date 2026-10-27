@@ -1,58 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EEG Denoising Benchmark &amp; Waveform Studio (Tier 1 &amp; Tier 2)</title>
   <style>
-    :root {
-      --bg-primary: #0f141c;
-      --bg-secondary: #171f2c;
-      --bg-card: #1c2637;
-      --bg-card-hover: #233046;
-      --border-color: #2b3952;
-      --border-color-focus: #3b82f6;
-      --text-primary: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --accent-blue: #3b82f6;
-      --accent-blue-hover: #2563eb;
-      --accent-green: #22c55e;
-      --accent-red: #ef4444;
-      --accent-purple: #a855f7;
-      --accent-cyan: #06b6d4;
-      --accent-amber: #f59e0b;
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      font-family: var(--font-sans);
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #ffffff;
+      color: #111111;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow-x: hidden;
+      font-size: 13px;
     }
 
-    /* Header & Navigation Tabs */
+    /* Header */
     .app-header {
-      background-color: var(--bg-secondary);
-      border-bottom: 1px solid var(--border-color);
-      padding: 0.65rem 1.25rem;
+      background-color: #ffffff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 0.55rem 1rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      position: sticky;
-      top: 0;
-      z-index: 100;
     }
 
     .header-left {
@@ -61,191 +39,181 @@
       gap: 1.25rem;
     }
 
-    .header-brand {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .brand-icon {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #3b82f6, #06b6d4);
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-      font-weight: bold;
-    }
-
     .brand-title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #111111;
+      letter-spacing: -0.01em;
     }
 
-    .brand-subtitle {
-      font-size: 0.72rem;
-      color: var(--text-secondary);
-    }
-
-    /* Main Tab Navigation Buttons */
+    /* Navigation Tabs */
     .nav-tabs {
       display: flex;
-      background-color: var(--bg-card);
-      padding: 3px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-color);
-      gap: 4px;
+      gap: 0.4rem;
     }
 
     .nav-tab-btn {
-      padding: 0.45rem 0.95rem;
+      padding: 0.35rem 0.75rem;
       font-size: 0.8rem;
-      font-weight: 600;
-      border: none;
-      background: transparent;
-      color: var(--text-secondary);
-      border-radius: var(--radius-sm);
+      font-weight: 500;
+      border: 1px solid #dcdcdc;
+      background: #ffffff;
+      color: #555555;
+      border-radius: 4px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      transition: all 0.15s ease;
+      transition: all 0.1s ease;
     }
 
     .nav-tab-btn:hover {
-      color: var(--text-primary);
+      color: #111111;
+      border-color: #999999;
     }
 
     .nav-tab-btn.active {
-      background-color: var(--accent-blue);
-      color: #fff;
-      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+      background: #111111;
+      color: #ffffff;
+      border-color: #111111;
+      font-weight: 600;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.4rem;
     }
 
-    /* Main Container */
+    /* Layout */
     .app-container {
       display: flex;
       flex: 1;
-      height: calc(100vh - 58px);
+      height: calc(100vh - 49px);
       overflow: hidden;
+      background: #ffffff;
     }
 
     /* Sidebar */
     .sidebar {
-      width: 330px;
-      min-width: 310px;
-      background-color: var(--bg-secondary);
-      border-right: 1px solid var(--border-color);
+      width: 310px;
+      min-width: 290px;
+      background-color: #ffffff;
+      border-right: 1px solid #e0e0e0;
       display: flex;
       flex-direction: column;
       overflow-y: auto;
     }
 
     .sidebar-section {
-      padding: 1rem;
-      border-bottom: 1px solid var(--border-color);
+      padding: 0.8rem;
+      border-bottom: 1px solid #e0e0e0;
     }
 
     .section-title {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--text-secondary);
-      font-weight: 700;
-      margin-bottom: 0.75rem;
+      color: #666666;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
     .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.15rem 0.45rem;
       font-size: 0.7rem;
-      font-weight: 600;
-      border-radius: 9999px;
-      background-color: var(--bg-card);
-      color: var(--accent-blue);
-      border: 1px solid var(--border-color);
+      font-weight: 500;
+      padding: 0.1rem 0.35rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 3px;
+      background: #ffffff;
+      color: #444444;
     }
 
     /* Dropzone */
     .dropzone {
-      border: 2px dashed var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 0.9rem 0.75rem;
+      border: 1px dashed #b0b0b0;
+      border-radius: 4px;
+      padding: 0.75rem;
       text-align: center;
-      background-color: rgba(28, 38, 55, 0.4);
+      background: #fafafa;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }
 
-    .dropzone:hover, .dropzone.dragover {
-      border-color: var(--accent-blue);
-      background-color: rgba(59, 130, 246, 0.1);
+    .dropzone:hover,
+    .dropzone.dragover {
+      border-color: #111111;
+      background: #f0f0f0;
     }
 
-    .dropzone-icon { font-size: 1.4rem; margin-bottom: 0.2rem; display: block; }
-    .dropzone-text { font-size: 0.8rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.1rem; }
-    .dropzone-hint { font-size: 0.68rem; color: var(--text-muted); }
+    .dropzone-text {
+      font-size: 0.78rem;
+      color: #222222;
+      margin-bottom: 0.15rem;
+    }
+
+    .dropzone-hint {
+      font-size: 0.68rem;
+      color: #777777;
+    }
 
     .quick-samples {
-      margin-top: 0.6rem;
+      margin-top: 0.5rem;
       display: flex;
-      gap: 0.4rem;
+      gap: 0.35rem;
     }
 
     .btn-sample {
       flex: 1;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      color: var(--text-secondary);
+      background: #ffffff;
+      border: 1px solid #dcdcdc;
+      color: #333333;
       font-size: 0.72rem;
-      padding: 0.35rem 0.5rem;
-      border-radius: var(--radius-sm);
+      padding: 0.3rem 0.45rem;
+      border-radius: 3px;
       cursor: pointer;
       text-align: center;
-      transition: all 0.15s ease;
     }
-    .btn-sample:hover { background: var(--bg-card-hover); color: #fff; border-color: var(--accent-blue); }
 
-    /* Preset buttons */
+    .btn-sample:hover {
+      background: #f5f5f5;
+      border-color: #999999;
+    }
+
+    /* Presets */
     .preset-bar {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.35rem;
-      margin-bottom: 0.75rem;
+      gap: 0.3rem;
+      margin-bottom: 0.65rem;
     }
 
     .btn-preset {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      color: var(--text-secondary);
+      background: #ffffff;
+      border: 1px solid #dcdcdc;
+      color: #444444;
       font-size: 0.72rem;
-      font-weight: 600;
-      padding: 0.3rem 0.55rem;
-      border-radius: var(--radius-sm);
+      padding: 0.28rem 0.5rem;
+      border-radius: 3px;
       cursor: pointer;
-      transition: all 0.15s ease;
     }
-    .btn-preset:hover { background-color: var(--bg-card-hover); color: var(--text-primary); border-color: var(--accent-blue); }
-    .btn-preset.active { background-color: rgba(59, 130, 246, 0.25); border-color: var(--accent-blue); color: #fff; }
+
+    .btn-preset:hover {
+      background: #f5f5f5;
+      border-color: #999999;
+    }
+
+    .btn-preset.active {
+      background: #111111;
+      color: #ffffff;
+      border-color: #111111;
+    }
 
     /* Checklist */
     .checklist {
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
+      gap: 0.3rem;
       max-height: 220px;
       overflow-y: auto;
     }
@@ -253,37 +221,39 @@
     .check-item {
       display: flex;
       align-items: center;
-      gap: 0.55rem;
-      padding: 0.4rem 0.6rem;
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
+      gap: 0.45rem;
+      padding: 0.3rem 0.45rem;
+      border: 1px solid #e5e5e5;
+      border-radius: 3px;
       cursor: pointer;
+      background: #ffffff;
       user-select: none;
-      transition: background-color 0.15s ease, border-color 0.15s ease;
     }
-    .check-item:hover { background-color: var(--bg-card-hover); }
-    .check-item.checked { border-color: rgba(59, 130, 246, 0.4); }
+
+    .check-item:hover {
+      background: #f9f9f9;
+    }
+
+    .check-item.checked {
+      border-color: #b0b0b0;
+    }
 
     .check-item input[type="checkbox"] {
-      accent-color: var(--accent-blue);
-      width: 14px;
-      height: 14px;
+      width: 13px;
+      height: 13px;
       cursor: pointer;
     }
 
     .color-dot {
-      width: 9px;
-      height: 9px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       flex-shrink: 0;
-      display: inline-block;
     }
 
     .check-label {
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--text-primary);
+      font-size: 0.78rem;
+      color: #111111;
       flex: 1;
       white-space: nowrap;
       overflow: hidden;
@@ -292,148 +262,171 @@
 
     .check-tag {
       font-size: 0.65rem;
-      font-family: var(--font-mono);
-      color: var(--text-muted);
+      font-family: monospace;
+      color: #777777;
     }
 
     /* Channel Pills */
-    .pill-group { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-    .channel-pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.3rem 0.6rem;
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
-      color: var(--text-secondary);
-      transition: all 0.15s ease;
+    .pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
     }
-    .channel-pill:hover { background-color: var(--bg-card-hover); color: var(--text-primary); }
-    .channel-pill.active { background-color: rgba(59, 130, 246, 0.25); border-color: var(--accent-blue); color: #fff; }
 
-    /* Form Controls */
+    .channel-pill {
+      padding: 0.25rem 0.5rem;
+      background: #ffffff;
+      border: 1px solid #dcdcdc;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      color: #333333;
+    }
+
+    .channel-pill:hover {
+      background: #f5f5f5;
+      border-color: #999999;
+    }
+
+    .channel-pill.active {
+      background: #111111;
+      color: #ffffff;
+      border-color: #111111;
+    }
+
+    /* Form controls */
     .control-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 0.6rem;
-      font-size: 0.8rem;
-    }
-    .control-label { color: var(--text-secondary); }
-    .control-input {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      color: var(--text-primary);
-      padding: 0.25rem 0.45rem;
-      border-radius: var(--radius-sm);
+      margin-bottom: 0.55rem;
       font-size: 0.78rem;
-      width: 75px;
-      text-align: right;
+      color: #333333;
     }
-    .control-input:focus { outline: none; border-color: var(--accent-blue); }
+
+    .control-input,
     .control-select {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      color: var(--text-primary);
-      padding: 0.25rem 0.45rem;
-      border-radius: var(--radius-sm);
+      background: #ffffff;
+      border: 1px solid #cccccc;
+      color: #111111;
+      padding: 0.25rem 0.4rem;
+      border-radius: 3px;
       font-size: 0.78rem;
     }
 
-    /* Main Area */
+    .control-input {
+      width: 70px;
+      text-align: right;
+    }
+
+    .control-input:focus,
+    .control-select:focus {
+      outline: none;
+      border-color: #111111;
+    }
+
+    /* Main area */
     .main-content {
       flex: 1;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      background-color: #0b0f17;
+      background: #ffffff;
     }
 
     .toolbar {
-      background-color: var(--bg-secondary);
-      border-bottom: 1px solid var(--border-color);
-      padding: 0.55rem 1.25rem;
+      background: #ffffff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 0.45rem 1rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
     }
 
-    .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 0.6rem; }
-    .graph-status { font-size: 0.8rem; color: var(--text-secondary); }
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .graph-status {
+      font-size: 0.78rem;
+      color: #222222;
+    }
 
     .content-area {
       flex: 1;
       overflow-y: auto;
-      padding: 1rem;
+      padding: 0.85rem;
       display: flex;
       flex-direction: column;
+      background: #ffffff;
     }
 
     .canvas-wrapper {
-      background-color: #ffffff;
-      border-radius: var(--radius-md);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-      padding: 0.85rem;
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 0.5rem;
       margin: 0 auto;
       max-width: 1350px;
       width: 100%;
     }
 
-    canvas.benchmark-canvas { display: block; width: 100%; height: auto; }
+    canvas.benchmark-canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
 
-    /* Cards for Tier 2 Summary */
+    /* Stat cards */
     .tier2-stat-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 0.85rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.65rem;
       max-width: 1350px;
       width: 100%;
-      margin: 0 auto 1rem auto;
+      margin: 0 auto 0.85rem auto;
     }
 
     .stat-card {
-      background-color: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 0.85rem 1rem;
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 0.65rem 0.85rem;
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 0.2rem;
     }
 
     .stat-card-title {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #666666;
+      font-weight: 600;
     }
 
     .stat-card-val {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #fff;
-      display: flex;
-      align-items: baseline;
-      gap: 0.4rem;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #111111;
     }
 
     .stat-card-sub {
-      font-size: 0.72rem;
-      color: var(--text-secondary);
+      font-size: 0.7rem;
+      color: #666666;
     }
 
-    /* Summary & Data Tables */
+    /* Tables */
     .summary-container {
-      margin-top: 1rem;
-      background-color: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 0.85rem;
+      margin-top: 0.85rem;
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 0.75rem;
       max-width: 1350px;
       width: 100%;
       margin-left: auto;
@@ -441,115 +434,183 @@
     }
 
     .summary-header {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 0.6rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #111111;
+      margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .metrics-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left; }
-    .metrics-table th { padding: 0.45rem 0.65rem; background-color: var(--bg-card); color: var(--text-secondary); font-weight: 600; border-bottom: 1px solid var(--border-color); }
-    .metrics-table td { padding: 0.45rem 0.65rem; border-bottom: 1px solid rgba(43, 57, 82, 0.5); font-family: var(--font-mono); color: var(--text-primary); }
-    .metrics-table tr:hover td { background-color: rgba(35, 48, 70, 0.4); }
+    .metrics-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+
+    .metrics-table th {
+      padding: 0.4rem 0.5rem;
+      background: #ffffff;
+      color: #111111;
+      font-weight: 600;
+      border-bottom: 2px solid #111111;
+      text-align: left;
+    }
+
+    .metrics-table td {
+      padding: 0.4rem 0.5rem;
+      border-bottom: 1px solid #e5e5e5;
+      font-family: monospace;
+      color: #222222;
+    }
+
+    .metrics-table tr:hover td {
+      background: #fafafa;
+    }
 
     /* Buttons */
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
-      padding: 0.38rem 0.75rem;
-      border-radius: var(--radius-sm);
+      padding: 0.32rem 0.65rem;
+      border-radius: 3px;
       font-size: 0.78rem;
-      font-weight: 600;
-      border: 1px solid transparent;
+      font-weight: 500;
+      border: 1px solid #cccccc;
+      background: #ffffff;
+      color: #111111;
       cursor: pointer;
-      transition: all 0.15s ease;
     }
-    .btn-primary { background-color: var(--accent-blue); color: #fff; }
-    .btn-primary:hover { background-color: var(--accent-blue-hover); }
-    .btn-secondary { background-color: var(--bg-card); color: var(--text-primary); border-color: var(--border-color); }
-    .btn-secondary:hover { background-color: var(--bg-card-hover); border-color: var(--accent-blue); }
+
+    .btn:hover {
+      background: #f5f5f5;
+      border-color: #999999;
+    }
+
+    .btn-primary {
+      background: #111111;
+      color: #ffffff;
+      border-color: #111111;
+    }
+
+    .btn-primary:hover {
+      background: #333333;
+      color: #ffffff;
+    }
 
     /* Modal */
     .modal-overlay {
       position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background-color: rgba(0, 0, 0, 0.75);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 999; opacity: 0; pointer-events: none;
-      transition: opacity 0.2s ease;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
     }
-    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
     .modal-dialog {
-      background-color: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
-      width: 90%; max-width: 600px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      display: flex; flex-direction: column; overflow: hidden;
+      background: #ffffff;
+      border: 1px solid #999999;
+      border-radius: 4px;
+      width: 90%;
+      max-width: 580px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
-    .modal-header { padding: 0.85rem 1.15rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; font-weight: 700; }
-    .modal-body { padding: 1.15rem; }
-    .modal-footer { padding: 0.75rem 1.15rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.6rem; }
+
+    .modal-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+    }
+
+    .modal-body {
+      padding: 1rem;
+    }
+
+    .modal-footer {
+      padding: 0.65rem 1rem;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
     .csv-textarea {
-      width: 100%; height: 220px; background-color: var(--bg-card);
-      border: 1px solid var(--border-color); border-radius: var(--radius-sm);
-      color: var(--text-primary); font-family: var(--font-mono); font-size: 0.78rem;
-      padding: 0.65rem; resize: vertical;
+      width: 100%;
+      height: 200px;
+      background: #ffffff;
+      border: 1px solid #cccccc;
+      border-radius: 3px;
+      color: #111111;
+      font-family: monospace;
+      font-size: 0.78rem;
+      padding: 0.5rem;
+      resize: vertical;
     }
-    .csv-textarea:focus { outline: none; border-color: var(--accent-blue); }
+
+    .csv-textarea:focus {
+      outline: none;
+      border-color: #111111;
+    }
   </style>
 </head>
+
 <body>
   <!-- Header -->
   <header class="app-header">
-    <div class="header-left">
-      <div class="header-brand">
-        <div class="brand-icon">⚡</div>
-        <div>
-          <div class="brand-title">CI EEG Denoising Studio</div>
-          <div class="brand-subtitle">Minimal Standalone HTML · No server needed</div>
-        </div>
-      </div>
 
-      <!-- Navigation Tabs: Tier 1 vs Tier 2 -->
-      <nav class="nav-tabs">
-        <button id="tabTier1" class="nav-tab-btn active">
-          <span>⚡</span> Tier 1: Waveforms (Epoch Denoising)
-        </button>
-        <button id="tabTier2" class="nav-tab-btn">
-          <span>📊</span> Tier 2: ERP Benchmark (CI Cohort)
-        </button>
-      </nav>
+    <!-- Navigation Tabs: Tier 1 vs Tier 2 -->
+    <nav class="nav-tabs">
+      <button id="tabTier1" class="nav-tab-btn active">
+        <span></span> Tier 1: Waveforms (Epoch Denoising)
+      </button>
+      <button id="tabTier2" class="nav-tab-btn">
+        <span></span> Tier 2: ERP Benchmark (CI Cohort)
+      </button>
+    </nav>
     </div>
 
     <div class="header-actions">
       <!-- Tier 1 actions -->
       <div id="tier1Actions" style="display: flex; gap: 0.5rem;">
         <button id="btnLoadDemo" class="btn btn-secondary" title="Restore Tier 1 Benchmark Demo">
-          <span>📂</span> Reset Demo
+          Reset Demo
         </button>
         <button id="btnPasteModal" class="btn btn-secondary" title="Paste raw CSV text">
-          <span>📋</span> Paste CSV
+          Paste CSV
         </button>
         <button id="btnExportCSV" class="btn btn-secondary" title="Export visible traces to CSV">
-          <span>💾</span> Export CSV
+          Export CSV
         </button>
         <button id="btnExportPNG" class="btn btn-primary" title="Export High-Res PNG">
-          <span>📸</span> Export PNG (200 DPI)
+          Export PNG
         </button>
       </div>
 
       <!-- Tier 2 actions -->
       <div id="tier2Actions" style="display: none; gap: 0.5rem;">
         <button id="btnExportTier2CSV" class="btn btn-secondary" title="Export Tier 2 Metrics CSV">
-          <span>💾</span> Export Metrics CSV
+          Export Metrics CSV
         </button>
         <button id="btnExportTier2PNG" class="btn btn-primary" title="Export Tier 2 High-Res PNG">
-          <span>📸</span> Export Chart PNG
+          Export Chart PNG
         </button>
       </div>
     </div>
@@ -565,11 +626,10 @@
           <span>Data Input</span>
           <span id="dataStatusBadge" class="badge">Demo loaded</span>
         </div>
-        
+
         <div id="dropzone" class="dropzone">
-          <span class="dropzone-icon">📥</span>
-          <div class="dropzone-text">Drop CSV file here</div>
-          <div class="dropzone-hint">or click to browse (.csv, .tsv, .txt)</div>
+          <div class="dropzone-text">Drop CSV file here, or click to browse</div>
+          <div class="dropzone-hint">Supports .csv, .tsv, .txt</div>
           <input type="file" id="fileInput" accept=".csv,.tsv,.txt" style="display: none;">
         </div>
 
@@ -588,8 +648,10 @@
         <!-- Preset Filters -->
         <div class="preset-bar">
           <button class="btn-preset active" id="presetAll" title="Show all waves">All Waves</button>
-          <button class="btn-preset" id="presetDirtyClean" title="Select Dirty Input & Clean Ground Truth only">🎯 Dirty &amp; Clean Only</button>
-          <button class="btn-preset" id="presetCleanDenoised" title="Show Clean and all denoised methods">Clean &amp; Denoised</button>
+          <button class="btn-preset" id="presetDirtyClean" title="Select Dirty Input & Clean Ground Truth only">Dirty
+            &amp; Clean Only</button>
+          <button class="btn-preset" id="presetCleanDenoised" title="Show Clean and all denoised methods">Clean &amp;
+            Denoised</button>
           <button class="btn-preset" id="presetDenoisedOnly" title="Show only denoised methods">Denoised Only</button>
         </div>
 
@@ -642,12 +704,17 @@
 
         <div class="control-row">
           <span class="control-label">Line Thickness</span>
-          <input type="range" id="lineWidthRange" min="1" max="3.5" value="1.8" step="0.2" style="width: 90px; accent-color: var(--accent-blue);">
+          <input type="range" id="lineWidthRange" min="1" max="3.5" value="1.8" step="0.2" style="width: 90px; accent-">
         </div>
 
         <div class="control-row">
           <span class="control-label">Show Grid</span>
-          <input type="checkbox" id="showGridCheck" checked style="accent-color: var(--accent-blue); width: 15px; height: 15px;">
+          <input type="checkbox" id="showGridCheck" checked style="width: 15px; height: 15px;">
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Trial Segments</span>
+          <input type="checkbox" id="showTrialSegmentsCheck" checked style="width: 15px; height: 15px;" title="Label interleaved [non-AV (1.5s), AV (1.5s)] trial cadence and Code 25 trigger onsets">
         </div>
       </section>
     </aside>
@@ -658,15 +725,15 @@
       <section class="sidebar-section">
         <div class="section-title">
           <span>Tier 2 Benchmark</span>
-          <span class="badge" style="color: var(--accent-green);">Loaded</span>
+          <span class="badge" style="">Loaded</span>
         </div>
         <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.4;">
-          Evaluates <strong>neural preservation</strong> of auditory cortical responses (N1-P2) across real CI participants.
+          Evaluates <strong>neural preservation</strong> of auditory cortical responses (N1-P2) across real CI
+          participants.
         </p>
         <div id="dropzoneTier2" class="dropzone">
-          <span class="dropzone-icon">📥</span>
-          <div class="dropzone-text">Drop tier2_*.csv file</div>
-          <div class="dropzone-hint">to load custom ERP evaluation</div>
+          <div class="dropzone-text">Drop tier2_*.csv file here</div>
+          <div class="dropzone-hint">Load custom ERP evaluation</div>
           <input type="file" id="fileInputTier2" accept=".csv" style="display: none;">
         </div>
       </section>
@@ -678,10 +745,10 @@
         </div>
         <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.75rem;">
           <button class="btn-preset active" id="viewTier2Bar" style="text-align: left; padding: 0.5rem 0.65rem;">
-            📊 4-Panel Summary Bar Charts (Mean ± Std)
+            Summary Bar Charts (Mean ± Std)
           </button>
           <button class="btn-preset" id="viewTier2Box" style="text-align: left; padding: 0.5rem 0.65rem;">
-            📦 Distribution Boxplots (CI Subjects)
+            Distribution Boxplots (CI Subjects)
           </button>
         </div>
 
@@ -718,7 +785,8 @@
         </div>
         <div class="control-row">
           <span class="control-label">Search Subject</span>
-          <input type="text" id="tier2SubjectSearch" class="control-input" placeholder="e.g. 0901" style="width: 100px; text-align: left;">
+          <input type="text" id="tier2SubjectSearch" class="control-input" placeholder="e.g. 0901"
+            style="width: 100px; text-align: left;">
         </div>
       </section>
     </aside>
@@ -732,15 +800,15 @@
             <span id="activeFileInfo" class="graph-status" style="font-weight: 600; color: #fff;">
               Tier 1 Screening Benchmark Sample
             </span>
-            <span id="metaStats" class="badge" style="background: rgba(59, 130, 246, 0.15); border: none;">
+            <span id="metaStats" class="badge">
               750 samples · 4 channels · 6 waves
             </span>
           </div>
           <div class="toolbar-right">
-            <span id="hoverInfo" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-cyan);">
+            <span id="hoverInfo" style="font-family: var(--font-mono); font-size: 0.75rem; ">
               Hover cursor over graph to inspect values
             </span>
-            <button id="btnResetView" class="btn btn-secondary" title="Reset Time Window">↺ Reset</button>
+            <button id="btnResetView" class="btn btn-secondary" title="Reset Time Window">Reset</button>
           </div>
         </div>
 
@@ -751,8 +819,9 @@
 
           <div class="summary-container">
             <div class="summary-header">
-              <span>📈 Denoising Objective Metrics (Window: <span id="timeSpanBadge">0.0 – 3.0s</span>)</span>
-              <span style="font-size: 0.72rem; color: var(--text-muted);">Calculated against Clean Ground Truth (Hearing)</span>
+              <span>Denoising Objective Metrics (Window: <span id="timeSpanBadge">0.0 – 3.0s</span>)</span>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">Calculated against Clean Ground Truth
+                (Hearing)</span>
             </div>
             <div style="overflow-x: auto;">
               <table class="metrics-table">
@@ -780,7 +849,7 @@
             <span class="graph-status" style="font-weight: 600; color: #fff;">
               Tier 2 ERP Benchmark: Neural Signal Preservation
             </span>
-            <span class="badge" style="background: rgba(34, 197, 94, 0.15); color: var(--accent-green); border: none;">
+            <span class="badge">
               37 CI Participants · 77 Evaluated Recordings
             </span>
           </div>
@@ -797,7 +866,7 @@
             <div class="stat-card">
               <span class="stat-card-title">Top Auditory SNR</span>
               <div class="stat-card-val">
-                <span style="color: var(--accent-cyan);">14.97 dB</span>
+                <span style="">14.97 dB</span>
                 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">± 5.88 dB</span>
               </div>
               <span class="stat-card-sub">Wavelet Denoising (Highest evoked SNR)</span>
@@ -806,7 +875,7 @@
             <div class="stat-card">
               <span class="stat-card-title">Lowest Baseline Noise</span>
               <div class="stat-card-val">
-                <span style="color: var(--accent-green);">0.31 μV</span>
+                <span style="">0.31 μV</span>
                 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">± 0.16 μV</span>
               </div>
               <span class="stat-card-sub">Wavelet &amp; SSP (90% noise attenuation)</span>
@@ -815,7 +884,7 @@
             <div class="stat-card">
               <span class="stat-card-title">Template Correlation</span>
               <div class="stat-card-val">
-                <span style="color: var(--accent-blue);">r = 0.046</span>
+                <span style="">r = 0.046</span>
                 <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">± 0.16</span>
               </div>
               <span class="stat-card-sub">CCA (Best alignment with hearing template)</span>
@@ -824,7 +893,7 @@
             <div class="stat-card">
               <span class="stat-card-title">Evaluated CI Cohort</span>
               <div class="stat-card-val">
-                <span style="color: var(--accent-purple);">37 Subjects</span>
+                <span style="">37 Subjects</span>
               </div>
               <span class="stat-card-sub">Real CI user EEG datasets</span>
             </div>
@@ -838,7 +907,7 @@
           <!-- Full Tier 2 Subject Data Table -->
           <div class="summary-container" style="margin-top: 1rem;">
             <div class="summary-header">
-              <span>📋 CI Subject ERP Metrics Breakdown (N1, P2, SNR, Baseline Noise)</span>
+              <span>CI Subject ERP Metrics Breakdown (N1, P2, SNR, Baseline Noise)</span>
               <span id="tier2RowCount" style="font-size: 0.72rem; color: var(--text-muted);">Showing 77 rows</span>
             </div>
             <div style="overflow-x: auto; max-height: 380px;">
@@ -876,7 +945,8 @@
         <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.6rem;">
           Paste raw CSV lines below. Supports comma, tab, or semicolon separated columns.
         </p>
-        <textarea id="pasteTextarea" class="csv-textarea" placeholder="time,channel,dirty,clean,ica,pca...&#10;0.000,Cz,14.2,12.0,-260.1,20.4&#10;..."></textarea>
+        <textarea id="pasteTextarea" class="csv-textarea"
+          placeholder="time,channel,dirty,clean,ica,pca...&#10;0.000,Cz,14.2,12.0,-260.1,20.4&#10;..."></textarea>
       </div>
       <div class="modal-footer">
         <button id="btnCancelModal" class="btn btn-secondary">Cancel</button>
@@ -888,7 +958,7 @@
   <!-- Embedded Logic & Datasets -->
   <script>
     // ── Tier 2 Embedded Benchmark Dataset (CI Cohort ERP Evaluation) ──
-    const DEFAULT_TIER2_DATA = [{"method": "raw", "subject_id": "0901y2", "condition": "A", "template_corr": 0.01694146240405575, "channel": "Cz", "n1_amp_uv": -9.561172016066923, "n1_lat_ms": 117.00439453125, "p2_amp_uv": 7.343453897470446, "p2_lat_ms": 186.8896484375, "p2p_uv": 16.90462591353737, "base_rms_uv": 2.811919434391583, "erp_snr_db": 14.379185011760152}, {"method": "raw", "subject_id": "0902y2", "condition": "A", "template_corr": -0.0294496184216225, "channel": "Cz", "n1_amp_uv": -2.227286022741475, "n1_lat_ms": 107.84912109375, "p2_amp_uv": 4.718265768397822, "p2_lat_ms": 159.66796875, "p2p_uv": 6.945551791139297, "base_rms_uv": 1.1904978519844058, "erp_snr_db": 16.155150910688576}, {"method": "raw", "subject_id": "0903y2", "condition": "A", "template_corr": 0.06926549741664652, "channel": "Cz", "n1_amp_uv": -17.16542052148232, "n1_lat_ms": 106.99462890625, "p2_amp_uv": 17.05223482832432, "p2_lat_ms": 237.97607421875, "p2p_uv": 34.21765534980664, "base_rms_uv": 4.91982000837909, "erp_snr_db": 13.271376525080996}, {"method": "raw", "subject_id": "0904y2", "condition": "A", "template_corr": -0.008898122714437838, "channel": "Cz", "n1_amp_uv": -17.099292044626104, "n1_lat_ms": 147.64404296875, "p2_amp_uv": 17.82510972266701, "p2_lat_ms": 174.98779296875, "p2p_uv": 34.92440176729311, "base_rms_uv": 8.295679611585387, "erp_snr_db": 10.383765327764392}, {"method": "raw", "subject_id": "0905y2", "condition": "A", "template_corr": -0.06882789823232482, "channel": "Cz", "n1_amp_uv": -2.40551408353027, "n1_lat_ms": 143.24951171875, "p2_amp_uv": 2.785363182009858, "p2_lat_ms": 219.8486328125, "p2p_uv": 5.190877265540128, "base_rms_uv": 0.7726126515590738, "erp_snr_db": 15.180854022564558}, {"method": "raw", "subject_id": "0906y2", "condition": "A", "template_corr": -0.3107604989270651, "channel": "Cz", "n1_amp_uv": -3.921084571478411, "n1_lat_ms": 88.56201171875, "p2_amp_uv": 2.748422247620203, "p2_lat_ms": 243.7744140625, "p2p_uv": 6.669506819098614, "base_rms_uv": 0.635513287945378, "erp_snr_db": 15.805620722614233}, {"method": "raw", "subject_id": "0907y2", "condition": "A", "template_corr": 0.013936000418603479, "channel": "Cz", "n1_amp_uv": -3.5492718703699015, "n1_lat_ms": 122.61962890625, "p2_amp_uv": 4.249710857335393, "p2_lat_ms": 193.84765625, "p2p_uv": 7.798982727705295, "base_rms_uv": 1.1060188790847518, "erp_snr_db": 11.691933294976725}, {"method": "raw", "subject_id": "0908y2", "condition": "A", "template_corr": 0.10116538348415403, "channel": "Cz", "n1_amp_uv": -7.393390814489983, "n1_lat_ms": 139.0380859375, "p2_amp_uv": 2.9427745239970413, "p2_lat_ms": 218.8720703125, "p2p_uv": 10.336165338487024, "base_rms_uv": 1.8799572614057023, "erp_snr_db": 14.247005801473447}, {"method": "raw", "subject_id": "0910y2", "condition": "A", "template_corr": -0.020234032235447695, "channel": "Cz", "n1_amp_uv": -8.732699005084797, "n1_lat_ms": 138.24462890625, "p2_amp_uv": 10.501114422916993, "p2_lat_ms": 239.80712890625, "p2p_uv": 19.23381342800179, "base_rms_uv": 2.3029521874315697, "erp_snr_db": 14.981208400238984}, {"method": "raw", "subject_id": "0912y2", "condition": "A", "template_corr": -0.07054465314064866, "channel": "Cz", "n1_amp_uv": -7.80029517117264, "n1_lat_ms": 148.4375, "p2_amp_uv": 11.83430357482768, "p2_lat_ms": 166.32080078125, "p2p_uv": 19.63459874600032, "base_rms_uv": 3.87909756566325, "erp_snr_db": 12.656267221780276}, {"method": "raw", "subject_id": "0913y2", "condition": "A", "template_corr": 0.036601570876526206, "channel": "Cz", "n1_amp_uv": -4.538478957587345, "n1_lat_ms": 149.658203125, "p2_amp_uv": 5.861505757366155, "p2_lat_ms": 163.0859375, "p2p_uv": 10.3999847149535, "base_rms_uv": 1.632630231344249, "erp_snr_db": 12.050190705450287}, {"method": "raw", "subject_id": "0914y2", "condition": "A", "template_corr": 0.17067125311811876, "channel": "Cz", "n1_amp_uv": -3.0932244839031147, "n1_lat_ms": 80.38330078125, "p2_amp_uv": 7.598938575039268, "p2_lat_ms": 239.44091796875, "p2p_uv": 10.692163058942382, "base_rms_uv": 1.9843739940252016, "erp_snr_db": 20.808132563073794}, {"method": "raw", "subject_id": "0915y2", "condition": "A", "template_corr": -0.06565076630174083, "channel": "Cz", "n1_amp_uv": -3.162753180979605, "n1_lat_ms": 118.10302734375, "p2_amp_uv": 12.513195212696505, "p2_lat_ms": 212.158203125, "p2p_uv": 15.67594839367611, "base_rms_uv": 1.4485032061642145, "erp_snr_db": 19.63940632373099}, {"method": "raw", "subject_id": "0918y2", "condition": "A", "template_corr": -0.00602225933633654, "channel": "Cz", "n1_amp_uv": -6.834249970874692, "n1_lat_ms": 130.4931640625, "p2_amp_uv": 15.713625948759892, "p2_lat_ms": 185.24169921875, "p2p_uv": 22.547875919634585, "base_rms_uv": 2.471659913215146, "erp_snr_db": 17.156549210202943}, {"method": "raw", "subject_id": "0919y2", "condition": "A", "template_corr": 0.0018224246757403667, "channel": "Cz", "n1_amp_uv": -6.39479869239441, "n1_lat_ms": 84.47265625, "p2_amp_uv": 7.933818589900581, "p2_lat_ms": 176.513671875, "p2p_uv": 14.328617282294992, "base_rms_uv": 2.362418630052223, "erp_snr_db": 10.522507363944232}, {"method": "raw", "subject_id": "0921y2", "condition": "A", "template_corr": 0.14511197104321039, "channel": "Cz", "n1_amp_uv": -1.7991191163501234, "n1_lat_ms": 104.4921875, "p2_amp_uv": 4.8292536036867455, "p2_lat_ms": 193.7255859375, "p2p_uv": 6.628372720036869, "base_rms_uv": 1.1624102491839967, "erp_snr_db": 15.564109731375641}, {"method": "raw", "subject_id": "0922y2", "condition": "A", "template_corr": 0.07836828418277741, "channel": "Cz", "n1_amp_uv": -2.285410813789436, "n1_lat_ms": 95.947265625, "p2_amp_uv": 0.6859433453752827, "p2_lat_ms": 153.3203125, "p2p_uv": 2.9713541591647186, "base_rms_uv": 0.498261071538776, "erp_snr_db": 17.84481105085914}, {"method": "raw", "subject_id": "0923y2", "condition": "A", "template_corr": 0.19523739572565157, "channel": "Cz", "n1_amp_uv": -8.16051180652122, "n1_lat_ms": 131.7138671875, "p2_amp_uv": 10.314699735375022, "p2_lat_ms": 161.1328125, "p2p_uv": 18.475211541896243, "base_rms_uv": 2.6385409902931, "erp_snr_db": 28.13653283961895}, {"method": "raw", "subject_id": "0924y2", "condition": "A", "template_corr": 0.08932506244034233, "channel": "Cz", "n1_amp_uv": -13.905664280695952, "n1_lat_ms": 107.97119140625, "p2_amp_uv": 11.581225303393335, "p2_lat_ms": 223.0224609375, "p2p_uv": 25.486889584089287, "base_rms_uv": 2.3547123908841407, "erp_snr_db": 15.425076637280753}, {"method": "raw", "subject_id": "0925y2", "condition": "A", "template_corr": 0.04829843740503786, "channel": "Cz", "n1_amp_uv": -5.123704913057408, "n1_lat_ms": 145.56884765625, "p2_amp_uv": 3.1158580544209444, "p2_lat_ms": 208.0078125, "p2p_uv": 8.239562967478353, "base_rms_uv": 1.1046212820865473, "erp_snr_db": 16.414569569289085}, {"method": "raw", "subject_id": "0926y2", "condition": "A", "template_corr": -0.07612697879184273, "channel": "Cz", "n1_amp_uv": -0.9604253659890409, "n1_lat_ms": 109.86328125, "p2_amp_uv": 2.698412515398281, "p2_lat_ms": 154.96826171875, "p2p_uv": 3.6588378813873224, "base_rms_uv": 0.8154092144418995, "erp_snr_db": 17.54806301686186}, {"method": "raw", "subject_id": "0929y2", "condition": "A", "template_corr": 0.0018833671344934781, "channel": "Cz", "n1_amp_uv": -9.938410404617082, "n1_lat_ms": 101.4404296875, "p2_amp_uv": 5.5727452880449935, "p2_lat_ms": 160.46142578125, "p2p_uv": 15.511155692662076, "base_rms_uv": 2.4995503580691403, "erp_snr_db": 11.989100025643298}, {"method": "raw", "subject_id": "0931y2", "condition": "A", "template_corr": 0.012904846856122087, "channel": "Cz", "n1_amp_uv": -3.082591719222457, "n1_lat_ms": 81.54296875, "p2_amp_uv": 3.7069732864219973, "p2_lat_ms": 156.55517578125, "p2p_uv": 6.789565005644454, "base_rms_uv": 1.1102516726093192, "erp_snr_db": 13.743122120256835}, {"method": "raw", "subject_id": "0932y2", "condition": "A", "template_corr": -0.03814510241665097, "channel": "Cz", "n1_amp_uv": -6.165041652616351, "n1_lat_ms": 136.29150390625, "p2_amp_uv": 5.925036034958096, "p2_lat_ms": 196.044921875, "p2p_uv": 12.090077687574446, "base_rms_uv": 2.1939789666064664, "erp_snr_db": 9.652203795312515}, {"method": "raw", "subject_id": "0934y2", "condition": "A", "template_corr": -0.07026093767844166, "channel": "Cz", "n1_amp_uv": -10.62381074186752, "n1_lat_ms": 147.27783203125, "p2_amp_uv": 0.44047552577076, "p2_lat_ms": 189.02587890625, "p2p_uv": 11.064286267638279, "base_rms_uv": 2.2384736748222527, "erp_snr_db": 14.176565048848449}, {"method": "raw", "subject_id": "0935y2", "condition": "A", "template_corr": 0.10034836988978531, "channel": "Cz", "n1_amp_uv": -7.655676268827803, "n1_lat_ms": 82.70263671875, "p2_amp_uv": 11.509651645023979, "p2_lat_ms": 159.0576171875, "p2p_uv": 19.165327913851783, "base_rms_uv": 3.3841617628910847, "erp_snr_db": 10.63222092463188}, {"method": "raw", "subject_id": "0936y2", "condition": "A", "template_corr": 0.21787424700562538, "channel": "Cz", "n1_amp_uv": -5.157406561127567, "n1_lat_ms": 128.173828125, "p2_amp_uv": 2.6279917753359836, "p2_lat_ms": 172.42431640625, "p2p_uv": 7.78539833646355, "base_rms_uv": 1.0445393413546056, "erp_snr_db": 13.870127351616645}, {"method": "raw", "subject_id": "0938y2", "condition": "A", "template_corr": -0.11169290946088678, "channel": "Cz", "n1_amp_uv": -3.847225951437368, "n1_lat_ms": 108.09326171875, "p2_amp_uv": 4.60067899549544, "p2_lat_ms": 152.64892578125, "p2p_uv": 8.447904946932809, "base_rms_uv": 0.8213259895177563, "erp_snr_db": 14.966120893655148}, {"method": "raw", "subject_id": "0939y2", "condition": "A", "template_corr": -0.19951156693257863, "channel": "Cz", "n1_amp_uv": -6.884232572221138, "n1_lat_ms": 89.66064453125, "p2_amp_uv": 6.118090799899068, "p2_lat_ms": 186.46240234375, "p2p_uv": 13.002323372120205, "base_rms_uv": 1.8061880357033415, "erp_snr_db": 11.621850121821248}, {"method": "raw", "subject_id": "0940y2", "condition": "A", "template_corr": 0.06961161911658979, "channel": "Cz", "n1_amp_uv": -5.886965723572488, "n1_lat_ms": 128.2958984375, "p2_amp_uv": 10.925771253836201, "p2_lat_ms": 217.59033203125, "p2p_uv": 16.81273697740869, "base_rms_uv": 2.1523901956471545, "erp_snr_db": 15.106699520114333}, {"method": "raw", "subject_id": "0941y2", "condition": "A", "template_corr": 0.17723757526007525, "channel": "Cz", "n1_amp_uv": -2.2417589568911684, "n1_lat_ms": 87.0361328125, "p2_amp_uv": 6.750664523009311, "p2_lat_ms": 227.4169921875, "p2p_uv": 8.992423479900479, "base_rms_uv": 0.9869712242105322, "erp_snr_db": 16.70083624905058}, {"method": "raw", "subject_id": "0944y2", "condition": "A", "template_corr": -0.07298391135377064, "channel": "Cz", "n1_amp_uv": -6.461304590812357, "n1_lat_ms": 81.4208984375, "p2_amp_uv": 7.713152160509955, "p2_lat_ms": 201.7822265625, "p2p_uv": 14.174456751322312, "base_rms_uv": 1.9004488444021277, "erp_snr_db": 14.928858932676487}, {"method": "raw", "subject_id": "0945y2", "condition": "A", "template_corr": 0.044169657015424205, "channel": "Cz", "n1_amp_uv": -4.515252820976549, "n1_lat_ms": 149.658203125, "p2_amp_uv": 3.8680591288862685, "p2_lat_ms": 190.24658203125, "p2p_uv": 8.383311949862819, "base_rms_uv": 1.292779092234922, "erp_snr_db": 11.437391715343058}, {"method": "raw", "subject_id": "0946y2", "condition": "A", "template_corr": -0.12859042534250495, "channel": "Cz", "n1_amp_uv": -3.3825222432476054, "n1_lat_ms": 91.85791015625, "p2_amp_uv": 3.2265811336207006, "p2_lat_ms": 179.5654296875, "p2p_uv": 6.6091033768683065, "base_rms_uv": 1.3736111504806623, "erp_snr_db": 9.609169096498302}, {"method": "raw", "subject_id": "0947y2", "condition": "A", "template_corr": -0.11045477903534827, "channel": "Cz", "n1_amp_uv": -1.8286786241703856, "n1_lat_ms": 98.20556640625, "p2_amp_uv": 2.5486325626946322, "p2_lat_ms": 243.71337890625, "p2p_uv": 4.377311186865018, "base_rms_uv": 0.5608318701611358, "erp_snr_db": 13.149477041439393}, {"method": "raw", "subject_id": "0948y2", "condition": "A", "template_corr": 0.05029305912628659, "channel": "Cz", "n1_amp_uv": -3.0868779811968934, "n1_lat_ms": 92.71240234375, "p2_amp_uv": 3.5659682747927426, "p2_lat_ms": 150.5126953125, "p2p_uv": 6.652846255989636, "base_rms_uv": 1.1290286348867467, "erp_snr_db": 11.443842040359094}, {"method": "raw", "subject_id": "0999y2", "condition": "A", "template_corr": -0.013790097692547219, "channel": "Cz", "n1_amp_uv": -6.006334093962797, "n1_lat_ms": 148.01025390625, "p2_amp_uv": 6.7970278935685915, "p2_lat_ms": 245.17822265625, "p2p_uv": 12.803361987531389, "base_rms_uv": 2.5854479353414317, "erp_snr_db": 8.810800717180635}, {"method": "ica", "subject_id": "0901y2", "condition": "A", "template_corr": 0.021226343460898238, "channel": "Cz", "n1_amp_uv": -6.963887505315969, "n1_lat_ms": 117.00439453125, "p2_amp_uv": 10.903526887832005, "p2_lat_ms": 186.8896484375, "p2p_uv": 17.867414393147975, "base_rms_uv": 2.694208243407532, "erp_snr_db": 12.142716167115168}, {"method": "ica", "subject_id": "0902y2", "condition": "A", "template_corr": -0.15771236715216388, "channel": "Cz", "n1_amp_uv": -0.40226255283550355, "n1_lat_ms": 84.65576171875, "p2_amp_uv": 1.5233729107347938, "p2_lat_ms": 150.2685546875, "p2p_uv": 1.9256354635702972, "base_rms_uv": 0.9370618775948107, "erp_snr_db": 10.529693495520682}, {"method": "ica", "subject_id": "0903y2", "condition": "A", "template_corr": -0.24477250752272361, "channel": "Cz", "n1_amp_uv": -10.821627210077775, "n1_lat_ms": 146.17919921875, "p2_amp_uv": 6.815716742062301, "p2_lat_ms": 227.72216796875, "p2p_uv": 17.637343952140075, "base_rms_uv": 1.8451996318633088, "erp_snr_db": 15.36498291898628}, {"method": "ica", "subject_id": "0904y2", "condition": "A", "template_corr": -0.014166472953932845, "channel": "Cz", "n1_amp_uv": -14.785677742740265, "n1_lat_ms": 147.64404296875, "p2_amp_uv": 20.420010688646492, "p2_lat_ms": 226.50146484375, "p2p_uv": 35.20568843138676, "base_rms_uv": 8.181698409974912, "erp_snr_db": 9.792468387607052}, {"method": "ica", "subject_id": "0905y2", "condition": "A", "template_corr": -0.055614450544339486, "channel": "Cz", "n1_amp_uv": -3.2210078326451397, "n1_lat_ms": 83.92333984375, "p2_amp_uv": 1.665597169807143, "p2_lat_ms": 249.267578125, "p2p_uv": 4.886605002452283, "base_rms_uv": 0.7729645817041827, "erp_snr_db": 14.137289489312547}, {"method": "ica", "subject_id": "0906y2", "condition": "A", "template_corr": -0.29830581204864787, "channel": "Cz", "n1_amp_uv": -2.0042917437530186, "n1_lat_ms": 82.8857421875, "p2_amp_uv": 1.444488643747815, "p2_lat_ms": 202.7587890625, "p2p_uv": 3.4487803875008334, "base_rms_uv": 0.5051285652263774, "erp_snr_db": 13.37340206866184}, {"method": "ica", "subject_id": "0907y2", "condition": "A", "template_corr": 0.009049109682062137, "channel": "Cz", "n1_amp_uv": -3.1968287967587887, "n1_lat_ms": 122.61962890625, "p2_amp_uv": 4.708079780007506, "p2_lat_ms": 193.84765625, "p2p_uv": 7.904908576766295, "base_rms_uv": 1.0514074723882822, "erp_snr_db": 13.02145115660345}, {"method": "ica", "subject_id": "0908y2", "condition": "A", "template_corr": 0.03966606718621327, "channel": "Cz", "n1_amp_uv": -4.86419895554269, "n1_lat_ms": 139.0380859375, "p2_amp_uv": 6.491113515440209, "p2_lat_ms": 218.8720703125, "p2p_uv": 11.355312470982899, "base_rms_uv": 1.9312278164705146, "erp_snr_db": 10.52971275348977}, {"method": "ica", "subject_id": "0910y2", "condition": "A", "template_corr": -0.02975836826173533, "channel": "Cz", "n1_amp_uv": -11.338577074925517, "n1_lat_ms": 145.8740234375, "p2_amp_uv": 9.084271115303501, "p2_lat_ms": 209.77783203125, "p2p_uv": 20.42284819022902, "base_rms_uv": 2.3766398961151722, "erp_snr_db": 15.320120348298449}, {"method": "pca", "subject_id": "0901y2", "condition": "A", "template_corr": 0.010641448977144679, "channel": "Cz", "n1_amp_uv": -6.589389122242988, "n1_lat_ms": 117.00439453125, "p2_amp_uv": 11.054754630170347, "p2_lat_ms": 186.8896484375, "p2p_uv": 17.644143752413335, "base_rms_uv": 2.699102615025333, "erp_snr_db": 12.246593634168876}, {"method": "pca", "subject_id": "0902y2", "condition": "A", "template_corr": 0.008287935099747474, "channel": "Cz", "n1_amp_uv": -2.3087998787922333, "n1_lat_ms": 146.484375, "p2_amp_uv": 4.314161121975829, "p2_lat_ms": 228.94287109375, "p2p_uv": 6.622961000768062, "base_rms_uv": 1.1940107214332611, "erp_snr_db": 15.305019157685685}, {"method": "pca", "subject_id": "0903y2", "condition": "A", "template_corr": 0.07032276906728505, "channel": "Cz", "n1_amp_uv": -15.7810726770318, "n1_lat_ms": 106.99462890625, "p2_amp_uv": 16.84531341416067, "p2_lat_ms": 237.97607421875, "p2p_uv": 32.62638609119247, "base_rms_uv": 5.057225712357257, "erp_snr_db": 13.412275252787518}, {"method": "pca", "subject_id": "0904y2", "condition": "A", "template_corr": -0.00815370834269513, "channel": "Cz", "n1_amp_uv": -14.512648385236888, "n1_lat_ms": 147.64404296875, "p2_amp_uv": 20.515081716335462, "p2_lat_ms": 174.98779296875, "p2p_uv": 35.02773010157235, "base_rms_uv": 8.251355858335634, "erp_snr_db": 9.714947061129987}, {"method": "pca", "subject_id": "0906y2", "condition": "A", "template_corr": -0.31284675057842537, "channel": "Cz", "n1_amp_uv": -4.588080672918138, "n1_lat_ms": 88.56201171875, "p2_amp_uv": 1.6474001712144646, "p2_lat_ms": 208.49609375, "p2p_uv": 6.235480844132603, "base_rms_uv": 0.582330506557918, "erp_snr_db": 17.929217262400638}, {"method": "pca", "subject_id": "0907y2", "condition": "A", "template_corr": 0.015093004368454897, "channel": "Cz", "n1_amp_uv": -3.1561030303946014, "n1_lat_ms": 122.61962890625, "p2_amp_uv": 4.7047047221431, "p2_lat_ms": 193.84765625, "p2p_uv": 7.860807752537702, "base_rms_uv": 1.05204347933198, "erp_snr_db": 13.009969724325721}, {"method": "pca", "subject_id": "0908y2", "condition": "A", "template_corr": 0.09460786767687608, "channel": "Cz", "n1_amp_uv": -3.9039060621382724, "n1_lat_ms": 139.0380859375, "p2_amp_uv": 6.3155430246244215, "p2_lat_ms": 218.8720703125, "p2p_uv": 10.219449086762694, "base_rms_uv": 2.02716694889787, "erp_snr_db": 9.870422569015462}, {"method": "cca", "subject_id": "0901y2", "condition": "A", "template_corr": 0.020961606521044285, "channel": "Cz", "n1_amp_uv": -6.959060396005018, "n1_lat_ms": 117.00439453125, "p2_amp_uv": 10.906592521879896, "p2_lat_ms": 186.8896484375, "p2p_uv": 17.865652917884915, "base_rms_uv": 2.694444918803875, "erp_snr_db": 12.144394960368283}, {"method": "cca", "subject_id": "0902y2", "condition": "A", "template_corr": 0.38147317530759706, "channel": "Cz", "n1_amp_uv": -4.652438128415036, "n1_lat_ms": 101.4404296875, "p2_amp_uv": 5.542715077701403, "p2_lat_ms": 178.40576171875, "p2p_uv": 10.195153206116439, "base_rms_uv": 1.072989006510939, "erp_snr_db": 17.39399049176798}, {"method": "cca", "subject_id": "0903y2", "condition": "A", "template_corr": -0.10559545615176506, "channel": "Cz", "n1_amp_uv": -33.25116902075874, "n1_lat_ms": 107.72705078125, "p2_amp_uv": 47.50982324870326, "p2_lat_ms": 189.94140625, "p2p_uv": 80.76099226946201, "base_rms_uv": 12.338756832341922, "erp_snr_db": 11.783910047174988}, {"method": "cca", "subject_id": "0904y2", "condition": "A", "template_corr": -0.02670432654666943, "channel": "Cz", "n1_amp_uv": -16.234215307779646, "n1_lat_ms": 147.64404296875, "p2_amp_uv": 21.73604502598534, "p2_lat_ms": 164.85595703125, "p2p_uv": 37.97026033376498, "base_rms_uv": 8.425838851031791, "erp_snr_db": 9.929303276483775}, {"method": "cca", "subject_id": "0905y2", "condition": "A", "template_corr": -0.12055008887701646, "channel": "Cz", "n1_amp_uv": -10.50036538301787, "n1_lat_ms": 81.84814453125, "p2_amp_uv": 8.962234545632619, "p2_lat_ms": 151.85546875, "p2p_uv": 19.46259992865049, "base_rms_uv": 2.5760609199483, "erp_snr_db": 13.437581741531051}, {"method": "cca", "subject_id": "0906y2", "condition": "A", "template_corr": -0.0022522902950670113, "channel": "Cz", "n1_amp_uv": -6.169339332968546, "n1_lat_ms": 140.13671875, "p2_amp_uv": -0.20906842315058402, "p2_lat_ms": 166.015625, "p2p_uv": 5.960270909817962, "base_rms_uv": 1.2107616767813594, "erp_snr_db": 16.532916518829612}, {"method": "cca", "subject_id": "0907y2", "condition": "A", "template_corr": 0.08861452431094796, "channel": "Cz", "n1_amp_uv": -8.368085501635926, "n1_lat_ms": 110.29052734375, "p2_amp_uv": 8.529272437478538, "p2_lat_ms": 221.5576171875, "p2p_uv": 16.897357939114464, "base_rms_uv": 1.8302197612902928, "erp_snr_db": 13.67051251441634}, {"method": "cca", "subject_id": "0908y2", "condition": "A", "template_corr": 0.12941382889036562, "channel": "Cz", "n1_amp_uv": -41.72009621283805, "n1_lat_ms": 80.13916015625, "p2_amp_uv": 14.603248891777092, "p2_lat_ms": 235.3515625, "p2p_uv": 56.32334510461514, "base_rms_uv": 16.61234391528636, "erp_snr_db": 9.615051076021624}, {"method": "ssp", "subject_id": "0901y2", "condition": "A", "template_corr": -0.30718327027344133, "channel": "Cz", "n1_amp_uv": -1.4643285881172488, "n1_lat_ms": 104.30908203125, "p2_amp_uv": 1.6891502525902855, "p2_lat_ms": 246.4599609375, "p2p_uv": 3.1534788407075345, "base_rms_uv": 0.495660618031346, "erp_snr_db": 10.649659690954529}, {"method": "ssp", "subject_id": "0902y2", "condition": "A", "template_corr": 0.01891906572490554, "channel": "Cz", "n1_amp_uv": -0.7251561796789044, "n1_lat_ms": 116.51611328125, "p2_amp_uv": 1.9721466185454994, "p2_lat_ms": 169.00634765625, "p2p_uv": 2.697302798224404, "base_rms_uv": 0.6379064306521678, "erp_snr_db": 14.699292622580263}, {"method": "ssp", "subject_id": "0903y2", "condition": "A", "template_corr": -0.34480659811733655, "channel": "Cz", "n1_amp_uv": -2.475495382283304, "n1_lat_ms": 148.13232421875, "p2_amp_uv": 0.32715597670754276, "p2_lat_ms": 234.80224609375, "p2p_uv": 2.802651358990847, "base_rms_uv": 0.4056886130947785, "erp_snr_db": 18.353090234142574}, {"method": "ssp", "subject_id": "0904y2", "condition": "A", "template_corr": -0.3637556393671204, "channel": "Cz", "n1_amp_uv": -0.0812685278419186, "n1_lat_ms": 109.2529296875, "p2_amp_uv": 0.15163558546027323, "p2_lat_ms": 158.38623046875, "p2p_uv": 0.23290411330219182, "base_rms_uv": 0.04539208817896302, "erp_snr_db": 10.898854669348816}, {"method": "ssp", "subject_id": "0905y2", "condition": "A", "template_corr": -0.0401753969137401, "channel": "Cz", "n1_amp_uv": -2.6908496019850934, "n1_lat_ms": 83.92333984375, "p2_amp_uv": 1.6052035659353094, "p2_lat_ms": 233.94775390625, "p2p_uv": 4.296053167920403, "base_rms_uv": 0.38154553193933277, "erp_snr_db": 16.966831218244643}, {"method": "ssp", "subject_id": "0906y2", "condition": "A", "template_corr": -0.4277623049597081, "channel": "Cz", "n1_amp_uv": -2.018193661039012, "n1_lat_ms": 82.8857421875, "p2_amp_uv": 1.1447205101438493, "p2_lat_ms": 202.7587890625, "p2p_uv": 3.1629141711828614, "base_rms_uv": 0.264995112692235, "erp_snr_db": 18.12026560053017}, {"method": "ssp", "subject_id": "0907y2", "condition": "A", "template_corr": 0.030450028638937515, "channel": "Cz", "n1_amp_uv": -1.730038798419572, "n1_lat_ms": 140.19775390625, "p2_amp_uv": 1.3273292052038506, "p2_lat_ms": 181.5185546875, "p2p_uv": 3.0573680036234228, "base_rms_uv": 0.40375307423862317, "erp_snr_db": 12.63877337358509}, {"method": "ssp", "subject_id": "0908y2", "condition": "A", "template_corr": 0.04329428116462448, "channel": "Cz", "n1_amp_uv": -1.0406438949201493, "n1_lat_ms": 88.134765625, "p2_amp_uv": 3.071877419172107, "p2_lat_ms": 243.71337890625, "p2p_uv": 4.112521314092256, "base_rms_uv": 0.49509014932223483, "erp_snr_db": 15.854374205073077}, {"method": "wavelet", "subject_id": "0901y2", "condition": "A", "template_corr": 0.15313869664242985, "channel": "Cz", "n1_amp_uv": -0.9814894251479348, "n1_lat_ms": 137.75634765625, "p2_amp_uv": 2.5425270672746834, "p2_lat_ms": 213.07373046875, "p2p_uv": 3.5240164924226183, "base_rms_uv": 0.2528673965463345, "erp_snr_db": 20.047387037108898}, {"method": "wavelet", "subject_id": "0902y2", "condition": "A", "template_corr": 0.16117618131584782, "channel": "Cz", "n1_amp_uv": 0.512258954096628, "n1_lat_ms": 124.32861328125, "p2_amp_uv": 1.549396430720044, "p2_lat_ms": 158.935546875, "p2p_uv": 1.037137476623416, "base_rms_uv": 0.6608013639957292, "erp_snr_db": 12.377643578349847}, {"method": "wavelet", "subject_id": "0903y2", "condition": "A", "template_corr": -0.14811234241785057, "channel": "Cz", "n1_amp_uv": -3.131801488402686, "n1_lat_ms": 148.4375, "p2_amp_uv": 0.5787077913512111, "p2_lat_ms": 227.72216796875, "p2p_uv": 3.7105092797538974, "base_rms_uv": 0.19342911526442189, "erp_snr_db": 24.53599757739729}, {"method": "wavelet", "subject_id": "0904y2", "condition": "A", "template_corr": -0.286732106559868, "channel": "Cz", "n1_amp_uv": 0.4966767275062679, "n1_lat_ms": 80.01708984375, "p2_amp_uv": 0.5785764913584471, "p2_lat_ms": 150.0244140625, "p2p_uv": 0.08189976385217923, "base_rms_uv": 0.37765565203116147, "erp_snr_db": 11.713328251598853}, {"method": "wavelet", "subject_id": "0905y2", "condition": "A", "template_corr": -0.30426208406498384, "channel": "Cz", "n1_amp_uv": -0.5413328316813487, "n1_lat_ms": 149.96337890625, "p2_amp_uv": 0.06663719588382926, "p2_lat_ms": 250.0, "p2p_uv": 0.6079700275651779, "base_rms_uv": 0.14130003516188683, "erp_snr_db": 11.896801243694055}, {"method": "wavelet", "subject_id": "0906y2", "condition": "A", "template_corr": -0.34298692027268507, "channel": "Cz", "n1_amp_uv": -2.333806434028514, "n1_lat_ms": 95.21484375, "p2_amp_uv": 0.037185017704663224, "p2_lat_ms": 250.0, "p2p_uv": 2.370991451733177, "base_rms_uv": 0.21963953719793466, "erp_snr_db": 20.526996233288834}, {"method": "wavelet", "subject_id": "0907y2", "condition": "A", "template_corr": 0.12585708678953117, "channel": "Cz", "n1_amp_uv": -0.514350328136271, "n1_lat_ms": 143.12744140625, "p2_amp_uv": 0.9174462602648734, "p2_lat_ms": 198.2421875, "p2p_uv": 1.4317965884011445, "base_rms_uv": 0.36504774001863205, "erp_snr_db": 8.004586822384855}, {"method": "wavelet", "subject_id": "0908y2", "condition": "A", "template_corr": 0.05513789692124164, "channel": "Cz", "n1_amp_uv": -0.6057119121954632, "n1_lat_ms": 149.84130859375, "p2_amp_uv": 0.8735212101676563, "p2_lat_ms": 228.759765625, "p2p_uv": 1.4792331223631194, "base_rms_uv": 0.25572851642583083, "erp_snr_db": 10.669819501851737}];
+    const DEFAULT_TIER2_DATA = [{ "method": "raw", "subject_id": "0901y2", "condition": "A", "template_corr": 0.01694146240405575, "channel": "Cz", "n1_amp_uv": -9.561172016066923, "n1_lat_ms": 117.00439453125, "p2_amp_uv": 7.343453897470446, "p2_lat_ms": 186.8896484375, "p2p_uv": 16.90462591353737, "base_rms_uv": 2.811919434391583, "erp_snr_db": 14.379185011760152 }, { "method": "raw", "subject_id": "0902y2", "condition": "A", "template_corr": -0.0294496184216225, "channel": "Cz", "n1_amp_uv": -2.227286022741475, "n1_lat_ms": 107.84912109375, "p2_amp_uv": 4.718265768397822, "p2_lat_ms": 159.66796875, "p2p_uv": 6.945551791139297, "base_rms_uv": 1.1904978519844058, "erp_snr_db": 16.155150910688576 }, { "method": "raw", "subject_id": "0903y2", "condition": "A", "template_corr": 0.06926549741664652, "channel": "Cz", "n1_amp_uv": -17.16542052148232, "n1_lat_ms": 106.99462890625, "p2_amp_uv": 17.05223482832432, "p2_lat_ms": 237.97607421875, "p2p_uv": 34.21765534980664, "base_rms_uv": 4.91982000837909, "erp_snr_db": 13.271376525080996 }, { "method": "raw", "subject_id": "0904y2", "condition": "A", "template_corr": -0.008898122714437838, "channel": "Cz", "n1_amp_uv": -17.099292044626104, "n1_lat_ms": 147.64404296875, "p2_amp_uv": 17.82510972266701, "p2_lat_ms": 174.98779296875, "p2p_uv": 34.92440176729311, "base_rms_uv": 8.295679611585387, "erp_snr_db": 10.383765327764392 }, { "method": "raw", "subject_id": "0905y2", "condition": "A", "template_corr": -0.06882789823232482, "channel": "Cz", "n1_amp_uv": -2.40551408353027, "n1_lat_ms": 143.24951171875, "p2_amp_uv": 2.785363182009858, "p2_lat_ms": 219.8486328125, "p2p_uv": 5.190877265540128, "base_rms_uv": 0.7726126515590738, "erp_snr_db": 15.180854022564558 }, { "method": "raw", "subject_id": "0906y2", "condition": "A", "template_corr": -0.3107604989270651, "channel": "Cz", "n1_amp_uv": -3.921084571478411, "n1_lat_ms": 88.56201171875, "p2_amp_uv": 2.748422247620203, "p2_lat_ms": 243.7744140625, "p2p_uv": 6.669506819098614, "base_rms_uv": 0.635513287945378, "erp_snr_db": 15.805620722614233 }, { "method": "raw", "subject_id": "0907y2", "condition": "A", "template_corr": 0.013936000418603479, "channel": "Cz", "n1_amp_uv": -3.5492718703699015, "n1_lat_ms": 122.61962890625, "p2_amp_uv": 4.249710857335393, "p2_lat_ms": 193.84765625, "p2p_uv": 7.798982727705295, "base_rms_uv": 1.1060188790847518, "erp_snr_db": 11.691933294976725 }, { "method": "raw", "subject_id": "0908y2", "condition": "A", "template_corr": 0.10116538348415403, "channel": "Cz", "n1_amp_uv": -7.393390814489983, "n1_lat_ms": 139.0380859375, "p2_amp_uv": 2.9427745239970413, "p2_lat_ms": 218.8720703125, "p2p_uv": 10.336165338487024, "base_rms_uv": 1.8799572614057023, "erp_snr_db": 14.247005801473447 }, { "method": "raw", "subject_id": "0910y2", "condition": "A", "template_corr": -0.020234032235447695, "channel": "Cz", "n1_amp_uv": -8.732699005084797, "n1_lat_ms": 138.24462890625, "p2_amp_uv": 10.501114422916993, "p2_lat_ms": 239.80712890625, "p2p_uv": 19.23381342800179, "base_rms_uv": 2.3029521874315697, "erp_snr_db": 14.981208400238984 }, { "method": "raw", "subject_id": "0912y2", "condition": "A", "template_corr": -0.07054465314064866, "channel": "Cz", "n1_amp_uv": -7.80029517117264, "n1_lat_ms": 148.4375, "p2_amp_uv": 11.83430357482768, "p2_lat_ms": 166.32080078125, "p2p_uv": 19.63459874600032, "base_rms_uv": 3.87909756566325, "erp_snr_db": 12.656267221780276 }, { "method": "raw", "subject_id": "0913y2", "condition": "A", "template_corr": 0.036601570876526206, "channel": "Cz", "n1_amp_uv": -4.538478957587345, "n1_lat_ms": 149.658203125, "p2_amp_uv": 5.861505757366155, "p2_lat_ms": 163.0859375, "p2p_uv": 10.3999847149535, "base_rms_uv": 1.632630231344249, "erp_snr_db": 12.050190705450287 }, { "method": "raw", "subject_id": "0914y2", "condition": "A", "template_corr": 0.17067125311811876, "channel": "Cz", "n1_amp_uv": -3.0932244839031147, "n1_lat_ms": 80.38330078125, "p2_amp_uv": 7.598938575039268, "p2_lat_ms": 239.44091796875, "p2p_uv": 10.692163058942382, "base_rms_uv": 1.9843739940252016, "erp_snr_db": 20.808132563073794 }, { "method": "raw", "subject_id": "0915y2", "condition": "A", "template_corr": -0.06565076630174083, "channel": "Cz", "n1_amp_uv": -3.162753180979605, "n1_lat_ms": 118.10302734375, "p2_amp_uv": 12.513195212696505, "p2_lat_ms": 212.158203125, "p2p_uv": 15.67594839367611, "base_rms_uv": 1.4485032061642145, "erp_snr_db": 19.63940632373099 }, { "method": "raw", "subject_id": "0918y2", "condition": "A", "template_corr": -0.00602225933633654, "channel": "Cz", "n1_amp_uv": -6.834249970874692, "n1_lat_ms": 130.4931640625, "p2_amp_uv": 15.713625948759892, "p2_lat_ms": 185.24169921875, "p2p_uv": 22.547875919634585, "base_rms_uv": 2.471659913215146, "erp_snr_db": 17.156549210202943 }, { "method": "raw", "subject_id": "0919y2", "condition": "A", "template_corr": 0.0018224246757403667, "channel": "Cz", "n1_amp_uv": -6.39479869239441, "n1_lat_ms": 84.47265625, "p2_amp_uv": 7.933818589900581, "p2_lat_ms": 176.513671875, "p2p_uv": 14.328617282294992, "base_rms_uv": 2.362418630052223, "erp_snr_db": 10.522507363944232 }, { "method": "raw", "subject_id": "0921y2", "condition": "A", "template_corr": 0.14511197104321039, "channel": "Cz", "n1_amp_uv": -1.7991191163501234, "n1_lat_ms": 104.4921875, "p2_amp_uv": 4.8292536036867455, "p2_lat_ms": 193.7255859375, "p2p_uv": 6.628372720036869, "base_rms_uv": 1.1624102491839967, "erp_snr_db": 15.564109731375641 }, { "method": "raw", "subject_id": "0922y2", "condition": "A", "template_corr": 0.07836828418277741, "channel": "Cz", "n1_amp_uv": -2.285410813789436, "n1_lat_ms": 95.947265625, "p2_amp_uv": 0.6859433453752827, "p2_lat_ms": 153.3203125, "p2p_uv": 2.9713541591647186, "base_rms_uv": 0.498261071538776, "erp_snr_db": 17.84481105085914 }, { "method": "raw", "subject_id": "0923y2", "condition": "A", "template_corr": 0.19523739572565157, "channel": "Cz", "n1_amp_uv": -8.16051180652122, "n1_lat_ms": 131.7138671875, "p2_amp_uv": 10.314699735375022, "p2_lat_ms": 161.1328125, "p2p_uv": 18.475211541896243, "base_rms_uv": 2.6385409902931, "erp_snr_db": 28.13653283961895 }, { "method": "raw", "subject_id": "0924y2", "condition": "A", "template_corr": 0.08932506244034233, "channel": "Cz", "n1_amp_uv": -13.905664280695952, "n1_lat_ms": 107.97119140625, "p2_amp_uv": 11.581225303393335, "p2_lat_ms": 223.0224609375, "p2p_uv": 25.486889584089287, "base_rms_uv": 2.3547123908841407, "erp_snr_db": 15.425076637280753 }, { "method": "raw", "subject_id": "0925y2", "condition": "A", "template_corr": 0.04829843740503786, "channel": "Cz", "n1_amp_uv": -5.123704913057408, "n1_lat_ms": 145.56884765625, "p2_amp_uv": 3.1158580544209444, "p2_lat_ms": 208.0078125, "p2p_uv": 8.239562967478353, "base_rms_uv": 1.1046212820865473, "erp_snr_db": 16.414569569289085 }, { "method": "raw", "subject_id": "0926y2", "condition": "A", "template_corr": -0.07612697879184273, "channel": "Cz", "n1_amp_uv": -0.9604253659890409, "n1_lat_ms": 109.86328125, "p2_amp_uv": 2.698412515398281, "p2_lat_ms": 154.96826171875, "p2p_uv": 3.6588378813873224, "base_rms_uv": 0.8154092144418995, "erp_snr_db": 17.54806301686186 }, { "method": "raw", "subject_id": "0929y2", "condition": "A", "template_corr": 0.0018833671344934781, "channel": "Cz", "n1_amp_uv": -9.938410404617082, "n1_lat_ms": 101.4404296875, "p2_amp_uv": 5.5727452880449935, "p2_lat_ms": 160.46142578125, "p2p_uv": 15.511155692662076, "base_rms_uv": 2.4995503580691403, "erp_snr_db": 11.989100025643298 }, { "method": "raw", "subject_id": "0931y2", "condition": "A", "template_corr": 0.012904846856122087, "channel": "Cz", "n1_amp_uv": -3.082591719222457, "n1_lat_ms": 81.54296875, "p2_amp_uv": 3.7069732864219973, "p2_lat_ms": 156.55517578125, "p2p_uv": 6.789565005644454, "base_rms_uv": 1.1102516726093192, "erp_snr_db": 13.743122120256835 }, { "method": "raw", "subject_id": "0932y2", "condition": "A", "template_corr": -0.03814510241665097, "channel": "Cz", "n1_amp_uv": -6.165041652616351, "n1_lat_ms": 136.29150390625, "p2_amp_uv": 5.925036034958096, "p2_lat_ms": 196.044921875, "p2p_uv": 12.090077687574446, "base_rms_uv": 2.1939789666064664, "erp_snr_db": 9.652203795312515 }, { "method": "raw", "subject_id": "0934y2", "condition": "A", "template_corr": -0.07026093767844166, "channel": "Cz", "n1_amp_uv": -10.62381074186752, "n1_lat_ms": 147.27783203125, "p2_amp_uv": 0.44047552577076, "p2_lat_ms": 189.02587890625, "p2p_uv": 11.064286267638279, "base_rms_uv": 2.2384736748222527, "erp_snr_db": 14.176565048848449 }, { "method": "raw", "subject_id": "0935y2", "condition": "A", "template_corr": 0.10034836988978531, "channel": "Cz", "n1_amp_uv": -7.655676268827803, "n1_lat_ms": 82.70263671875, "p2_amp_uv": 11.509651645023979, "p2_lat_ms": 159.0576171875, "p2p_uv": 19.165327913851783, "base_rms_uv": 3.3841617628910847, "erp_snr_db": 10.63222092463188 }, { "method": "raw", "subject_id": "0936y2", "condition": "A", "template_corr": 0.21787424700562538, "channel": "Cz", "n1_amp_uv": -5.157406561127567, "n1_lat_ms": 128.173828125, "p2_amp_uv": 2.6279917753359836, "p2_lat_ms": 172.42431640625, "p2p_uv": 7.78539833646355, "base_rms_uv": 1.0445393413546056, "erp_snr_db": 13.870127351616645 }, { "method": "raw", "subject_id": "0938y2", "condition": "A", "template_corr": -0.11169290946088678, "channel": "Cz", "n1_amp_uv": -3.847225951437368, "n1_lat_ms": 108.09326171875, "p2_amp_uv": 4.60067899549544, "p2_lat_ms": 152.64892578125, "p2p_uv": 8.447904946932809, "base_rms_uv": 0.8213259895177563, "erp_snr_db": 14.966120893655148 }, { "method": "raw", "subject_id": "0939y2", "condition": "A", "template_corr": -0.19951156693257863, "channel": "Cz", "n1_amp_uv": -6.884232572221138, "n1_lat_ms": 89.66064453125, "p2_amp_uv": 6.118090799899068, "p2_lat_ms": 186.46240234375, "p2p_uv": 13.002323372120205, "base_rms_uv": 1.8061880357033415, "erp_snr_db": 11.621850121821248 }, { "method": "raw", "subject_id": "0940y2", "condition": "A", "template_corr": 0.06961161911658979, "channel": "Cz", "n1_amp_uv": -5.886965723572488, "n1_lat_ms": 128.2958984375, "p2_amp_uv": 10.925771253836201, "p2_lat_ms": 217.59033203125, "p2p_uv": 16.81273697740869, "base_rms_uv": 2.1523901956471545, "erp_snr_db": 15.106699520114333 }, { "method": "raw", "subject_id": "0941y2", "condition": "A", "template_corr": 0.17723757526007525, "channel": "Cz", "n1_amp_uv": -2.2417589568911684, "n1_lat_ms": 87.0361328125, "p2_amp_uv": 6.750664523009311, "p2_lat_ms": 227.4169921875, "p2p_uv": 8.992423479900479, "base_rms_uv": 0.9869712242105322, "erp_snr_db": 16.70083624905058 }, { "method": "raw", "subject_id": "0944y2", "condition": "A", "template_corr": -0.07298391135377064, "channel": "Cz", "n1_amp_uv": -6.461304590812357, "n1_lat_ms": 81.4208984375, "p2_amp_uv": 7.713152160509955, "p2_lat_ms": 201.7822265625, "p2p_uv": 14.174456751322312, "base_rms_uv": 1.9004488444021277, "erp_snr_db": 14.928858932676487 }, { "method": "raw", "subject_id": "0945y2", "condition": "A", "template_corr": 0.044169657015424205, "channel": "Cz", "n1_amp_uv": -4.515252820976549, "n1_lat_ms": 149.658203125, "p2_amp_uv": 3.8680591288862685, "p2_lat_ms": 190.24658203125, "p2p_uv": 8.383311949862819, "base_rms_uv": 1.292779092234922, "erp_snr_db": 11.437391715343058 }, { "method": "raw", "subject_id": "0946y2", "condition": "A", "template_corr": -0.12859042534250495, "channel": "Cz", "n1_amp_uv": -3.3825222432476054, "n1_lat_ms": 91.85791015625, "p2_amp_uv": 3.2265811336207006, "p2_lat_ms": 179.5654296875, "p2p_uv": 6.6091033768683065, "base_rms_uv": 1.3736111504806623, "erp_snr_db": 9.609169096498302 }, { "method": "raw", "subject_id": "0947y2", "condition": "A", "template_corr": -0.11045477903534827, "channel": "Cz", "n1_amp_uv": -1.8286786241703856, "n1_lat_ms": 98.20556640625, "p2_amp_uv": 2.5486325626946322, "p2_lat_ms": 243.71337890625, "p2p_uv": 4.377311186865018, "base_rms_uv": 0.5608318701611358, "erp_snr_db": 13.149477041439393 }, { "method": "raw", "subject_id": "0948y2", "condition": "A", "template_corr": 0.05029305912628659, "channel": "Cz", "n1_amp_uv": -3.0868779811968934, "n1_lat_ms": 92.71240234375, "p2_amp_uv": 3.5659682747927426, "p2_lat_ms": 150.5126953125, "p2p_uv": 6.652846255989636, "base_rms_uv": 1.1290286348867467, "erp_snr_db": 11.443842040359094 }, { "method": "raw", "subject_id": "0999y2", "condition": "A", "template_corr": -0.013790097692547219, "channel": "Cz", "n1_amp_uv": -6.006334093962797, "n1_lat_ms": 148.01025390625, "p2_amp_uv": 6.7970278935685915, "p2_lat_ms": 245.17822265625, "p2p_uv": 12.803361987531389, "base_rms_uv": 2.5854479353414317, "erp_snr_db": 8.810800717180635 }, { "method": "ica", "subject_id": "0901y2", "condition": "A", "template_corr": 0.021226343460898238, "channel": "Cz", "n1_amp_uv": -6.963887505315969, "n1_lat_ms": 117.00439453125, "p2_amp_uv": 10.903526887832005, "p2_lat_ms": 186.8896484375, "p2p_uv": 17.867414393147975, "base_rms_uv": 2.694208243407532, "erp_snr_db": 12.142716167115168 }, { "method": "ica", "subject_id": "0902y2", "condition": "A", "template_corr": -0.15771236715216388, "channel": "Cz", "n1_amp_uv": -0.40226255283550355, "n1_lat_ms": 84.65576171875, "p2_amp_uv": 1.5233729107347938, "p2_lat_ms": 150.2685546875, "p2p_uv": 1.9256354635702972, "base_rms_uv": 0.9370618775948107, "erp_snr_db": 10.529693495520682 }, { "method": "ica", "subject_id": "0903y2", "condition": "A", "template_corr": -0.24477250752272361, "channel": "Cz", "n1_amp_uv": -10.821627210077775, "n1_lat_ms": 146.17919921875, "p2_amp_uv": 6.815716742062301, "p2_lat_ms": 227.72216796875, "p2p_uv": 17.637343952140075, "base_rms_uv": 1.8451996318633088, "erp_snr_db": 15.36498291898628 }, { "method": "ica", "subject_id": "0904y2", "condition": "A", "template_corr": -0.014166472953932845, "channel": "Cz", "n1_amp_uv": -14.785677742740265, "n1_lat_ms": 147.64404296875, "p2_amp_uv": 20.420010688646492, "p2_lat_ms": 226.50146484375, "p2p_uv": 35.20568843138676, "base_rms_uv": 8.181698409974912, "erp_snr_db": 9.792468387607052 }, { "method": "ica", "subject_id": "0905y2", "condition": "A", "template_corr": -0.055614450544339486, "channel": "Cz", "n1_amp_uv": -3.2210078326451397, "n1_lat_ms": 83.92333984375, "p2_amp_uv": 1.665597169807143, "p2_lat_ms": 249.267578125, "p2p_uv": 4.886605002452283, "base_rms_uv": 0.7729645817041827, "erp_snr_db": 14.137289489312547 }, { "method": "ica", "subject_id": "0906y2", "condition": "A", "template_corr": -0.29830581204864787, "channel": "Cz", "n1_amp_uv": -2.0042917437530186, "n1_lat_ms": 82.8857421875, "p2_amp_uv": 1.444488643747815, "p2_lat_ms": 202.7587890625, "p2p_uv": 3.4487803875008334, "base_rms_uv": 0.5051285652263774, "erp_snr_db": 13.37340206866184 }, { "method": "ica", "subject_id": "0907y2", "condition": "A", "template_corr": 0.009049109682062137, "channel": "Cz", "n1_amp_uv": -3.1968287967587887, "n1_lat_ms": 122.61962890625, "p2_amp_uv": 4.708079780007506, "p2_lat_ms": 193.84765625, "p2p_uv": 7.904908576766295, "base_rms_uv": 1.0514074723882822, "erp_snr_db": 13.02145115660345 }, { "method": "ica", "subject_id": "0908y2", "condition": "A", "template_corr": 0.03966606718621327, "channel": "Cz", "n1_amp_uv": -4.86419895554269, "n1_lat_ms": 139.0380859375, "p2_amp_uv": 6.491113515440209, "p2_lat_ms": 218.8720703125, "p2p_uv": 11.355312470982899, "base_rms_uv": 1.9312278164705146, "erp_snr_db": 10.52971275348977 }, { "method": "ica", "subject_id": "0910y2", "condition": "A", "template_corr": -0.02975836826173533, "channel": "Cz", "n1_amp_uv": -11.338577074925517, "n1_lat_ms": 145.8740234375, "p2_amp_uv": 9.084271115303501, "p2_lat_ms": 209.77783203125, "p2p_uv": 20.42284819022902, "base_rms_uv": 2.3766398961151722, "erp_snr_db": 15.320120348298449 }, { "method": "pca", "subject_id": "0901y2", "condition": "A", "template_corr": 0.010641448977144679, "channel": "Cz", "n1_amp_uv": -6.589389122242988, "n1_lat_ms": 117.00439453125, "p2_amp_uv": 11.054754630170347, "p2_lat_ms": 186.8896484375, "p2p_uv": 17.644143752413335, "base_rms_uv": 2.699102615025333, "erp_snr_db": 12.246593634168876 }, { "method": "pca", "subject_id": "0902y2", "condition": "A", "template_corr": 0.008287935099747474, "channel": "Cz", "n1_amp_uv": -2.3087998787922333, "n1_lat_ms": 146.484375, "p2_amp_uv": 4.314161121975829, "p2_lat_ms": 228.94287109375, "p2p_uv": 6.622961000768062, "base_rms_uv": 1.1940107214332611, "erp_snr_db": 15.305019157685685 }, { "method": "pca", "subject_id": "0903y2", "condition": "A", "template_corr": 0.07032276906728505, "channel": "Cz", "n1_amp_uv": -15.7810726770318, "n1_lat_ms": 106.99462890625, "p2_amp_uv": 16.84531341416067, "p2_lat_ms": 237.97607421875, "p2p_uv": 32.62638609119247, "base_rms_uv": 5.057225712357257, "erp_snr_db": 13.412275252787518 }, { "method": "pca", "subject_id": "0904y2", "condition": "A", "template_corr": -0.00815370834269513, "channel": "Cz", "n1_amp_uv": -14.512648385236888, "n1_lat_ms": 147.64404296875, "p2_amp_uv": 20.515081716335462, "p2_lat_ms": 174.98779296875, "p2p_uv": 35.02773010157235, "base_rms_uv": 8.251355858335634, "erp_snr_db": 9.714947061129987 }, { "method": "pca", "subject_id": "0906y2", "condition": "A", "template_corr": -0.31284675057842537, "channel": "Cz", "n1_amp_uv": -4.588080672918138, "n1_lat_ms": 88.56201171875, "p2_amp_uv": 1.6474001712144646, "p2_lat_ms": 208.49609375, "p2p_uv": 6.235480844132603, "base_rms_uv": 0.582330506557918, "erp_snr_db": 17.929217262400638 }, { "method": "pca", "subject_id": "0907y2", "condition": "A", "template_corr": 0.015093004368454897, "channel": "Cz", "n1_amp_uv": -3.1561030303946014, "n1_lat_ms": 122.61962890625, "p2_amp_uv": 4.7047047221431, "p2_lat_ms": 193.84765625, "p2p_uv": 7.860807752537702, "base_rms_uv": 1.05204347933198, "erp_snr_db": 13.009969724325721 }, { "method": "pca", "subject_id": "0908y2", "condition": "A", "template_corr": 0.09460786767687608, "channel": "Cz", "n1_amp_uv": -3.9039060621382724, "n1_lat_ms": 139.0380859375, "p2_amp_uv": 6.3155430246244215, "p2_lat_ms": 218.8720703125, "p2p_uv": 10.219449086762694, "base_rms_uv": 2.02716694889787, "erp_snr_db": 9.870422569015462 }, { "method": "cca", "subject_id": "0901y2", "condition": "A", "template_corr": 0.020961606521044285, "channel": "Cz", "n1_amp_uv": -6.959060396005018, "n1_lat_ms": 117.00439453125, "p2_amp_uv": 10.906592521879896, "p2_lat_ms": 186.8896484375, "p2p_uv": 17.865652917884915, "base_rms_uv": 2.694444918803875, "erp_snr_db": 12.144394960368283 }, { "method": "cca", "subject_id": "0902y2", "condition": "A", "template_corr": 0.38147317530759706, "channel": "Cz", "n1_amp_uv": -4.652438128415036, "n1_lat_ms": 101.4404296875, "p2_amp_uv": 5.542715077701403, "p2_lat_ms": 178.40576171875, "p2p_uv": 10.195153206116439, "base_rms_uv": 1.072989006510939, "erp_snr_db": 17.39399049176798 }, { "method": "cca", "subject_id": "0903y2", "condition": "A", "template_corr": -0.10559545615176506, "channel": "Cz", "n1_amp_uv": -33.25116902075874, "n1_lat_ms": 107.72705078125, "p2_amp_uv": 47.50982324870326, "p2_lat_ms": 189.94140625, "p2p_uv": 80.76099226946201, "base_rms_uv": 12.338756832341922, "erp_snr_db": 11.783910047174988 }, { "method": "cca", "subject_id": "0904y2", "condition": "A", "template_corr": -0.02670432654666943, "channel": "Cz", "n1_amp_uv": -16.234215307779646, "n1_lat_ms": 147.64404296875, "p2_amp_uv": 21.73604502598534, "p2_lat_ms": 164.85595703125, "p2p_uv": 37.97026033376498, "base_rms_uv": 8.425838851031791, "erp_snr_db": 9.929303276483775 }, { "method": "cca", "subject_id": "0905y2", "condition": "A", "template_corr": -0.12055008887701646, "channel": "Cz", "n1_amp_uv": -10.50036538301787, "n1_lat_ms": 81.84814453125, "p2_amp_uv": 8.962234545632619, "p2_lat_ms": 151.85546875, "p2p_uv": 19.46259992865049, "base_rms_uv": 2.5760609199483, "erp_snr_db": 13.437581741531051 }, { "method": "cca", "subject_id": "0906y2", "condition": "A", "template_corr": -0.0022522902950670113, "channel": "Cz", "n1_amp_uv": -6.169339332968546, "n1_lat_ms": 140.13671875, "p2_amp_uv": -0.20906842315058402, "p2_lat_ms": 166.015625, "p2p_uv": 5.960270909817962, "base_rms_uv": 1.2107616767813594, "erp_snr_db": 16.532916518829612 }, { "method": "cca", "subject_id": "0907y2", "condition": "A", "template_corr": 0.08861452431094796, "channel": "Cz", "n1_amp_uv": -8.368085501635926, "n1_lat_ms": 110.29052734375, "p2_amp_uv": 8.529272437478538, "p2_lat_ms": 221.5576171875, "p2p_uv": 16.897357939114464, "base_rms_uv": 1.8302197612902928, "erp_snr_db": 13.67051251441634 }, { "method": "cca", "subject_id": "0908y2", "condition": "A", "template_corr": 0.12941382889036562, "channel": "Cz", "n1_amp_uv": -41.72009621283805, "n1_lat_ms": 80.13916015625, "p2_amp_uv": 14.603248891777092, "p2_lat_ms": 235.3515625, "p2p_uv": 56.32334510461514, "base_rms_uv": 16.61234391528636, "erp_snr_db": 9.615051076021624 }, { "method": "ssp", "subject_id": "0901y2", "condition": "A", "template_corr": -0.30718327027344133, "channel": "Cz", "n1_amp_uv": -1.4643285881172488, "n1_lat_ms": 104.30908203125, "p2_amp_uv": 1.6891502525902855, "p2_lat_ms": 246.4599609375, "p2p_uv": 3.1534788407075345, "base_rms_uv": 0.495660618031346, "erp_snr_db": 10.649659690954529 }, { "method": "ssp", "subject_id": "0902y2", "condition": "A", "template_corr": 0.01891906572490554, "channel": "Cz", "n1_amp_uv": -0.7251561796789044, "n1_lat_ms": 116.51611328125, "p2_amp_uv": 1.9721466185454994, "p2_lat_ms": 169.00634765625, "p2p_uv": 2.697302798224404, "base_rms_uv": 0.6379064306521678, "erp_snr_db": 14.699292622580263 }, { "method": "ssp", "subject_id": "0903y2", "condition": "A", "template_corr": -0.34480659811733655, "channel": "Cz", "n1_amp_uv": -2.475495382283304, "n1_lat_ms": 148.13232421875, "p2_amp_uv": 0.32715597670754276, "p2_lat_ms": 234.80224609375, "p2p_uv": 2.802651358990847, "base_rms_uv": 0.4056886130947785, "erp_snr_db": 18.353090234142574 }, { "method": "ssp", "subject_id": "0904y2", "condition": "A", "template_corr": -0.3637556393671204, "channel": "Cz", "n1_amp_uv": -0.0812685278419186, "n1_lat_ms": 109.2529296875, "p2_amp_uv": 0.15163558546027323, "p2_lat_ms": 158.38623046875, "p2p_uv": 0.23290411330219182, "base_rms_uv": 0.04539208817896302, "erp_snr_db": 10.898854669348816 }, { "method": "ssp", "subject_id": "0905y2", "condition": "A", "template_corr": -0.0401753969137401, "channel": "Cz", "n1_amp_uv": -2.6908496019850934, "n1_lat_ms": 83.92333984375, "p2_amp_uv": 1.6052035659353094, "p2_lat_ms": 233.94775390625, "p2p_uv": 4.296053167920403, "base_rms_uv": 0.38154553193933277, "erp_snr_db": 16.966831218244643 }, { "method": "ssp", "subject_id": "0906y2", "condition": "A", "template_corr": -0.4277623049597081, "channel": "Cz", "n1_amp_uv": -2.018193661039012, "n1_lat_ms": 82.8857421875, "p2_amp_uv": 1.1447205101438493, "p2_lat_ms": 202.7587890625, "p2p_uv": 3.1629141711828614, "base_rms_uv": 0.264995112692235, "erp_snr_db": 18.12026560053017 }, { "method": "ssp", "subject_id": "0907y2", "condition": "A", "template_corr": 0.030450028638937515, "channel": "Cz", "n1_amp_uv": -1.730038798419572, "n1_lat_ms": 140.19775390625, "p2_amp_uv": 1.3273292052038506, "p2_lat_ms": 181.5185546875, "p2p_uv": 3.0573680036234228, "base_rms_uv": 0.40375307423862317, "erp_snr_db": 12.63877337358509 }, { "method": "ssp", "subject_id": "0908y2", "condition": "A", "template_corr": 0.04329428116462448, "channel": "Cz", "n1_amp_uv": -1.0406438949201493, "n1_lat_ms": 88.134765625, "p2_amp_uv": 3.071877419172107, "p2_lat_ms": 243.71337890625, "p2p_uv": 4.112521314092256, "base_rms_uv": 0.49509014932223483, "erp_snr_db": 15.854374205073077 }, { "method": "wavelet", "subject_id": "0901y2", "condition": "A", "template_corr": 0.15313869664242985, "channel": "Cz", "n1_amp_uv": -0.9814894251479348, "n1_lat_ms": 137.75634765625, "p2_amp_uv": 2.5425270672746834, "p2_lat_ms": 213.07373046875, "p2p_uv": 3.5240164924226183, "base_rms_uv": 0.2528673965463345, "erp_snr_db": 20.047387037108898 }, { "method": "wavelet", "subject_id": "0902y2", "condition": "A", "template_corr": 0.16117618131584782, "channel": "Cz", "n1_amp_uv": 0.512258954096628, "n1_lat_ms": 124.32861328125, "p2_amp_uv": 1.549396430720044, "p2_lat_ms": 158.935546875, "p2p_uv": 1.037137476623416, "base_rms_uv": 0.6608013639957292, "erp_snr_db": 12.377643578349847 }, { "method": "wavelet", "subject_id": "0903y2", "condition": "A", "template_corr": -0.14811234241785057, "channel": "Cz", "n1_amp_uv": -3.131801488402686, "n1_lat_ms": 148.4375, "p2_amp_uv": 0.5787077913512111, "p2_lat_ms": 227.72216796875, "p2p_uv": 3.7105092797538974, "base_rms_uv": 0.19342911526442189, "erp_snr_db": 24.53599757739729 }, { "method": "wavelet", "subject_id": "0904y2", "condition": "A", "template_corr": -0.286732106559868, "channel": "Cz", "n1_amp_uv": 0.4966767275062679, "n1_lat_ms": 80.01708984375, "p2_amp_uv": 0.5785764913584471, "p2_lat_ms": 150.0244140625, "p2p_uv": 0.08189976385217923, "base_rms_uv": 0.37765565203116147, "erp_snr_db": 11.713328251598853 }, { "method": "wavelet", "subject_id": "0905y2", "condition": "A", "template_corr": -0.30426208406498384, "channel": "Cz", "n1_amp_uv": -0.5413328316813487, "n1_lat_ms": 149.96337890625, "p2_amp_uv": 0.06663719588382926, "p2_lat_ms": 250.0, "p2p_uv": 0.6079700275651779, "base_rms_uv": 0.14130003516188683, "erp_snr_db": 11.896801243694055 }, { "method": "wavelet", "subject_id": "0906y2", "condition": "A", "template_corr": -0.34298692027268507, "channel": "Cz", "n1_amp_uv": -2.333806434028514, "n1_lat_ms": 95.21484375, "p2_amp_uv": 0.037185017704663224, "p2_lat_ms": 250.0, "p2p_uv": 2.370991451733177, "base_rms_uv": 0.21963953719793466, "erp_snr_db": 20.526996233288834 }, { "method": "wavelet", "subject_id": "0907y2", "condition": "A", "template_corr": 0.12585708678953117, "channel": "Cz", "n1_amp_uv": -0.514350328136271, "n1_lat_ms": 143.12744140625, "p2_amp_uv": 0.9174462602648734, "p2_lat_ms": 198.2421875, "p2p_uv": 1.4317965884011445, "base_rms_uv": 0.36504774001863205, "erp_snr_db": 8.004586822384855 }, { "method": "wavelet", "subject_id": "0908y2", "condition": "A", "template_corr": 0.05513789692124164, "channel": "Cz", "n1_amp_uv": -0.6057119121954632, "n1_lat_ms": 149.84130859375, "p2_amp_uv": 0.8735212101676563, "p2_lat_ms": 228.759765625, "p2p_uv": 1.4792331223631194, "base_rms_uv": 0.25572851642583083, "erp_snr_db": 10.669819501851737 }];
 
     // ── Synthetic Tier 1 Generator ──
     function createTier1SampleData() {
@@ -897,7 +967,7 @@
       const n_samples = Math.floor(duration_s * sfreq);
       const channels = ['Cz', 'Fz', 'P7', 'T7'];
       const waves = ['dirty', 'clean', 'ica', 'pca', 'ssp', 'wavelet'];
-      
+
       const times = [];
       for (let i = 0; i < n_samples; i++) times.push(i / sfreq);
 
@@ -998,6 +1068,7 @@
       scaleMode: 'per_channel',
       lineWidth: 1.8,
       showGrid: true,
+      showTrialSegments: true,
       sfreq: 250.0,
 
       // Tier 2 state
@@ -1047,6 +1118,7 @@
       scaleMode: document.getElementById('scaleMode'),
       lineWidthRange: document.getElementById('lineWidthRange'),
       showGridCheck: document.getElementById('showGridCheck'),
+      showTrialSegmentsCheck: document.getElementById('showTrialSegmentsCheck'),
       canvas: document.getElementById('eegCanvas'),
       metricsBody: document.getElementById('metricsBody'),
       timeSpanBadge: document.getElementById('timeSpanBadge'),
@@ -1373,7 +1445,7 @@
 
       const containerWidth = canvas.parentElement.clientWidth || 1100;
       const rowHeight = 170;
-      const headerHeight = 65;
+      const headerHeight = state.showTrialSegments ? 90 : 65;
       const footerHeight = 60;
       const nRows = Math.max(1, visibleChannels.length);
       const totalHeight = headerHeight + (nRows * rowHeight) + footerHeight;
@@ -1584,6 +1656,130 @@
       ctx.fillStyle = '#000000';
       ctx.font = 'bold 12px -apple-system, sans-serif';
       ctx.fillText('Time (seconds)', marginLeft + plotWidth / 2, xAxisY + 28);
+    }
+
+    
+    function drawTrialSegments(ctx, tMin, tMax, duration, marginLeft, plotWidth, subplots, headerHeight) {
+      if (!state.showTrialSegments || subplots.length === 0) return;
+
+      const plotTopAll = subplots[0].plotTop;
+      const plotBottomAll = subplots[subplots.length - 1].plotBottom;
+      const bannerY = 32;
+      const bannerH = 20;
+
+      // Cadence: [non-AV (1.5s), AV (1.5s)]
+      // Non-AV: [3k, 3k + 1.5s)
+      // AV: [3k + 1.5s, 3k + 3.0s)
+      // AV Onset = Code 25 = 3k + 1.5s
+      // Non-AV Onset = Code 25 - 1.5s = 3k
+      const startCycle = Math.floor(tMin / 3.0);
+      const endCycle = Math.ceil(tMax / 3.0);
+
+      ctx.save();
+
+      for (let c = startCycle; c <= endCycle; c++) {
+        const tNonAV = c * 3.0;
+        const tAV = tNonAV + 1.5;
+        const tNext = tNonAV + 3.0;
+
+        // 1. Non-AV Segment [tNonAV, tAV)
+        const nonAVStart = Math.max(tNonAV, tMin);
+        const nonAVEnd = Math.min(tAV, tMax);
+        if (nonAVEnd > nonAVStart) {
+          const x0 = marginLeft + ((nonAVStart - tMin) / duration) * plotWidth;
+          const x1 = marginLeft + ((nonAVEnd - tMin) / duration) * plotWidth;
+          const w = Math.max(1, x1 - x0);
+
+          // Top Banner
+          ctx.fillStyle = '#fafafa';
+          ctx.fillRect(x0, bannerY, w, bannerH);
+          ctx.strokeStyle = '#d5d5d5';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x0, bannerY, w, bannerH);
+
+          ctx.fillStyle = '#111111';
+          ctx.font = '600 10px -apple-system, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          if (w > 160) {
+            ctx.fillText(`Non-AV: Auditory (A) / Visual (V) [${tNonAV.toFixed(1)}s – ${tAV.toFixed(1)}s]`, x0 + w / 2, bannerY + bannerH / 2);
+          } else if (w > 70) {
+            ctx.fillText(`Non-AV (A/V)`, x0 + w / 2, bannerY + bannerH / 2);
+          }
+        }
+
+        // 2. AV Segment [tAV, tNext)
+        const avStart = Math.max(tAV, tMin);
+        const avEnd = Math.min(tNext, tMax);
+        if (avEnd > avStart) {
+          const x0 = marginLeft + ((avStart - tMin) / duration) * plotWidth;
+          const x1 = marginLeft + ((avEnd - tMin) / duration) * plotWidth;
+          const w = Math.max(1, x1 - x0);
+
+          // Subtle plot background tint for AV trial
+          subplots.forEach(sp => {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+            ctx.fillRect(x0, sp.plotTop, w, sp.plotBottom - sp.plotTop);
+          });
+
+          // Top Banner
+          ctx.fillStyle = '#f0f0f0';
+          ctx.fillRect(x0, bannerY, w, bannerH);
+          ctx.strokeStyle = '#bbbbbb';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x0, bannerY, w, bannerH);
+
+          ctx.fillStyle = '#111111';
+          ctx.font = '600 10px -apple-system, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          if (w > 160) {
+            ctx.fillText(`AV: AudioVisual (AV) • Code 25 [${tAV.toFixed(1)}s – ${tNext.toFixed(1)}s]`, x0 + w / 2, bannerY + bannerH / 2);
+          } else if (w > 70) {
+            ctx.fillText(`AV (Code 25)`, x0 + w / 2, bannerY + bannerH / 2);
+          }
+        }
+
+        // Vertical Trigger Line at tAV (Code 25)
+        if (tAV >= tMin && tAV <= tMax) {
+          const xAV = marginLeft + ((tAV - tMin) / duration) * plotWidth;
+          ctx.strokeStyle = '#555555';
+          ctx.lineWidth = 1.2;
+          ctx.setLineDash([4, 3]);
+          ctx.beginPath();
+          ctx.moveTo(xAV, plotTopAll - 14);
+          ctx.lineTo(xAV, plotBottomAll);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.fillStyle = '#111111';
+          ctx.font = 'bold 9px -apple-system, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(`t_AV = Code 25 (${tAV.toFixed(1)}s)`, xAV, plotTopAll - 2);
+        }
+
+        // Vertical Divider Line at tNonAV
+        if (tNonAV >= tMin && tNonAV <= tMax && tNonAV > tMin) {
+          const xNon = marginLeft + ((tNonAV - tMin) / duration) * plotWidth;
+          ctx.strokeStyle = '#aaaaaa';
+          ctx.lineWidth = 1.0;
+          ctx.setLineDash([2, 3]);
+          ctx.beginPath();
+          ctx.moveTo(xNon, plotTopAll - 14);
+          ctx.lineTo(xNon, plotBottomAll);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.fillStyle = '#555555';
+          ctx.font = '9px -apple-system, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(`t_non-AV (${tNonAV.toFixed(1)}s)`, xNon, plotTopAll - 2);
+        }
+      }
+
+      ctx.restore();
     }
 
     function drawLegend(ctx, visibleWaves, startX, legendY, availableWidth) {
@@ -1840,12 +2036,12 @@
       }
 
       const panels = [
-        { 
-          title: `Template Correlation with Hearing Control ERP (${zoomSetting === 'full' ? 'Full Scale' : 'Zoomed Scale'}, Pearson r)`, 
-          yLabel: 'Pearson r', 
-          key: 'corr', 
-          yMax: corrMax, 
-          yMin: corrMin 
+        {
+          title: `Template Correlation with Hearing Control ERP (${zoomSetting === 'full' ? 'Full Scale' : 'Zoomed Scale'}, Pearson r)`,
+          yLabel: 'Pearson r',
+          key: 'corr',
+          yMax: corrMax,
+          yMin: corrMin
         },
         { title: 'Auditory ERP SNR (Higher is better)', yLabel: 'SNR (dB)', key: 'snr', yMax: 22.0, yMin: 0.0 },
         { title: 'N1-P2 Peak-to-Peak Amplitude (μV)', yLabel: 'Amplitude (μV)', key: 'p2p', yMax: 60.0, yMin: 0.0 },
@@ -2111,10 +2307,10 @@
           <td><span class="badge" style="color: ${PALETTE[r.method] || '#fff'};">${r.method.toUpperCase()}</span></td>
           <td><strong>${r.subject_id}</strong></td>
           <td>${r.channel || 'Cz'}</td>
-          <td style="${r.erp_snr_db > 14 ? 'color: var(--accent-cyan); font-weight:600;' : ''}">${r.erp_snr_db !== null ? r.erp_snr_db.toFixed(2) : '—'}</td>
-          <td style="${r.template_corr > 0.05 ? 'color: var(--accent-green);' : ''}">${r.template_corr !== null ? r.template_corr.toFixed(4) : '—'}</td>
+          <td style="${r.erp_snr_db > 14 ? ' font-weight:600;' : ''}">${r.erp_snr_db !== null ? r.erp_snr_db.toFixed(2) : '—'}</td>
+          <td style="${r.template_corr > 0.05 ? '' : ''}">${r.template_corr !== null ? r.template_corr.toFixed(4) : '—'}</td>
           <td>${r.p2p_uv !== null ? r.p2p_uv.toFixed(2) : '—'}</td>
-          <td style="${r.base_rms_uv < 1.0 ? 'color: var(--accent-green);' : ''}">${r.base_rms_uv !== null ? r.base_rms_uv.toFixed(2) : '—'}</td>
+          <td style="${r.base_rms_uv < 1.0 ? '' : ''}">${r.base_rms_uv !== null ? r.base_rms_uv.toFixed(2) : '—'}</td>
           <td>${r.n1_lat_ms !== null ? r.n1_lat_ms.toFixed(1) : '—'}</td>
           <td>${r.p2_lat_ms !== null ? r.p2_lat_ms.toFixed(1) : '—'}</td>
         </tr>
@@ -2270,7 +2466,10 @@
         const v = state.data[ch]?.[w]?.[idx];
         return `${w}: ${v !== undefined ? v.toFixed(1) : '?'}μV`;
       }).join(' | ');
-      dom.hoverInfo.textContent = `t=${actualT.toFixed(3)}s [${ch}] → ${readouts}`;
+      const cycleT = actualT % 3.0;
+      const isAV = (cycleT >= 1.5);
+      const trialDesc = isAV ? 'AV Trial (Code 25)' : 'Non-AV Trial (A/V)';
+      dom.hoverInfo.textContent = `t=${actualT.toFixed(3)}s [${ch}] • ${trialDesc} : ${readouts}`;
     });
 
     dom.canvas.addEventListener('mouseleave', () => {
@@ -2376,6 +2575,11 @@
     dom.timeMax.addEventListener('input', () => { renderGraph(); updateMetricsTable(); });
     dom.scaleMode.addEventListener('change', (e) => { state.scaleMode = e.target.value; renderGraph(); });
     dom.lineWidthRange.addEventListener('input', () => renderGraph());
+    dom.showTrialSegmentsCheck.addEventListener('change', (e) => {
+      state.showTrialSegments = e.target.checked;
+      renderGraph();
+    });
+
     dom.showGridCheck.addEventListener('change', (e) => { state.showGrid = e.target.checked; renderGraph(); });
 
     dom.btnResetView.addEventListener('click', () => {
@@ -2428,4 +2632,5 @@
     });
   </script>
 </body>
+
 </html>

@@ -121,6 +121,11 @@ def main():
 
     os.makedirs(args.output_dir, exist_ok=True)
     device = args.device
+    if device == "cpu":
+        slurm_cpus = os.environ.get("SLURM_CPUS_PER_TASK")
+        if slurm_cpus:
+            torch.set_num_threads(int(slurm_cpus))
+        print(f"PyTorch CPU Threads: {torch.get_num_threads()}")
 
     print("=== Tier 3: Downstream Validation & Model Generalization Benchmark ===")
     print(f"Device:         {device}")
@@ -136,49 +141,78 @@ def main():
         if d not in sys.path:
             sys.path.insert(0, d)
 
-    from eeg_dataloader import EEGDataset
+    from collections import defaultdict
+    import zarr
     from unet import UNet
 
-    # Load dataset
-    print("Loading test split from EEGDataset...")
-    dataset = EEGDataset(
-        zarr_path=args.zarr_path,
-        clean_group='hearing_trial_data',
-        noise_group='ci_trial_data',
-        alpha=1.0,
-        num_pairings=3,
-        seed=args.seed,
-        mix=True,
-    )
+    # Load dataset lazily without loading full 19 GB arrays into RAM
+    print("Opening Zarr dataset lazily...")
+    try:
+        root = zarr.open(args.zarr_path, mode='r')
+    except Exception:
+        root = zarr.open_group(args.zarr_path, mode='r')
 
-    n_total = len(dataset)
+    clean_grp = root['hearing_trial_data']
+    noise_grp = root['ci_trial_data']
+
+    clean_perm = clean_grp['perm'][:]
+    clean_block = clean_grp['block'][:]
+    noise_perm = noise_grp['perm'][:]
+    noise_block = noise_grp['block'][:]
+
+    # Build (perm, block) -> noise indices mapping
+    noise_by_cond = defaultdict(list)
+    for idx in range(len(noise_perm)):
+        key = (noise_perm[idx], noise_block[idx])
+        noise_by_cond[key].append(idx)
+
+    rng = np.random.default_rng(args.seed)
+    pairs = []
+    for c_idx in range(len(clean_perm)):
+        key = (clean_perm[c_idx], clean_block[c_idx])
+        candidates = noise_by_cond.get(key, [])
+        if not candidates:
+            continue
+        chosen = rng.choice(candidates, size=3, replace=len(candidates) < 3)
+        for n_idx in chosen:
+            pairs.append((c_idx, int(n_idx)))
+
+    n_total = len(pairs)
     n_train = int(0.8 * n_total)
     n_val = int(0.1 * n_total)
-    n_test = n_total - n_train - n_val
 
-    _, _, test_set = torch.utils.data.random_split(
-        dataset, [n_train, n_val, n_test],
-        generator=torch.Generator().manual_seed(args.seed)
-    )
-    print(f"Total dataset pairs: {n_total} -> Test split pairs: {len(test_set)}")
+    # Identical seed-based random split
+    g = torch.Generator().manual_seed(args.seed)
+    indices = torch.randperm(n_total, generator=g).tolist()
+    test_indices = indices[n_train + n_val:]
+    test_pairs = [pairs[i] for i in test_indices]
+    print(f"Total dataset pairs: {n_total} -> Test split pairs: {len(test_pairs)}")
 
-    # Pre-load test pairs into memory (< 10 MB total) to completely eliminate Zarr worker IPC overhead and OOM
-    print("Pre-loading test split into memory...")
+    # Load ONLY the ~85 test split pairs directly into memory (< 10 MB total)
+    print("Loading test split into memory (< 10 MB)...")
+    clean_data_arr = clean_grp['data']
+    noise_data_arr = noise_grp['data']
+
     test_dirty_list = []
     test_clean_list = []
-    for i in range(len(test_set)):
-        d, c = test_set[i]
+    for c_idx, n_idx in test_pairs:
+        c_raw = clean_data_arr[c_idx]
+        n_raw = noise_data_arr[n_idx]
+        if np.isnan(c_raw).any() or np.isnan(n_raw).any():
+            continue
+        c = torch.tensor(c_raw, dtype=torch.float32)
+        n = torch.tensor(n_raw, dtype=torch.float32)
+        min_ch = min(c.shape[0], n.shape[0])
+        c = c[:min_ch, :]
+        n = n[:min_ch, :]
+        d = c + 1.0 * n
         test_dirty_list.append(d)
         test_clean_list.append(c)
+
     test_dirty_all = torch.stack(test_dirty_list)
     test_clean_all = torch.stack(test_clean_list)
     mem_mb = (test_dirty_all.nelement() + test_clean_all.nelement()) * test_dirty_all.element_size() / (1024 * 1024)
-    print(f"Cached test split in RAM: {test_dirty_all.shape} ({mem_mb:.2f} MB)")
-
-    # Release Zarr store and garbage collect
-    del dataset, test_set, test_dirty_list, test_clean_list
-    import gc
-    gc.collect()
+    print(f"Cached {len(test_dirty_all)} test pairs in RAM: {test_dirty_all.shape} ({mem_mb:.2f} MB)")
 
     test_dataset = torch.utils.data.TensorDataset(test_dirty_all, test_clean_all)
     test_loader = DataLoader(
