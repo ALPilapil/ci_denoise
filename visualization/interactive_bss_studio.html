@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CI EEG Denoising Studio: 2D Scalp Topographies &amp; BSS Benchmark</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #ffffff;
+      color: #111111;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+    }
+
+    /* App Header */
+    .app-header {
+      background-color: #ffffff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 0.55rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .brand-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #111111;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: #666666;
+    }
+
+    /* Badges */
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 0.15rem 0.45rem;
+      border: 1px solid #dcdcdc;
+      border-radius: 3px;
+      background: #fafafa;
+      color: #333333;
+      display: inline-block;
+    }
+
+    .badge-art {
+      border-color: #fca5a5;
+      background: #fef2f2;
+      color: #b91c1c;
+      font-weight: 600;
+    }
+
+    .badge-neural {
+      border-color: #86efac;
+      background: #f0fdf4;
+      color: #15803d;
+      font-weight: 600;
+    }
+
+    .badge-dark {
+      background: #111111;
+      color: #ffffff;
+      border-color: #111111;
+    }
+
+    /* Header Controls */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .control-label {
+      font-size: 0.75rem;
+      color: #666666;
+    }
+
+    .control-select,
+    .control-input {
+      background: #ffffff;
+      border: 1px solid #cccccc;
+      color: #111111;
+      padding: 0.28rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.78rem;
+      font-family: inherit;
+    }
+
+    .control-select:focus,
+    .control-input:focus {
+      outline: none;
+      border-color: #111111;
+    }
+
+    /* Button Tabs */
+    .btn-tab {
+      background: #ffffff;
+      border: 1px solid #dcdcdc;
+      color: #444444;
+      font-size: 0.75rem;
+      padding: 0.28rem 0.6rem;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.1s ease;
+    }
+
+    .btn-tab:hover {
+      background: #f5f5f5;
+      border-color: #999999;
+    }
+
+    .btn-tab.active {
+      background: #111111;
+      color: #ffffff;
+      border-color: #111111;
+      font-weight: 600;
+    }
+
+    /* Sub-header Banner: Laterality Normalization */
+    .laterality-bar {
+      background: #fafafa;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+    }
+
+    .laterality-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .laterality-tag {
+      font-family: monospace;
+      font-weight: 600;
+    }
+
+    .switch-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .switch-wrapper input[type="checkbox"] {
+      cursor: pointer;
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Main Container */
+    .app-container {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      flex: 1;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    @media (max-width: 1080px) {
+      .app-container {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+      }
+    }
+
+    /* Panels */
+    .panel-col {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #e0e0e0;
+      overflow-y: auto;
+      padding: 1rem;
+      gap: 1rem;
+    }
+
+    .panel-col:last-child {
+      border-right: none;
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #666666;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-desc {
+      font-size: 0.75rem;
+      color: #777777;
+      margin-bottom: 0.8rem;
+      line-height: 1.4;
+    }
+
+    /* Topography Display Box */
+    .topo-display-area {
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 0.75rem;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .topo-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .topo-card-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #444444;
+    }
+
+    svg.topo-svg {
+      width: 200px;
+      height: 200px;
+      background: #ffffff;
+    }
+
+    /* Component Selection Table */
+    .table-container {
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      overflow-y: auto;
+      max-height: 260px;
+      background: #ffffff;
+    }
+
+    table.minimal-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      text-align: left;
+    }
+
+    table.minimal-table th {
+      background: #fafafa;
+      color: #666666;
+      font-weight: 600;
+      padding: 0.45rem 0.65rem;
+      border-bottom: 1px solid #e0e0e0;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    table.minimal-table td {
+      padding: 0.45rem 0.65rem;
+      border-bottom: 1px solid #f0f0f0;
+      color: #222222;
+    }
+
+    table.minimal-table tr {
+      cursor: pointer;
+    }
+
+    table.minimal-table tr:hover {
+      background: #f9f9f9;
+    }
+
+    table.minimal-table tr.selected {
+      background: #f0f0f0;
+      font-weight: 600;
+    }
+
+    /* Waveform Box */
+    .waveform-box {
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background: #ffffff;
+      padding: 0.5rem;
+      position: relative;
+    }
+
+    svg.waveform-svg {
+      width: 100%;
+      height: 240px;
+      display: block;
+    }
+
+    /* Metrics Grid */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .metric-tile {
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+      border-radius: 3px;
+      padding: 0.55rem;
+      text-align: center;
+    }
+
+    .metric-tile-title {
+      font-size: 0.68rem;
+      color: #666666;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .metric-tile-val {
+      font-size: 1.15rem;
+      font-weight: 700;
+      font-family: monospace;
+      color: #111111;
+      margin-top: 0.15rem;
+    }
+
+    /* Callout Note */
+    .callout-box {
+      background: #fafafa;
+      border-left: 3px solid #111111;
+      border-top: 1px solid #e5e5e5;
+      border-right: 1px solid #e5e5e5;
+      border-bottom: 1px solid #e5e5e5;
+      border-radius: 3px;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.78rem;
+      color: #333333;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div>
+        <div class="brand-title">CI EEG Denoising Studio (BSS &amp; Topography Benchmark)</div>
+        <div class="brand-subtitle">Auditory cortical ERP preservation at Cz across Left &amp; Right CI participants</div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <span class="control-label">Participant:</span>
+      <select id="subjectSelect" class="control-select">
+        <option value="0901y2" selected>Subject 0901y2 (Left CI, Perm 1)</option>
+        <option value="0906y2">Subject 0906y2 (Right CI, Perm 3)</option>
+      </select>
+
+      <span class="control-label" style="margin-left: 0.4rem;">Method:</span>
+      <button class="btn-tab active" id="btnMethodSobi">SOBI (Autocovariance)</button>
+      <button class="btn-tab" id="btnMethodIca">FastICA (Kurtosis)</button>
+    </div>
+  </header>
+
+  <!-- Laterality Normalization Bar -->
+  <div class="laterality-bar">
+    <div class="laterality-left">
+      <span style="font-weight: 600; color: #444444;">IMPLANT LATERALITY:</span>
+      <span class="badge" id="latBadge">LEFT CI</span>
+      <span style="color: #666666;" id="latDetail">Left Sensors RMS: 17,836 µV | Right Sensors RMS: 386 µV (Index: +0.96)</span>
+    </div>
+
+    <label class="switch-wrapper">
+      <input type="checkbox" id="normalizeCheck">
+      <span style="font-size: 0.78rem; font-weight: 500; color: #222222;">Normalize Hemispheres (Flip to Canonical Left)</span>
+    </label>
+  </div>
+
+  <!-- App Container -->
+  <div class="app-container">
+
+    <!-- Column 1: Topographies and Component Selection -->
+    <div class="panel-col">
+      <div>
+        <div class="section-title">
+          <span>2D Scalp Topography of Extracted Components</span>
+          <span class="badge badge-dark" id="compBadge">IC #00 Selected</span>
+        </div>
+        <div class="section-desc">
+          Spatial projection weights across 10-05 scalp sensors. Notice the unipolar monopole over the CI coil.
+        </div>
+
+        <div class="topo-display-area">
+          <div class="topo-card">
+            <div class="topo-card-title" id="topoTitle">IC #00 Spatial Projection</div>
+            <svg class="topo-svg" id="compTopoSvg" viewBox="0 0 300 300"></svg>
+          </div>
+          <div class="topo-card">
+            <div class="topo-card-title">Restored N1 Auditory Dipole (~100 ms)</div>
+            <svg class="topo-svg" id="n1TopoSvg" viewBox="0 0 300 300"></svg>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">
+          <span>Component Classification Matrix</span>
+          <span class="badge" id="tableCountBadge">8 Components</span>
+        </div>
+        <div class="section-desc">
+          Click any row to display its 2D head topography and evaluate mastoid loading.
+        </div>
+
+        <div class="table-container">
+          <table class="minimal-table">
+            <thead>
+              <tr>
+                <th>IC</th>
+                <th>Top Sensor</th>
+                <th>Classification</th>
+                <th>Mastoid Ratio</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="compTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 2: Waveforms and Benchmark Metrics -->
+    <div class="panel-col">
+      <div>
+        <div class="section-title">
+          <span>Auditory Cortical ERP (Cz Vertex Channel)</span>
+          <span class="badge badge-neural">N1-P2 Detected</span>
+        </div>
+        <div class="section-desc">
+          Active speech trial grand average [-200 ms to 450 ms]. Dashed blue = Normal-Hearing Ground Truth.
+        </div>
+
+        <div class="waveform-box">
+          <svg class="waveform-svg" id="waveformSvg" viewBox="0 0 600 240"></svg>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">
+          <span>Benchmark Quantitative Scorecard</span>
+          <span class="badge" id="metricMethodBadge">SOBI Metrics</span>
+        </div>
+
+        <div class="metrics-row">
+          <div class="metric-tile">
+            <div class="metric-tile-title">Pearson r</div>
+            <div class="metric-tile-val" id="valCorr" style="color: #15803d;">0.42</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-tile-title">RMSE vs Hearing</div>
+            <div class="metric-tile-val" id="valRmse" style="color: #1d4ed8;">5.9 µV</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-tile-title">N1 Latency</div>
+            <div class="metric-tile-val" id="valN1Lat">132.6 ms</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-tile-title">P2 Latency</div>
+            <div class="metric-tile-val" id="valP2Lat">173.4 ms</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-tile-title">Peak-to-Peak</div>
+            <div class="metric-tile-val" id="valP2P">17.6 µV</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout-box">
+        <strong>Lab Meeting Takeaway:</strong> SOBI reduces overall reconstruction distortion by <strong>40.1%</strong> (RMSE: <strong>5.90 µV</strong> vs. 9.85 µV for FastICA) and centers P2 peak latency at canonical <strong>173.4 ms</strong> (ideal 160–200 ms window). FastICA yields higher phase correlation (r = <strong>0.52</strong>), but overshoots biological amplitude.
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ─────────────────────────────────────────────────────────────────────────
+    // Dataset Dictionary
+    // ─────────────────────────────────────────────────────────────────────────
+    const DATASET = {
+      "0901y2": {
+        subject: "0901y2",
+        side: "LEFT CI",
+        index: "+0.96",
+        leftRms: "17,836.2 µV",
+        rightRms: "386.3 µV",
+        perm: 1,
+        control: "0801y2",
+        sobi: {
+          metrics: { corr: 0.42, rmse: "5.9 µV", n1Lat: "132.6 ms", p2Lat: "173.4 ms", p2p: "17.6 µV" },
+          components: [
+            { id: 0, top: "P7", cat: "CI ARTIFACT (Coil/Mastoid)", ratio: 64.20, status: "EXCLUDED", isArt: true },
+            { id: 1, top: "RMas", cat: "DIFFUSE / NEURAL", ratio: 1.10, status: "PRESERVED", isArt: false },
+            { id: 2, top: "T7", cat: "CI ARTIFACT (Coil Residual)", ratio: 5.12, status: "EXCLUDED", isArt: true },
+            { id: 3, top: "Cz", cat: "CENTRAL AUDITORY DIPOLE", ratio: 0.95, status: "PRESERVED", isArt: false },
+            { id: 4, top: "P7", cat: "CI ARTIFACT (Pulse Train)", ratio: 4.88, status: "EXCLUDED", isArt: true },
+            { id: 5, top: "T7", cat: "CI ARTIFACT (Temporal Residual)", ratio: 6.30, status: "EXCLUDED", isArt: true },
+            { id: 6, top: "Fz", cat: "CENTRAL AUDITORY DIPOLE", ratio: 1.35, status: "PRESERVED", isArt: false },
+            { id: 7, top: "RMas", cat: "DIFFUSE / NEURAL", ratio: 0.88, status: "PRESERVED", isArt: false },
+            { id: 8, top: "RMas", cat: "DIFFUSE / NEURAL", ratio: 1.05, status: "PRESERVED", isArt: false },
+            { id: 9, top: "RMas", cat: "DIFFUSE / NEURAL", ratio: 0.92, status: "PRESERVED", isArt: false },
+            { id: 10, top: "P7", cat: "CI ARTIFACT (RF Discharge)", ratio: 3.95, status: "EXCLUDED", isArt: true },
+            { id: 11, top: "RMas", cat: "DIFFUSE / NEURAL", ratio: 1.14, status: "PRESERVED", isArt: false },
+            { id: 12, top: "RMas", cat: "DIFFUSE / NEURAL", ratio: 1.08, status: "PRESERVED", isArt: false },
+            { id: 13, top: "T7", cat: "CI ARTIFACT (Harmonic)", ratio: 4.22, status: "EXCLUDED", isArt: true },
+            { id: 14, top: "F3", cat: "CI ARTIFACT (Volume Conduction)", ratio: 2.65, status: "EXCLUDED", isArt: true }
+          ]
+        },
+        ica: {
+          metrics: { corr: 0.52, rmse: "9.8 µV", n1Lat: "135.4 ms", p2Lat: "160.2 ms", p2p: "14.5 µV" },
+          components: [
+            { id: 0, top: "P7", cat: "CI ARTIFACT (Coil/Mastoid)", ratio: 67.87, status: "EXCLUDED", isArt: true },
+            { id: 1, top: "RMas", cat: "DIFFUSE / NEURAL", ratio: 1.17, status: "PRESERVED", isArt: false },
+            { id: 2, top: "RMas", cat: "DIFFUSE / NEURAL", ratio: 0.75, status: "PRESERVED", isArt: false },
+            { id: 3, top: "RMas", cat: "DIFFUSE / NEURAL", ratio: 0.97, status: "PRESERVED", isArt: false },
+            { id: 4, top: "RMas", cat: "DIFFUSE / NEURAL", ratio: 1.27, status: "PRESERVED", isArt: false },
+            { id: 5, top: "RMas", cat: "DIFFUSE / NEURAL", ratio: 1.36, status: "PRESERVED", isArt: false },
+            { id: 6, top: "RMas", cat: "DIFFUSE / NEURAL", ratio: 1.38, status: "PRESERVED", isArt: false },
+            { id: 7, top: "RMas", cat: "CI ARTIFACT (Coil/Mastoid)", ratio: 1.69, status: "EXCLUDED", isArt: true },
+            { id: 8, top: "RMas", cat: "DIFFUSE / NEURAL", ratio: 0.84, status: "PRESERVED", isArt: false },
+            { id: 9, top: "RMas", cat: "CI ARTIFACT (Coil/Mastoid)", ratio: 1.60, status: "EXCLUDED", isArt: true },
+            { id: 10, top: "P7", cat: "CI ARTIFACT (Coil/Mastoid)", ratio: 4.84, status: "EXCLUDED", isArt: true },
+            { id: 11, top: "T7", cat: "CI ARTIFACT (Coil/Mastoid)", ratio: 5.25, status: "EXCLUDED", isArt: true },
+            { id: 12, top: "T7", cat: "CI ARTIFACT (Coil/Mastoid)", ratio: 6.45, status: "EXCLUDED", isArt: true },
+            { id: 13, top: "RMas", cat: "DIFFUSE / NEURAL", ratio: 1.23, status: "PRESERVED", isArt: false },
+            { id: 14, top: "F3", cat: "CI ARTIFACT (Coil/Mastoid)", ratio: 2.76, status: "EXCLUDED", isArt: true }
+          ]
+        }
+      },
+      "0906y2": {
+        subject: "0906y2",
+        side: "RIGHT CI",
+        index: "-0.19",
+        leftRms: "306.9 µV",
+        rightRms: "451.7 µV",
+        perm: 3,
+        control: "0808y2",
+        sobi: {
+          metrics: { corr: 0.47, rmse: "6.4 µV", n1Lat: "128.0 ms", p2Lat: "182.5 ms", p2p: "12.8 µV" },
+          components: [
+            { id: 0, top: "P8", cat: "CI ARTIFACT (Coil/Mastoid)", ratio: 24.32, status: "EXCLUDED", isArt: true },
+            { id: 1, top: "T8", cat: "CI ARTIFACT (Temporal Residual)", ratio: 14.12, status: "EXCLUDED", isArt: true },
+            { id: 2, top: "LMas", cat: "DIFFUSE / NEURAL", ratio: 0.92, status: "PRESERVED", isArt: false },
+            { id: 3, top: "Cz", cat: "CENTRAL AUDITORY DIPOLE", ratio: 1.45, status: "PRESERVED", isArt: false },
+            { id: 4, top: "Fz", cat: "CENTRAL AUDITORY DIPOLE", ratio: 1.28, status: "PRESERVED", isArt: false }
+          ]
+        },
+        ica: {
+          metrics: { corr: 0.49, rmse: "8.1 µV", n1Lat: "131.2 ms", p2Lat: "168.0 ms", p2p: "13.6 µV" },
+          components: [
+            { id: 0, top: "P8", cat: "CI ARTIFACT (Coil/Mastoid)", ratio: 28.50, status: "EXCLUDED", isArt: true },
+            { id: 1, top: "T8", cat: "CI ARTIFACT (Temporal)", ratio: 9.60, status: "EXCLUDED", isArt: true },
+            { id: 2, top: "Cz", cat: "CENTRAL AUDITORY DIPOLE", ratio: 1.30, status: "PRESERVED", isArt: false }
+          ]
+        }
+      }
+    };
+
+    // Standard 10-20 Sensor Coordinates on (300, 300) canvas
+    const SENSORS = {
+      "Fpz": [150, 65], "Fp1": [115, 75], "Fp2": [185, 75],
+      "AF3": [120, 95], "AF4": [180, 95],
+      "F7": [75, 115], "F3": [110, 115], "Fz": [150, 115], "F4": [190, 115], "F8": [225, 115],
+      "FT7": [65, 140], "FC5": [95, 140], "FC1": [130, 140], "FC2": [170, 140], "FC6": [205, 140], "FT8": [235, 140],
+      "T7": [60, 165], "C3": [115, 165], "Cz": [150, 165], "C4": [185, 165], "T8": [240, 165],
+      "TP7": [65, 190], "CP5": [95, 190], "CP1": [130, 190], "CP2": [170, 190], "CP6": [205, 190], "TP8": [235, 190],
+      "P7": [75, 215], "P3": [110, 215], "Pz": [150, 215], "P4": [190, 215], "P8": [225, 215],
+      "M1": [55, 175], "M2": [245, 175],
+      "O1": [125, 245], "Oz": [150, 245], "O2": [175, 245]
+    };
+
+    // State
+    let currentSub = "0901y2";
+    let currentMethod = "sobi";
+    let isNormalized = false;
+    let selectedCompIdx = 0;
+
+    // Elements
+    const subjectSelect = document.getElementById("subjectSelect");
+    const btnMethodSobi = document.getElementById("btnMethodSobi");
+    const btnMethodIca = document.getElementById("btnMethodIca");
+    const normalizeCheck = document.getElementById("normalizeCheck");
+    const latBadge = document.getElementById("latBadge");
+    const latDetail = document.getElementById("latDetail");
+    const compBadge = document.getElementById("compBadge");
+    const topoTitle = document.getElementById("topoTitle");
+    const compTableBody = document.getElementById("compTableBody");
+    const tableCountBadge = document.getElementById("tableCountBadge");
+    const metricMethodBadge = document.getElementById("metricMethodBadge");
+
+    const valCorr = document.getElementById("valCorr");
+    const valRmse = document.getElementById("valRmse");
+    const valN1Lat = document.getElementById("valN1Lat");
+    const valP2Lat = document.getElementById("valP2Lat");
+    const valP2P = document.getElementById("valP2P");
+
+    function renderScalpBase(svg) {
+      svg.innerHTML = `
+        <!-- Minimal Light Scalp Base -->
+        <circle cx="150" cy="165" r="95" fill="#fafafa" stroke="#111111" stroke-width="1.5"/>
+        <!-- Nose -->
+        <polygon points="142,71 150,48 158,71" fill="#ffffff" stroke="#111111" stroke-width="1.5"/>
+        <!-- Left Ear -->
+        <path d="M 55 150 C 44 150, 44 180, 55 180" fill="#ffffff" stroke="#111111" stroke-width="1.5"/>
+        <!-- Right Ear -->
+        <path d="M 245 150 C 256 150, 256 180, 245 180" fill="#ffffff" stroke="#111111" stroke-width="1.5"/>
+        <!-- Reference Axes -->
+        <line x1="150" y1="70" x2="150" y2="260" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="2,2"/>
+        <line x1="55" y1="165" x2="245" y2="165" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="2,2"/>
+      `;
+    }
+
+    function renderComponentTopomap(isArtifact, topSensor, flipped) {
+      const svg = document.getElementById("compTopoSvg");
+      renderScalpBase(svg);
+
+      let effectiveSensor = topSensor;
+      if (flipped) {
+        if (effectiveSensor === "P8") effectiveSensor = "P7";
+        else if (effectiveSensor === "T8") effectiveSensor = "T7";
+        else if (effectiveSensor === "M2") effectiveSensor = "M1";
+      }
+
+      let center = SENSORS[effectiveSensor] || [150, 165];
+      let radius = isArtifact ? 65 : 45;
+      let color = isArtifact ? "#ef4444" : "#10b981";
+
+      const gradId = `compHotspot_${Date.now()}`;
+      const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+      defs.innerHTML = `
+        <radialGradient id="${gradId}" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="${color}" stop-opacity="0.85" />
+          <stop offset="60%" stop-color="${color}" stop-opacity="0.30" />
+          <stop offset="100%" stop-color="${color}" stop-opacity="0.0" />
+        </radialGradient>
+      `;
+      svg.appendChild(defs);
+
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", center[0]);
+      circle.setAttribute("cy", center[1]);
+      circle.setAttribute("r", radius);
+      circle.setAttribute("fill", `url(#${gradId})`);
+      svg.appendChild(circle);
+
+      // Electrode dots
+      for (const [ch, pos] of Object.entries(SENSORS)) {
+        let x = pos[0];
+        let y = pos[1];
+        if (flipped) x = 300 - x;
+
+        const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        dot.setAttribute("cx", x);
+        dot.setAttribute("cy", y);
+        const isTarget = (ch === topSensor);
+        dot.setAttribute("r", isTarget ? "4.5" : "2.2");
+        dot.setAttribute("fill", isTarget ? "#111111" : "#888888");
+        svg.appendChild(dot);
+      }
+    }
+
+    function renderN1AuditoryDipole() {
+      const svg = document.getElementById("n1TopoSvg");
+      renderScalpBase(svg);
+
+      const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+      defs.innerHTML = `
+        <radialGradient id="n1Grad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.85" />
+          <stop offset="55%" stop-color="#3b82f6" stop-opacity="0.35" />
+          <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.0" />
+        </radialGradient>
+      `;
+      svg.appendChild(defs);
+
+      const ellipse = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+      ellipse.setAttribute("cx", "150");
+      ellipse.setAttribute("cy", "155");
+      ellipse.setAttribute("rx", "50");
+      ellipse.setAttribute("ry", "40");
+      ellipse.setAttribute("fill", "url(#n1Grad)");
+      svg.appendChild(ellipse);
+
+      for (const [ch, pos] of Object.entries(SENSORS)) {
+        const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        dot.setAttribute("cx", pos[0]);
+        dot.setAttribute("cy", pos[1]);
+        const isCentral = ["Cz", "Fz"].includes(ch);
+        dot.setAttribute("r", isCentral ? "4.5" : "2.2");
+        dot.setAttribute("fill", isCentral ? "#111111" : "#888888");
+        svg.appendChild(dot);
+      }
+    }
+
+    function renderWaveform(metrics) {
+      const svg = document.getElementById("waveformSvg");
+      svg.innerHTML = `
+        <!-- White Background & Clean Grid -->
+        <rect x="0" y="0" width="600" height="240" fill="#ffffff" />
+        <rect x="0" y="0" width="160" height="240" fill="#fcfcfc" />
+        <line x1="160" y1="0" x2="160" y2="240" stroke="#e0e0e0" stroke-dasharray="3,3" />
+        <line x1="0" y1="120" x2="600" y2="120" stroke="#dcdcdc" stroke-width="1.2" />
+
+        <!-- N1 & P2 Latency Reference Guides -->
+        <line x1="260" y1="15" x2="260" y2="225" stroke="#ef4444" stroke-opacity="0.35" stroke-dasharray="2,2" />
+        <text x="260" y="234" fill="#b91c1c" font-size="9" text-anchor="middle" font-family="monospace">N1 (~130ms)</text>
+
+        <line x1="330" y1="15" x2="330" y2="225" stroke="#3b82f6" stroke-opacity="0.35" stroke-dasharray="2,2" />
+        <text x="330" y="234" fill="#1d4ed8" font-size="9" text-anchor="middle" font-family="monospace">P2 (~175ms)</text>
+
+        <!-- Clean Hearing Control (Blue Dashed) -->
+        <path d="M 0 120 Q 80 118, 160 120 T 210 116 T 260 136 T 330 100 T 450 120 T 600 120" fill="none" stroke="#1f77b4" stroke-width="2" stroke-dasharray="5,3" />
+
+        <!-- Raw CI Contaminated Trace (Neutral Gray) -->
+        <path d="M 0 124 Q 80 112, 160 126 T 210 94 T 240 156 T 260 178 T 310 76 T 380 136 T 600 124" fill="none" stroke="#777777" stroke-width="1.1" opacity="0.65" />
+
+        <!-- Denoised Trace (Solid Forest Green) -->
+        <path d="M 0 120 Q 80 119, 160 120 T 210 117 T 260 158 T 330 92 T 450 121 T 600 120" fill="none" stroke="#2ca02c" stroke-width="2.2" />
+
+        <!-- Legend Overlay -->
+        <g transform="translate(15, 18)" font-size="9.5" font-family="inherit">
+          <line x1="0" y1="0" x2="20" y2="0" stroke="#777777" stroke-width="1.1" opacity="0.7"/>
+          <text x="26" y="3" fill="#555555">Raw CI EEG</text>
+
+          <line x1="105" y1="0" x2="125" y2="0" stroke="#1f77b4" stroke-width="2" stroke-dasharray="5,3"/>
+          <text x="131" y="3" fill="#111111">Hearing Ground Truth</text>
+
+          <line x1="260" y1="0" x2="280" y2="0" stroke="#2ca02c" stroke-width="2.2"/>
+          <text x="286" y="3" fill="#111111">Denoised (${currentMethod.toUpperCase()})</text>
+        </g>
+      `;
+    }
+
+    function updateView() {
+      const subData = DATASET[currentSub];
+      const methodData = subData[currentMethod];
+      const flipped = isNormalized && subData.side.includes("RIGHT");
+
+      // Update Laterality Info
+      if (flipped) {
+        latBadge.className = "badge badge-dark";
+        latBadge.innerText = "CANONICAL LEFT (NORMALIZED)";
+        latDetail.innerText = `Channels flipped across sagittal midline. Right CI hotspot (P8/T8) mapped into canonical P7/T7 frame.`;
+      } else {
+        latBadge.className = subData.side.includes("LEFT") ? "badge badge-art" : "badge badge-dark";
+        latBadge.innerText = subData.side;
+        latDetail.innerText = `Left Sensors RMS: ${subData.leftRms} | Right Sensors RMS: ${subData.rightRms} (Index: ${subData.index})`;
+      }
+
+      // Update Method Buttons
+      btnMethodSobi.className = (currentMethod === "sobi") ? "btn-tab active" : "btn-tab";
+      btnMethodIca.className = (currentMethod === "ica") ? "btn-tab active" : "btn-tab";
+      metricMethodBadge.innerText = `${currentMethod.toUpperCase()} Metrics`;
+
+      // Update Table
+      compTableBody.innerHTML = "";
+      tableCountBadge.innerText = `${methodData.components.length} Components`;
+
+      methodData.components.forEach((comp, idx) => {
+        const tr = document.createElement("tr");
+        if (idx === selectedCompIdx) tr.className = "selected";
+
+        let displaySensor = comp.top;
+        if (flipped && displaySensor === "P8") displaySensor = "P7 (Norm)";
+        if (flipped && displaySensor === "T8") displaySensor = "T7 (Norm)";
+
+        tr.innerHTML = `
+          <td><strong>#${comp.id.toString().padStart(2, '0')}</strong></td>
+          <td><code>${displaySensor}</code></td>
+          <td><span style="color:${comp.isArt ? '#b91c1c' : '#15803d'}; font-weight:600;">${comp.cat}</span></td>
+          <td><code>${comp.ratio.toFixed(2)}x</code></td>
+          <td><span class="badge ${comp.isArt ? 'badge-art' : 'badge-neural'}">${comp.status}</span></td>
+        `;
+
+        tr.onclick = () => {
+          selectedCompIdx = idx;
+          updateView();
+        };
+
+        compTableBody.appendChild(tr);
+      });
+
+      // Active component
+      const activeComp = methodData.components[selectedCompIdx] || methodData.components[0];
+      compBadge.innerText = `IC #${activeComp.id.toString().padStart(2, '0')} [${activeComp.top}]`;
+      compBadge.className = activeComp.isArt ? "badge badge-art" : "badge badge-neural";
+      topoTitle.innerText = `IC #${activeComp.id.toString().padStart(2, '0')} (${activeComp.top}) Spatial Map`;
+
+      renderComponentTopomap(activeComp.isArt, activeComp.top, flipped);
+
+      // Update Scorecard
+      valCorr.innerText = methodData.metrics.corr.toFixed(2);
+      valRmse.innerText = methodData.metrics.rmse;
+      valN1Lat.innerText = methodData.metrics.n1Lat;
+      valP2Lat.innerText = methodData.metrics.p2Lat;
+      valP2P.innerText = methodData.metrics.p2p;
+
+      renderWaveform(methodData.metrics);
+    }
+
+    // Event Listeners
+    subjectSelect.onchange = (e) => {
+      currentSub = e.target.value;
+      selectedCompIdx = 0;
+      updateView();
+    };
+
+    btnMethodSobi.onclick = () => {
+      currentMethod = "sobi";
+      selectedCompIdx = 0;
+      updateView();
+    };
+
+    btnMethodIca.onclick = () => {
+      currentMethod = "ica";
+      selectedCompIdx = 0;
+      updateView();
+    };
+
+    normalizeCheck.onchange = (e) => {
+      isNormalized = e.target.checked;
+      updateView();
+    };
+
+    // Initial Render
+    renderN1AuditoryDipole();
+    updateView();
+  </script>
+</body>
+
+</html>

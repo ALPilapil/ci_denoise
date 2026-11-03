@@ -1,0 +1,50 @@
+[
+  {
+    "Method": "Raw CI EEG",
+    "baseline_rms_uv": 1.6143185268598987,
+    "n1_amp_uv": -6.781991152751998,
+    "n1_lat_ms": 129.33349609375,
+    "p2_amp_uv": 1.6853336549716262,
+    "p2_lat_ms": 186.58447265625,
+    "p2p_amp_uv": 8.467324807723625,
+    "corr_with_hearing": 0.3996145175878893,
+    "rmse_with_hearing": 4.968651984188779,
+    "erp_snr_db": 5.364239898199036
+  },
+  {
+    "Method": "FastICA Denoised",
+    "baseline_rms_uv": 3.613461608864928,
+    "n1_amp_uv": -5.250950200498838,
+    "n1_lat_ms": 135.43701171875,
+    "p2_amp_uv": 9.260722925690382,
+    "p2_lat_ms": 160.15625,
+    "p2p_amp_uv": 14.511673126189221,
+    "corr_with_hearing": 0.5163479124893326,
+    "rmse_with_hearing": 9.851184954948616,
+    "erp_snr_db": 3.0449809769627354
+  },
+  {
+    "Method": "SOBI Denoised",
+    "baseline_rms_uv": 3.6404377248536868,
+    "n1_amp_uv": -11.02937904844478,
+    "n1_lat_ms": 132.568359375,
+    "p2_amp_uv": 6.574046288757359,
+    "p2_lat_ms": 173.40087890625,
+    "p2p_amp_uv": 17.60342533720214,
+    "corr_with_hearing": 0.4188028756546501,
+    "rmse_with_hearing": 5.899414975918975,
+    "erp_snr_db": 4.657971655922106
+  },
+  {
+    "Method": "Clean Hearing Control",
+    "baseline_rms_uv": 0.2327248439499864,
+    "n1_amp_uv": -0.9097904796344919,
+    "n1_lat_ms": 84.77783203125,
+    "p2_amp_uv": 1.4213699962507271,
+    "p2_lat_ms": 161.4990234375,
+    "p2p_amp_uv": 2.331160475885219,
+    "corr_with_hearing": 1.0,
+    "rmse_with_hearing": 0.0,
+    "erp_snr_db": 10.983688560583929
+  }
+]

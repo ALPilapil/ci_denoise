@@ -1,0 +1,92 @@
+{
+  "0": {
+    "top_channel": "P7",
+    "category": "CI ARTIFACT (Coil/Mastoid)",
+    "color": "#d62728",
+    "ref_ratio": 67.86722206711009
+  },
+  "1": {
+    "top_channel": "RMas",
+    "category": "DIFFUSE / NEURAL",
+    "color": "#1f77b4",
+    "ref_ratio": 1.1723125054915369
+  },
+  "2": {
+    "top_channel": "RMas",
+    "category": "DIFFUSE / NEURAL",
+    "color": "#1f77b4",
+    "ref_ratio": 0.7514870194086388
+  },
+  "3": {
+    "top_channel": "RMas",
+    "category": "DIFFUSE / NEURAL",
+    "color": "#1f77b4",
+    "ref_ratio": 0.9735690435256514
+  },
+  "4": {
+    "top_channel": "RMas",
+    "category": "DIFFUSE / NEURAL",
+    "color": "#1f77b4",
+    "ref_ratio": 1.2662317228546558
+  },
+  "5": {
+    "top_channel": "RMas",
+    "category": "DIFFUSE / NEURAL",
+    "color": "#1f77b4",
+    "ref_ratio": 1.356042581052414
+  },
+  "6": {
+    "top_channel": "RMas",
+    "category": "DIFFUSE / NEURAL",
+    "color": "#1f77b4",
+    "ref_ratio": 1.3783270169188617
+  },
+  "7": {
+    "top_channel": "RMas",
+    "category": "CI ARTIFACT (Coil/Mastoid)",
+    "color": "#d62728",
+    "ref_ratio": 1.68603176623977
+  },
+  "8": {
+    "top_channel": "RMas",
+    "category": "DIFFUSE / NEURAL",
+    "color": "#1f77b4",
+    "ref_ratio": 0.839995136468151
+  },
+  "9": {
+    "top_channel": "RMas",
+    "category": "CI ARTIFACT (Coil/Mastoid)",
+    "color": "#d62728",
+    "ref_ratio": 1.6033894724862345
+  },
+  "10": {
+    "top_channel": "P7",
+    "category": "CI ARTIFACT (Coil/Mastoid)",
+    "color": "#d62728",
+    "ref_ratio": 4.8441618247022715
+  },
+  "11": {
+    "top_channel": "T7",
+    "category": "CI ARTIFACT (Coil/Mastoid)",
+    "color": "#d62728",
+    "ref_ratio": 5.253216998775389
+  },
+  "12": {
+    "top_channel": "T7",
+    "category": "CI ARTIFACT (Coil/Mastoid)",
+    "color": "#d62728",
+    "ref_ratio": 6.454202363781482
+  },
+  "13": {
+    "top_channel": "RMas",
+    "category": "DIFFUSE / NEURAL",
+    "color": "#1f77b4",
+    "ref_ratio": 1.2284182557432588
+  },
+  "14": {
+    "top_channel": "F3",
+    "category": "CI ARTIFACT (Coil/Mastoid)",
+    "color": "#d62728",
+    "ref_ratio": 2.7648793017109954
+  }
+}
