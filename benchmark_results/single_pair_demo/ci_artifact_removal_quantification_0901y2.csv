@@ -1,0 +1,9 @@
+Channel,Role,Raw RMS (µV),Cleaned RMS (µV),Artifact Power Removed (%),Attenuation (dB),High-Freq RF Pulse Removed (20-50 Hz %),Neural Band Power Retained (1-15 Hz %)
+P7,CI Mastoid/Coil,18588.63,0.0,100.0,135.08,100.0,0.0
+T7,CI Mastoid/Coil,1295.62,12.9,99.99,40.04,98.71,0.0
+Cz,Auditory Vertex,2763.92,9.97,100.0,48.86,93.63,0.0
+Fz,Auditory Vertex,1157.68,42.72,99.86,28.66,49.79,0.0
+C3,Contralateral/Other,1755.34,27.85,99.97,35.99,66.27,0.0
+C4,Contralateral/Other,692.18,29.55,99.82,27.39,74.61,0.0
+M1,CI Mastoid/Coil,3878.45,20.97,100.0,45.34,93.38,0.0
+M2,Contralateral/Other,6583.21,8.48,100.0,57.8,98.95,0.0

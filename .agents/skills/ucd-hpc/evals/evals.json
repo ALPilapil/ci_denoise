@@ -1,0 +1,84 @@
+{
+  "skill_name": "ucd-hpc",
+  "evals": [
+    {
+      "id": 0,
+      "name": "hive-free-tier-gpu-job",
+      "prompt": "I'm a grad student on hive with just the free public access (no lab account yet). I have a pytorch training script ~/proj/train.py that needs one GPU, about 64GB of RAM and probably 20 hours. Can you write me a batch script and tell me how to submit and check on it? I've never used slurm.",
+      "expected_output": "An sbatch script file using --account=publicgrp --partition=high (within the free-tier caps: <=8 CPUs, <=128G, 1 GPU, <=30 days) or a clearly explained low-partition alternative with preemption caveat; --gpus=1; --time set; %j in output file names; sources /etc/profile.d/modules.sh and loads conda (or a pytorch module) before running; explains each directive briefly; shows sbatch/squeue --me/sacct commands; validated with sbatch --test-only or lint-jobscript.sh.",
+      "files": [],
+      "expectations": [
+        "Job script sets --account=publicgrp",
+        "Job script uses --partition=high, or uses --partition=low and the final response explicitly warns that low jobs are preempted/requeued",
+        "Job script requests exactly one GPU (--gpus=1, --gres=gpu:1, or --gpus-per-node=1)",
+        "If partition is high, the request stays within the Hive free-tier per-job caps: CPUs <= 8, memory <= 128G, 1 GPU, time <= 30 days",
+        "Job script sets --time of at least 20 hours (and no more than 30 days)",
+        "Job script's --output/--error, if present, contain %j (or are omitted so the default slurm-%j.out applies)",
+        "Job script makes `module` available (source /etc/profile.d/modules.sh or #!/bin/bash -l) and loads conda or a pytorch conda module before running python",
+        "Every module name loaded in the script exists on Hive (checkable with module avail; e.g. conda, conda/pytorch/2.9.1, python/3.11.9)",
+        "Transcript shows the script was validated against the real scheduler with sbatch --test-only or scripts/lint-jobscript.sh",
+        "Final response shows how to submit (sbatch) and how to monitor (squeue --me and/or sacct) and where the output file will be",
+        "Final response explains each #SBATCH line in plain language suitable for someone who has never used Slurm",
+        "No real job was submitted (no plain sbatch/srun/salloc in the transcript)"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "hive-debug-failed-jobs",
+      "prompt": "Two of my jobs on hive failed and I can't tell why. Job 22791953 (align_sample7) just stops in the output, and job 22791197 (run_bwa) says it finished but there's no aln.sam. The scripts are in ~/ucdhpc-cluster-skill/ucd-hpc-workspace/fixtures/. Can you figure out what happened and fix the scripts so they'll work?",
+      "expected_output": "Correctly diagnoses 22791953 as killed for memory (OUT_OF_MEMORY / oom-kill, 600M requested) and recommends a specific larger --mem; diagnoses 22791197 as exit 127 'bwa: command not found' because no module was loaded, recommends source /etc/profile.d/modules.sh + module load bwa/0.7.17 (after checking module avail); edits or rewrites the scripts accordingly; uses sacct/scontrol or job-postmortem.sh rather than guessing; does not submit heavy jobs.",
+      "files": [],
+      "expectations": [
+        "Diagnoses job 22791953 (align_sample7) as killed for exceeding its memory request (OUT_OF_MEMORY / oom-kill), citing sacct, the epilog summary, or the log",
+        "Recommends a specific larger --mem for align_sample7 (a concrete value >= 3G, i.e. above the observed ~3 GB need, not just 'more memory')",
+        "Diagnoses job 22791197 (run_bwa) as 'bwa: command not found' (exit 127) because no bwa module was loaded, citing the .err file or sacct",
+        "Explains why 22791197 reported COMPLETED even though bwa failed (the shell kept going; recommends set -e / set -euo pipefail)",
+        "Fixed run_bwa.sh loads a bwa module that exists on Hive (bwa/0.7.17 or bwa-mem2) and makes `module` available (source /etc/profile.d/modules.sh or #!/bin/bash -l)",
+        "Fixed scripts keep --account, --partition, --time, and unique %j output names",
+        "Transcript shows evidence gathering with sacct/scontrol/log files or scripts/job-postmortem.sh rather than guessing from the script text alone",
+        "Fixed scripts were validated with sbatch --test-only (or lint-jobscript.sh) and no real job was submitted",
+        "The original fixture files were not modified (fixed versions written to outputs/)"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "farm-array-pipeline-offcluster",
+      "prompt": "on farm I have 180 paired-end fastq.gz files (90 samples, _R1/_R2) in /group/jmlabgrp/raw_reads and I want to run fastp then bwa mem against /group/jmlabgrp/ref/genome.fa for each sample, writing bams to /group/jmlabgrp/aligned. my account is jmlabgrp. can you set this up as a slurm array so it doesn't take forever? each sample is maybe 30 min with 8 threads",
+      "expected_output": "Notes that we are not on Farm (we are on Hive) and works from the Farm reference; produces an array job script with --account=jmlabgrp, a Farm partition (high or bmh for owned resources, or low with preemption caveat), --array=1-90 with a throttle (%N), --cpus-per-task=8 and $SLURM_CPUS_PER_TASK passed to fastp/bwa/samtools, --output/--error with %A_%a, a samples manifest or bash array mapping SLURM_ARRAY_TASK_ID to sample names, source /etc/profile.d/modules.sh plus module load fastp/bwa/samtools with versions from the CVMFS tree, bwa index step handled separately (not per task), per-task unique output paths, optional use of $TMPDIR with copy-out. Tells the user how to verify on Farm (sbatch --test-only, sacctmgr show assoc).",
+      "files": [],
+      "expectations": [
+        "Final response acknowledges the session is on Hive, not Farm, and says which Farm facts came from documentation / need verification on Farm",
+        "Array script sets --account=jmlabgrp",
+        "Array script uses a partition that exists on Farm (high, low, bmh, bml, or a Farm GPU partition) and, if low/bml, warns about preemption",
+        "Array script uses --array over 90 samples (1-90 or 0-89), not 180 files, with a %N throttle",
+        "Array script requests --cpus-per-task=8 and passes $SLURM_CPUS_PER_TASK (or 8) to fastp, bwa mem, and samtools thread flags",
+        "Array script's --output/--error contain %A_%a (or default) so tasks do not share a log file",
+        "Array script maps SLURM_ARRAY_TASK_ID to one sample name (manifest via sed/awk or a bash array) and derives the _R1/_R2 paths from it",
+        "Array script makes `module` available and loads fastp, bwa (or bwa-mem2), and samtools with names that exist in the CVMFS tree (e.g. fastp/0.23.4, bwa/0.7.17, samtools/1.19.2)",
+        "bwa index is handled once outside the array (separate script/step or documented precondition), not inside every task",
+        "Each task writes a sorted BAM (bwa mem | samtools sort) to a unique path under /group/jmlabgrp/aligned",
+        "Array script sets --time with headroom over the 30-minute estimate (e.g. 1-4 hours) and does not exceed the Farm partition maximum",
+        "Final response tells the user how to verify on Farm (sbatch --test-only and/or sacctmgr show assoc) and how to submit and monitor"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "hive-home-quota-conda",
+      "prompt": "every time I try to make a conda env on hive I get 'Disk quota exceeded' errors. I'm in the hpccfgrp group. what am I doing wrong and how do I fix it? I need an env with scanpy and jupyter",
+      "expected_output": "Explains the 20 GB home quota (df -h ~), locates the space hogs (~/.conda, ~/.cache, ~/.local, ~/.apptainer via du), tells the user to use module load conda (not a self-installed conda) and to create the environment with --prefix on the group share (/quobyte/hpccfgrp/$USER/envs/...), moves pkgs_dirs/envs_dirs via conda config, runs conda clean --all, gives the exact mamba create command with scanpy and jupyterlab, mentions running big solves in an srun session rather than the login node, and notes how to select the env in Open OnDemand JupyterLab. Checks actual state with commands rather than assuming.",
+      "files": [],
+      "expectations": [
+        "Final response explains that the 20 GB home directory quota is the cause and shows how to check it (df -h ~ and/or du)",
+        "Transcript shows the actual home usage was inspected (df/du on /home/camw, e.g. ~/.conda, ~/.cache, ~/.local)",
+        "Recommends creating the environment on group storage with --prefix under /quobyte/hpccfgrp/... rather than in home",
+        "Recommends the central conda via module load conda and advises against a self-installed Miniconda/Anaconda in home",
+        "Recommends moving the package cache (pkgs_dirs) and/or envs_dirs to group storage via conda config or .condarc",
+        "Recommends conda clean --all (or equivalent) to reclaim cache space",
+        "Provides the exact create command including scanpy and jupyter/jupyterlab",
+        "Advises running the large solve in an interactive job (srun --pty) or otherwise notes login-node resource limits",
+        "Explains how to use the new environment from JupyterLab (Open OnDemand env field or jupyter inside a job)",
+        "Did not change the user's environment: transcript shows no conda clean, conda config --add/--set, env creation, or dotfile edits"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+[
+  {
+    "Channel": "P7",
+    "Role": "CI Mastoid/Coil",
+    "Raw RMS (\u00b5V)": 18588.63,
+    "Cleaned RMS (\u00b5V)": 0.0,
+    "Artifact Power Removed (%)": 100.0,
+    "Attenuation (dB)": 135.08,
+    "High-Freq RF Pulse Removed (20-50 Hz %)": 100.0,
+    "Neural Band Power Retained (1-15 Hz %)": 0.0
+  },
+  {
+    "Channel": "T7",
+    "Role": "CI Mastoid/Coil",
+    "Raw RMS (\u00b5V)": 1295.62,
+    "Cleaned RMS (\u00b5V)": 12.9,
+    "Artifact Power Removed (%)": 99.99,
+    "Attenuation (dB)": 40.04,
+    "High-Freq RF Pulse Removed (20-50 Hz %)": 98.71,
+    "Neural Band Power Retained (1-15 Hz %)": 0.0
+  },
+  {
+    "Channel": "Cz",
+    "Role": "Auditory Vertex",
+    "Raw RMS (\u00b5V)": 2763.92,
+    "Cleaned RMS (\u00b5V)": 9.97,
+    "Artifact Power Removed (%)": 100.0,
+    "Attenuation (dB)": 48.86,
+    "High-Freq RF Pulse Removed (20-50 Hz %)": 93.63,
+    "Neural Band Power Retained (1-15 Hz %)": 0.0
+  },
+  {
+    "Channel": "Fz",
+    "Role": "Auditory Vertex",
+    "Raw RMS (\u00b5V)": 1157.68,
+    "Cleaned RMS (\u00b5V)": 42.72,
+    "Artifact Power Removed (%)": 99.86,
+    "Attenuation (dB)": 28.66,
+    "High-Freq RF Pulse Removed (20-50 Hz %)": 49.79,
+    "Neural Band Power Retained (1-15 Hz %)": 0.0
+  },
+  {
+    "Channel": "C3",
+    "Role": "Contralateral/Other",
+    "Raw RMS (\u00b5V)": 1755.34,
+    "Cleaned RMS (\u00b5V)": 27.85,
+    "Artifact Power Removed (%)": 99.97,
+    "Attenuation (dB)": 35.99,
+    "High-Freq RF Pulse Removed (20-50 Hz %)": 66.27,
+    "Neural Band Power Retained (1-15 Hz %)": 0.0
+  },
+  {
+    "Channel": "C4",
+    "Role": "Contralateral/Other",
+    "Raw RMS (\u00b5V)": 692.18,
+    "Cleaned RMS (\u00b5V)": 29.55,
+    "Artifact Power Removed (%)": 99.82,
+    "Attenuation (dB)": 27.39,
+    "High-Freq RF Pulse Removed (20-50 Hz %)": 74.61,
+    "Neural Band Power Retained (1-15 Hz %)": 0.0
+  },
+  {
+    "Channel": "M1",
+    "Role": "CI Mastoid/Coil",
+    "Raw RMS (\u00b5V)": 3878.45,
+    "Cleaned RMS (\u00b5V)": 20.97,
+    "Artifact Power Removed (%)": 100.0,
+    "Attenuation (dB)": 45.34,
+    "High-Freq RF Pulse Removed (20-50 Hz %)": 93.38,
+    "Neural Band Power Retained (1-15 Hz %)": 0.0
+  },
+  {
+    "Channel": "M2",
+    "Role": "Contralateral/Other",
+    "Raw RMS (\u00b5V)": 6583.21,
+    "Cleaned RMS (\u00b5V)": 8.48,
+    "Artifact Power Removed (%)": 100.0,
+    "Attenuation (dB)": 57.8,
+    "High-Freq RF Pulse Removed (20-50 Hz %)": 98.95,
+    "Neural Band Power Retained (1-15 Hz %)": 0.0
+  }
+]

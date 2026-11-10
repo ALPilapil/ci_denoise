@@ -230,3 +230,21 @@ rsync -avzP evliang@hive.hpc.ucdavis.edu:~/cidenoise/benchmark_results/ ./benchm
    $$\mathbf{x}_{\text{input}}(t) = \mathbf{s}_k(t) + \alpha \cdot \mathbf{n}_k(t), \quad \mathbf{y}_{\text{target}}(t) = \mathbf{s}_k(t)$$
    where $\alpha$ is sampled dynamically to span SNRs from $-20\text{ dB}$ to $+5\text{ dB}$.
 4. **Export Format:** Write paired $(X, Y)$ tensors directly into Zarr chunks on `/quobyte/millerlmgrp/` to feed Track A's GPU U-Net training pipeline.
+
+### 5. EEGLAB viewprops & Quantitative Artifact Removal (Addressing Lab Meeting Directives)
+* **Combined 4-Quadrant View (EEGLAB viewprops format):** Generated multi-panel diagnostics combining 2D Scalp Topography, Power Spectral Density (1–50 Hz Welch), Continuous Condition Time Course ($A$, $AV$, $V$), and Evoked Potential ERP for all 15 components ([`benchmark_results/single_pair_demo/viewprops/`](benchmark_results/single_pair_demo/viewprops/)).
+* **Empirical Artifact Removal Quantification Table:**
+  | Channel | Role | Raw RMS ($\mu\text{V}$) | Cleaned RMS ($\mu\text{V}$) | Artifact Removed (%) | Attenuation (dB) | 20–50 Hz RF Hash Removed (%) |
+  | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+  | **P7** | CI Mastoid Coil (Left) | 18,588.6 | 0.0 | **100.0%** | **135.1 dB** | **100.0%** |
+  | **T7** | Left Temporal Sensor | 1,295.6 | 12.9 | **99.99%** | **40.0 dB** | **98.7%** |
+  | **M1** | Left Retroauricular (LMas) | 3,878.5 | 21.0 | **100.0%** | **45.3 dB** | **93.4%** |
+  | **Cz** | Auditory Vertex (Target) | 2,763.9 | 10.0 | **100.0%** | **48.9 dB** | **93.6%** |
+  | **Fz** | Frontal Auditory Target | 1,157.7 | 42.7 | **99.86%** | **28.7 dB** | **49.8%** |
+  | **C3** | Ipsilateral Central | 1,755.3 | 27.9 | **99.97%** | **36.0 dB** | **66.3%** |
+  | **C4** | Contralateral Central | 692.2 | 29.6 | **99.82%** | **27.4 dB** | **74.6%** |
+  | **M2** | Contralateral Mastoid (RMas) | 6,583.2 | 8.5 | **100.0%** | **57.8 dB** | **99.0%** |
+
+* **Interactive Diagnostic Web Dashboards:**
+  1. [`visualization/interactive_bss_studio.html`](visualization/interactive_bss_studio.html): BSS head-to-head studio, laterality normalization toggles, and live ERP reconstruction.
+  2. [`visualization/iclabel_viewprops_studio.html`](visualization/iclabel_viewprops_studio.html): EEGLAB `viewprops` & ICLabel diagnostic studio with the 4-quadrant layout and full artifact removal scorecard.
