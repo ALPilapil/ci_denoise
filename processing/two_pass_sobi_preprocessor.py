@@ -141,7 +141,8 @@ def run_two_pass_sobi_subject(input_fif, output_fif=None, target_fs=256.0, max_p
         X = current_data - np.mean(current_data, axis=1, keepdims=True)
         
         # Run SOBI
-        S, A, W = run_sobi(X, n_components=n_channels, num_lags=60, eps=1e-5, max_iter=300)
+        A, W = run_sobi(X, n_components=n_channels, lags=[1, 2, 4, 8, 16, 25, 50], eps=1e-5, max_iter=200)
+        S = W @ X
         cond_w = float(np.linalg.cond(W))
         
         # Analyze components
