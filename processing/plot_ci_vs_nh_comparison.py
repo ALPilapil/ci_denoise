@@ -33,7 +33,7 @@ def generate_comparison_plot():
     # -------------------------------------------------------------
     ax = axes[0]
     box_data = [df_nh_clean['p2_latency_ms'], df_ci_clean['p2_latency_ms']]
-    bp = ax.boxplot(box_data, patch_artist=True, labels=[f"Normal-Hearing\n(N={len(df_nh_clean)})", f"Cochlear Implant\n(N={len(df_ci_clean)})"],
+    bp = ax.boxplot(box_data, patch_artist=True, tick_labels=[f"Normal-Hearing\n(N={len(df_nh_clean)})", f"Cochlear Implant\n(N={len(df_ci_clean)})"],
                     medianprops=dict(color='black', linewidth=2),
                     widths=0.4)
     bp['boxes'][0].set_facecolor('#a6bddb')
@@ -62,7 +62,7 @@ def generate_comparison_plot():
     # -------------------------------------------------------------
     ax = axes[1]
     box_data_amp = [df_nh_clean['p2_amplitude_uv'], df_ci_clean['p2_amplitude_uv']]
-    bp2 = ax.boxplot(box_data_amp, patch_artist=True, labels=[f"Normal-Hearing\n(N={len(df_nh_clean)})", f"Cochlear Implant\n(N={len(df_ci_clean)})"],
+    bp2 = ax.boxplot(box_data_amp, patch_artist=True, tick_labels=[f"Normal-Hearing\n(N={len(df_nh_clean)})", f"Cochlear Implant\n(N={len(df_ci_clean)})"],
                      medianprops=dict(color='black', linewidth=2),
                      widths=0.4)
     bp2['boxes'][0].set_facecolor('#a6bddb')
@@ -86,7 +86,7 @@ def generate_comparison_plot():
     # -------------------------------------------------------------
     ax = axes[2]
     box_data_sil = [df_nh_clean['silent_cz_floor_uv'], df_ci_clean['silent_cz_floor_uv']]
-    bp3 = ax.boxplot(box_data_sil, patch_artist=True, labels=[f"Normal-Hearing\n(N={len(df_nh_clean)})", f"Cochlear Implant\n(N={len(df_ci_clean)})"],
+    bp3 = ax.boxplot(box_data_sil, patch_artist=True, tick_labels=[f"Normal-Hearing\n(N={len(df_nh_clean)})", f"Cochlear Implant\n(N={len(df_ci_clean)})"],
                      medianprops=dict(color='black', linewidth=2),
                      widths=0.4)
     bp3['boxes'][0].set_facecolor('#a6bddb')
