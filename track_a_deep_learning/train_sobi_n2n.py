@@ -50,28 +50,45 @@ def compute_sagittal_permutation_matrix(ch_names):
             P[j, i] = 1.0
     return P
 
-class EquivariantUNet1D(nn.Module):
-    def __init__(self, base_model, p_sagittal=None, use_sagittal=False):
+class ResidualConstrainedUNet1D(nn.Module):
+    """
+    Subspace-Constrained Residual 1D U-Net (Lindqvist & Thorne compliance).
+    1. Zero-Initialized output: Weight and bias initialized to 0 (identity pass-through at init).
+    2. Subspace Constraint: res = P_artifact @ UNet(x), restricted to artifact manifold.
+    3. Output: x_denoised = x - res.
+    """
+    def __init__(self, in_channels: int = 19, out_channels: int = 19, p_sagittal=None, use_sagittal=False):
         super().__init__()
-        self.base = base_model
+        self.base = UNet1D(in_channels=in_channels, out_channels=out_channels)
+        nn.init.zeros_(self.base.out.weight)
+        nn.init.zeros_(self.base.out.bias)
         self.use_sagittal = use_sagittal
         if p_sagittal is not None:
-            self.register_buffer('P', torch.tensor(p_sagittal, dtype=torch.float32))
+            self.register_buffer('P_sag', torch.tensor(p_sagittal, dtype=torch.float32))
         else:
-            self.P = None
+            self.P_sag = None
             
-    def forward(self, x):
-        if self.use_sagittal and self.P is not None:
-            # Equivariant forward pass: 0.5 * (f(x) + P f(P x))
-            Px = torch.matmul(self.P, x)
+    def forward(self, x: torch.Tensor, p_art: torch.Tensor = None):
+        if self.use_sagittal and self.P_sag is not None:
+            Px = torch.matmul(self.P_sag, x)
             f_x = self.base(x)
             f_Px = self.base(Px)
-            out = 0.5 * (f_x + torch.matmul(self.P, f_Px))
-            return out
+            raw_res = 0.5 * (f_x + torch.matmul(self.P_sag, f_Px))
         else:
-            return self.base(x)
+            raw_res = self.base(x)
+            
+        if p_art is not None:
+            if p_art.dim() == 2:
+                res = torch.matmul(p_art, raw_res)
+            elif p_art.dim() == 3:
+                res = torch.bmm(p_art, raw_res)
+        else:
+            res = raw_res
+            
+        out = x - res
+        return out, res
 
-def train_epoch(model, loader, optimizer, device, lambda_art=1.0, lambda_v=0.5):
+def train_epoch(model, loader, optimizer, device, lambda_art=1.0, lambda_v=1.0):
     model.train()
     total_loss, total_n2n, total_art, total_v = 0.0, 0.0, 0.0, 0.0
     
@@ -83,23 +100,21 @@ def train_epoch(model, loader, optimizer, device, lambda_art=1.0, lambda_v=0.5):
         
         optimizer.zero_grad()
         
-        # Forward passes
-        out1 = model(y1)
-        out2 = model(y2)
-        out_v = model(y_v)
+        # Subspace-constrained forward passes
+        out1, res1 = model(y1, p_art)
+        out2, res2 = model(y2, p_art)
+        out_v, res_v = model(y_v, p_art)
         
         # 1. Symmetric N2N Loss
         loss_n2n = 0.5 * torch.mean(torch.abs(out1 - y2)) + 0.5 * torch.mean(torch.abs(out2 - y1))
         
-        # 2. Speech Trial Artifact Subspace Nulling (Dr. Thorne mandate)
-        # ||P_art * f(y)||^2
+        # 2. Speech Trial Artifact Subspace Nulling
         p_out1 = torch.matmul(p_art, out1)
         p_out2 = torch.matmul(p_art, out2)
         loss_art = torch.mean(p_out1 ** 2) + torch.mean(p_out2 ** 2)
         
-        # 3. Silent Visual Artifact Subspace Nulling (preserves ongoing alpha/theta)
-        p_out_v = torch.matmul(p_art, out_v)
-        loss_v = torch.mean(p_out_v ** 2)
+        # 3. Silent Visual Residual Nulling (Strict penalty against non-zero subtraction during silence)
+        loss_v = torch.mean(res_v ** 2)
         
         loss = loss_n2n + lambda_art * loss_art + lambda_v * loss_v
         loss.backward()
@@ -118,10 +133,11 @@ def evaluate(model, loader, device, cz_idx, p7_idx):
     total_loss = 0.0
     etr_list = []
     with torch.no_grad():
-        for y1, y2, _, _ in loader:
+        for y1, y2, _, p_art in loader:
             y1 = y1.to(device)
             y2 = y2.to(device)
-            out1 = model(y1)
+            p_art = p_art[0].to(device)
+            out1, _ = model(y1, p_art)
             loss_n2n = 0.5 * torch.mean(torch.abs(out1 - y2))
             total_loss += loss_n2n.item()
             
@@ -148,9 +164,8 @@ def run_training(sobi_fif, csv_path, summary_json, output_dir, epochs=25, lr=5e-
     n_channels = len(ch_names)
     
     # 2. Build model
-    base_unet = UNet1D(in_channels=n_channels, out_channels=n_channels)
     P_sag = compute_sagittal_permutation_matrix(ch_names)
-    model = EquivariantUNet1D(base_unet, P_sag, use_sagittal=use_sagittal).to(device)
+    model = ResidualConstrainedUNet1D(in_channels=n_channels, out_channels=n_channels, p_sagittal=P_sag, use_sagittal=use_sagittal).to(device)
     
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)

@@ -79,3 +79,34 @@ class UNet1D(nn.Module):
         # Ensure exact match in time dimension
         min_t = min(out.shape[-1], x.shape[-1])
         return out[..., :min_t]
+
+
+class ResidualConstrainedUNet1D(nn.Module):
+    """
+    Subspace-Constrained Residual 1D U-Net for CI EEG Post-Processing.
+    
+    Guarantees:
+    1. Zero-Initialized Identity: Final layer weights/biases initialized to zero.
+       At epoch 0, residual is identically 0, preserving SOBI 2-pass baseline exactly.
+    2. Subspace Projection Constraint: Residual is strictly projected onto P_artifact,
+       preventing any modification of the orthogonal neural subspace (Cz ERP / alpha / theta).
+    3. Output: x_denoised = x - P_artifact @ UNet(x)
+    """
+    def __init__(self, in_channels: int = 20, out_channels: int = 20):
+        super().__init__()
+        self.unet = UNet1D(in_channels=in_channels, out_channels=out_channels)
+        # Zero-initialize the final projection layer
+        nn.init.zeros_(self.unet.out.weight)
+        nn.init.zeros_(self.unet.out.bias)
+        
+    def forward(self, x: torch.Tensor, p_art: torch.Tensor = None):
+        res = self.unet(x)
+        if p_art is not None:
+            # res shape: (batch, n_chs, n_times)
+            # p_art shape: (n_chs, n_chs)
+            if p_art.dim() == 2:
+                res = torch.matmul(p_art, res)
+            elif p_art.dim() == 3:
+                res = torch.bmm(p_art, res)
+        out = x - res
+        return out, res

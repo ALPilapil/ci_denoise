@@ -107,6 +107,14 @@ def build_n2n_splits(sobi_fif_path, csv_path, summary_json_path, split_ratios=(0
         U = np.column_stack(A_art_list) # (n_channels, n_art_comps)
         # Orthogonal projection onto artifact subspace: P = U (U^T U)^-1 U^T
         P_artifact = U @ np.linalg.pinv(U.T @ U) @ U.T
+        
+        # Prof. Lindqvist Condition A: Strict null-space enforcement on midline channels
+        midline_chs = ['Cz', 'Fz', 'Pz']
+        for m_ch in midline_chs:
+            if m_ch in available_chs:
+                m_idx = available_chs.index(m_ch)
+                P_artifact[m_idx, :] = 0.0
+                P_artifact[:, m_idx] = 0.0
     else:
         P_artifact = np.zeros((n_channels, n_channels), dtype=np.float32)
         
