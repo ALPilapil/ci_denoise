@@ -65,8 +65,7 @@ def run_sobi_polarity_pipeline(raw_fif, csv_path, output_dir, subject_id="0901y2
     
     # Also load raw data filtered to the same band for exact baseline comparison
     raw_orig = mne.io.read_raw_fif(raw_fif, preload=True, verbose=False)
-    available_chs = [ch for ch in CANONICAL_20_CHS if ch in raw_orig.ch_names]
-    raw_orig.pick(available_chs)
+    raw_orig.pick(raw_clean.ch_names)
     if raw_orig.info['sfreq'] != target_fs:
         raw_orig.resample(target_fs, verbose=False)
     if highpass > 0.0 or lowpass > 0.0:

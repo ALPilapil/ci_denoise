@@ -115,13 +115,21 @@ def run_two_pass_sobi_subject(input_fif, output_fif=None, target_fs=256.0, highp
     # 1. Channel selection
     available_chs = [ch for ch in CANONICAL_20_CHS if ch in raw.ch_names]
     raw.pick(available_chs)
-    ch_names = raw.ch_names
-    n_channels = len(ch_names)
     
     # 2. Resample to standard target_fs if needed
     if raw.info['sfreq'] != target_fs:
         print(f"Resampling {raw.info['sfreq']} Hz -> {target_fs} Hz...")
         raw.resample(target_fs, verbose=False)
+
+    # Detect and drop unrecorded / NaN channels before filtering
+    data_check = raw.get_data()
+    bad_nan_chs = [ch for i, ch in enumerate(raw.ch_names) if np.isnan(data_check[i]).any()]
+    if bad_nan_chs:
+        print(f"[Two-Pass SOBI] Detected {len(bad_nan_chs)} bad channels with NaNs: {bad_nan_chs}. Dropping.")
+        raw.drop_channels(bad_nan_chs)
+    
+    ch_names = raw.ch_names
+    n_channels = len(ch_names)
         
     # 3. Continuous zero-phase FIR pre-filtering (removes DC drift and anti-aliases)
     l_freq = highpass if (highpass is not None and highpass > 0.0) else None
