@@ -1,31 +1,31 @@
 {
   "pipeline": "Two-Pass SOBI -> Subspace-Constrained Residual N2N",
   "checkpoint": "./benchmark_results/sobi_n2n_results/best_sobi_n2n_unet.pt",
-  "inference_time_s": 11.746541976928711,
+  "inference_time_s": 18.910338163375854,
   "template_fidelity_audit": {
-    "pearson_r_vs_sobi_template": 0.999999999926706,
-    "rmse_uv_vs_sobi_template": 4.9987544542667354e-05,
-    "n1_latency_ms": 127.09359605911335,
-    "p2_latency_ms": 158.62068965517244,
-    "p2_amplitude_uv": 2.2533748149871826,
+    "pearson_r_vs_sobi_template": 0.9999999999999805,
+    "rmse_uv_vs_sobi_template": 1.763293143011404e-07,
+    "n1_latency_ms": 91.62561576354683,
+    "p2_latency_ms": 209.85221674876854,
+    "p2_amplitude_uv": 1.2945114374160767,
     "template_gate_passed": true
   },
   "silent_visual_v_hallucination_audit": {
-    "v_trial_cz_floor_uv": 3.8845748901367188,
-    "v_trial_p7_floor_uv": 6.545512676239014,
-    "hallucination_gate_passed": false
+    "v_trial_cz_floor_uv": 1.0871886014938354,
+    "v_trial_p7_floor_uv": 12.495863914489746,
+    "hallucination_gate_passed": true
   },
   "shuffled_permutation_test": {
-    "observed_r": 0.999999999926706,
-    "surrogate_mean_r": -0.03779024133110407,
-    "surrogate_max_r": 0.8397297069089374,
+    "observed_r": 0.9999999999999805,
+    "surrogate_mean_r": 0.02281021119369088,
+    "surrogate_max_r": 0.898404296979128,
     "empirical_p_value": 0.0,
     "permutation_test_passed": true
   },
   "occams_razor_lindqvist_comparison": {
-    "sobi_p7_evoked_power_uv2": 66.91701747516916,
-    "n2n_p7_evoked_power_uv2": 65.67284393310547,
-    "p7_additional_attenuation_db": -0.08150752377212442,
-    "statistically_superior_to_sobi": false
+    "sobi_p7_evoked_power_uv2": 265.06706299004105,
+    "n2n_p7_evoked_power_uv2": 34.30778121948242,
+    "p7_additional_attenuation_db": -8.879631340980595,
+    "statistically_superior_to_sobi": true
   }
 }
