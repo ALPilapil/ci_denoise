@@ -278,8 +278,6 @@ def run_sobi_polarity_pipeline(raw_fif, csv_path, output_dir, subject_id="0901y2
     
     # Panel B: P7 Artifact Rejection Across Stages
     ax = axes[1]
-    p7_raw_epoch = np.mean(raw_data[p7_idx, :int(1.0*fs)]) * 1e6
-    erp_raw_p7 = np.mean([r[p7_idx] for r in clean_pairs], axis=0) if clean_pairs else np.zeros(len(times))
     # Plot P7 evoked waveform
     erp_p7_sobi = np.mean([p['clean_speech_response'][p7_idx] for p in clean_pairs], axis=0) * 1e6
     erp_p7_diff = np.mean([p['isolated_artifact'][p7_idx] for p in clean_pairs], axis=0) * 1e6

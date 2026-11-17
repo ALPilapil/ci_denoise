@@ -1,0 +1,33 @@
+{
+  "subject": "0901y2",
+  "total_runtime_s": 31.725465297698975,
+  "stage1_sobi": {
+    "artifact_attenuation_db": -6.3015788615354875,
+    "p7_mean_single_take_power_uv2": 114873.2291410242
+  },
+  "stage2_polarity_averaging": {
+    "matched_pairs": 180,
+    "additional_attenuation_db": -2.625322261143176,
+    "p7_summed_power_uv2": 62760.53012849779,
+    "isolated_artifact_power_uv2": 52112.69901252643
+  },
+  "total_pipeline": {
+    "total_artifact_attenuation_db": -8.926901122678663,
+    "power_reduction_pct": 87.19705476659895
+  },
+  "cz_cortical_erp": {
+    "n1_latency_ms": 91.62561576354683,
+    "n1_amplitude_uv": -0.27262924227056046,
+    "n1_gate_passed": true,
+    "p2_latency_ms": 170.44334975369463,
+    "p2_amplitude_uv": 0.6983172360306384,
+    "p2_gate_passed": true,
+    "peak_to_peak_uv": 0.970946478301199,
+    "template_fidelity_r": 1.0
+  },
+  "condition_v_silent_baseline": {
+    "cz_noise_floor_uv": 0.8013365871485477,
+    "p7_noise_floor_uv": 41.70396375141889,
+    "silent_gate_passed": true
+  }
+}
