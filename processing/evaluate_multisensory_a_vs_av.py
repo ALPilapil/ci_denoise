@@ -53,13 +53,13 @@ def evaluate_cohort_multisensory(cohort_dir, cohort_type="ci"):
         # P2 window: 150 - 240 ms
         p2_mask = (times >= 0.150) & (times <= 0.240)
         
-        # Cz ERP for A
-        erp_a = np.mean(clean_speech[a_indices, cz_idx, :], axis=0)
+        # Cz ERP for A (convert Volts -> uV)
+        erp_a = np.mean(clean_speech[a_indices, cz_idx, :], axis=0) * 1e6
         p2_amp_a = float(np.max(erp_a[p2_mask]))
         p2_lat_a = float(times[p2_mask][np.argmax(erp_a[p2_mask])] * 1000.0)
         
-        # Cz ERP for AV
-        erp_av = np.mean(clean_speech[av_indices, cz_idx, :], axis=0)
+        # Cz ERP for AV (convert Volts -> uV)
+        erp_av = np.mean(clean_speech[av_indices, cz_idx, :], axis=0) * 1e6
         p2_amp_av = float(np.max(erp_av[p2_mask]))
         p2_lat_av = float(times[p2_mask][np.argmax(erp_av[p2_mask])] * 1000.0)
         
