@@ -140,30 +140,26 @@ def run_two_pass_sobi_subject(input_fif, output_fif=None, target_fs=256.0, max_p
         # Center data
         X = current_data - np.mean(current_data, axis=1, keepdims=True)
         
-        # Rank-Preserving SOBI: After removing (pass_idx - 1) components, the subspace has rank (n_channels - pass_idx + 1)
-        curr_rank = n_channels - (pass_idx - 1)
+        # Rank-Preserving SOBI: Use 15 components (discarding noise floor eigenvalues)
+        curr_rank = min(15, n_channels - (pass_idx - 1))
         
         # Run SOBI
         A, W = run_sobi(X, n_components=curr_rank, lags=[1, 2, 4, 8, 16, 25, 50], eps=1e-5, max_iter=200)
         S = W @ X
         cond_w = float(np.linalg.cond(W))
         
-        # Analyze components
-        comp_vars = np.var(S, axis=1)
-        total_s_var = np.sum(comp_vars)
-        var_pcts = (comp_vars / total_s_var) * 100.0
+        # Compute exact backprojected scalp variance: ||a_k s_k^T||_F^2 = ||a_k||^2 * ||s_k||^2
+        a_norms_sq = np.sum(A ** 2, axis=0)
+        s_norms_sq = np.sum(S ** 2, axis=1)
+        comp_vars = a_norms_sq * s_norms_sq
+        total_backprojected_var = np.sum(comp_vars) + 1e-12
+        pvaf = (comp_vars / total_backprojected_var) * 100.0
         
-        # Sort components by variance
-        sort_order = np.argsort(var_pcts)[::-1]
-        
-        # Find candidate artifact component
-        selected_comp = None
-        selected_r = 0.0
-        selected_peak_ch = ""
-        
-        for c_idx in sort_order:
+        # Evaluate each component
+        candidates = []
+        for c_idx in range(curr_rank):
             mixing_col = A[:, c_idx]
-            peak_ch_idx = np.argmax(np.abs(mixing_col))
+            peak_ch_idx = int(np.argmax(np.abs(mixing_col)))
             peak_ch = ch_names[peak_ch_idx]
             
             # Cortical Dipole Shield: NEVER reject if peak channel is Cz, Fz, Pz
@@ -171,19 +167,31 @@ def run_two_pass_sobi_subject(input_fif, output_fif=None, target_fs=256.0, max_p
                 continue
                 
             r_ratio = compute_spatial_ratio(mixing_col, ch_names)
-            if r_ratio >= r_thresh:
-                selected_comp = c_idx
-                selected_r = r_ratio
-                selected_peak_ch = peak_ch
-                break
-                
+            var_pct = float(pvaf[c_idx])
+            
+            # Score: Scalp variance * Mastoid-to-Central Ratio
+            score = var_pct * r_ratio if r_ratio >= r_thresh else 0.0
+            candidates.append({
+                'c_idx': c_idx,
+                'peak_ch': peak_ch,
+                'r_ratio': r_ratio,
+                'var_pct': var_pct,
+                'score': score
+            })
+            
         pass_time = time.time() - t_pass_start
         
-        if selected_comp is None:
+        # Sort candidates by score
+        candidates = sorted(candidates, key=lambda x: x['score'], reverse=True)
+        if not candidates or candidates[0]['score'] == 0.0:
             print(f"Pass {pass_idx}: No component met artifact criteria (R >= {r_thresh}x). Stopping clean.")
             break
             
-        var_removed = float(var_pcts[selected_comp])
+        best = candidates[0]
+        selected_comp = best['c_idx']
+        selected_r = best['r_ratio']
+        selected_peak_ch = best['peak_ch']
+        var_removed = best['var_pct']
         print(f"Pass {pass_idx}: Isolated Artifact IC {selected_comp} (Peak: {selected_peak_ch}, R={selected_r:.2f}x, Var={var_removed:.1f}%) in {pass_time:.2f}s")
         
         # Project out the artifact component
