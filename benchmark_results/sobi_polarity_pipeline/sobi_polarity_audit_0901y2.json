@@ -1,6 +1,6 @@
 {
   "subject": "0901y2",
-  "total_runtime_s": 31.725465297698975,
+  "total_runtime_s": 22.77950644493103,
   "stage1_sobi": {
     "artifact_attenuation_db": -6.3015788615354875,
     "p7_mean_single_take_power_uv2": 114873.2291410242
