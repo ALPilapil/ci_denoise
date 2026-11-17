@@ -1,0 +1,30 @@
+{
+  "FastICA": {
+    "Pass_1": {
+      "main_idx": 7,
+      "top_channel": "RMas",
+      "pvaf": 18.939927784771164,
+      "ref_ratio": 1.6899778016489815
+    },
+    "Pass_2": {
+      "main_idx": 2,
+      "top_channel": "RMas",
+      "pvaf": 51.50563197419782,
+      "ref_ratio": 0.9377839560342657
+    }
+  },
+  "SOBI": {
+    "Pass_1": {
+      "main_idx": 0,
+      "top_channel": "P7",
+      "pvaf": 34.51123363411298,
+      "ref_ratio": 16.88354727682856
+    },
+    "Pass_2": {
+      "main_idx": 4,
+      "top_channel": "T7",
+      "pvaf": 14.337106552418778,
+      "ref_ratio": 8.337947791510494
+    }
+  }
+}
