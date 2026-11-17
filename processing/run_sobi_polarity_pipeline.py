@@ -57,6 +57,31 @@ def run_sobi_polarity_pipeline(raw_fif, csv_path, output_dir, subject_id="0901y2
     with open(sobi_json, 'w') as f:
         json.dump(sobi_summary, f, indent=2)
         
+    # Check for hardware failure / uncalibrated recording
+    if sobi_summary.get('hardware_failure', False):
+        print(f"[PIPELINE ABORT] Subject {subject_id} failed hardware quality gate: Corrupted recording.")
+        audit_results = {
+            'subject': subject_id,
+            'hardware_failure': True,
+            'hardware_failure_reason': sobi_summary.get('audit_flags', ['Corrupted recording'])[0],
+            'total_runtime_s': sobi_summary.get('total_runtime_s', 0.0),
+            'stage1_sobi': {'artifact_attenuation_db': 0.0, 'p7_mean_single_take_power_uv2': np.nan},
+            'stage2_polarity_averaging': {'matched_pairs': 0, 'additional_attenuation_db': 0.0, 'p7_summed_power_uv2': np.nan, 'isolated_artifact_power_uv2': np.nan},
+            'total_pipeline': {'total_artifact_attenuation_db': 0.0, 'power_reduction_pct': 0.0},
+            'cz_cortical_erp': {
+                'n1_latency_ms': np.nan, 'n1_amplitude_uv': np.nan, 'n1_gate_passed': False,
+                'p2_latency_ms': np.nan, 'p2_amplitude_uv': np.nan, 'p2_gate_passed': False,
+                'peak_to_peak_uv': np.nan, 'cz_group_delay_ms': np.nan, 'cz_raw_clean_corr_r': np.nan
+            },
+            'condition_v_silent_baseline': {
+                'cz_noise_floor_uv': np.nan, 'p7_noise_floor_uv': np.nan, 'silent_gate_passed': False
+            }
+        }
+        audit_json_path = os.path.join(output_dir, f"sobi_polarity_audit_{subject_id}.json")
+        with open(audit_json_path, 'w') as f:
+            json.dump(audit_results, f, indent=2)
+        return audit_results
+
     fs = raw_clean.info['sfreq']
     ch_names = raw_clean.ch_names
     cz_idx = ch_names.index('Cz')
@@ -194,13 +219,32 @@ def run_sobi_polarity_pipeline(raw_fif, csv_path, output_dir, subject_id="0901y2
     p2_amp = float(erp_sum_cz[p2_mask][p2_idx])
     peak_to_peak = float(p2_amp - n1_amp)
     
-    # Correlation with Stage 1 SOBI template
-    r_cz_template = float(np.corrcoef(erp_sobi_cz[post_mask], erp_sum_cz[post_mask])[0, 1])
+    # Rigorous Phase & Morphology Evaluation (avoiding algebraic self-correlation tautologies)
+    from scipy.signal import correlate, correlation_lags
+    cz_sum_post = erp_sum_cz[post_mask] - np.mean(erp_sum_cz[post_mask])
+    cz_raw_post = erp_raw_cz[post_mask] - np.mean(erp_raw_cz[post_mask])
+    xcorr = correlate(cz_sum_post, cz_raw_post, mode='full')
+    xcorr_lags = correlation_lags(len(cz_sum_post), len(cz_raw_post), mode='full')
+    lag_opt = xcorr_lags[np.argmax(xcorr)]
+    cz_group_delay_ms = float(lag_opt * (1000.0 / fs))
+    
+    # Waveform correlation with zero-phase filtered raw ERP
+    cz_raw_clean_corr_r = float(np.corrcoef(erp_raw_cz[post_mask], erp_sum_cz[post_mask])[0, 1])
+    
+    # Biophysical Compliance Gates
+    p2_latency_valid = (150.0 <= p2_lat <= 240.0)
+    p2_amplitude_valid = (0.1 <= p2_amp <= 25.0)
+    p2_gate_passed = bool(p2_latency_valid and p2_amplitude_valid and (v_cz_floor < 3.0))
+
+    n1_latency_valid = (90.0 <= n1_lat <= 140.0)
+    n1_amplitude_valid = (-25.0 <= n1_amp <= -0.05)
+    n1_gate_passed = bool(n1_latency_valid and n1_amplitude_valid and (v_cz_floor < 3.0))
     
     total_runtime = time.time() - t_start
     
     audit_results = {
         'subject': subject_id,
+        'hardware_failure': False,
         'total_runtime_s': total_runtime,
         'stage1_sobi': {
             'artifact_attenuation_db': sobi_db_attenuation,
@@ -219,12 +263,13 @@ def run_sobi_polarity_pipeline(raw_fif, csv_path, output_dir, subject_id="0901y2
         'cz_cortical_erp': {
             'n1_latency_ms': n1_lat,
             'n1_amplitude_uv': n1_amp,
-            'n1_gate_passed': 90.0 <= n1_lat <= 140.0,
+            'n1_gate_passed': n1_gate_passed,
             'p2_latency_ms': p2_lat,
             'p2_amplitude_uv': p2_amp,
-            'p2_gate_passed': 150.0 <= p2_lat <= 240.0,
+            'p2_gate_passed': p2_gate_passed,
             'peak_to_peak_uv': peak_to_peak,
-            'template_fidelity_r': r_cz_template
+            'cz_group_delay_ms': cz_group_delay_ms,
+            'cz_raw_clean_corr_r': cz_raw_clean_corr_r
         },
         'condition_v_silent_baseline': {
             'cz_noise_floor_uv': v_cz_floor,
@@ -249,6 +294,7 @@ def run_sobi_polarity_pipeline(raw_fif, csv_path, output_dir, subject_id="0901y2
         clean_speech=all_clean_responses,
         isolated_artifact=all_isolated_artifacts,
         stim_ids=stim_ids,
+        v_clean=np.array(v_sobi_epochs),
         channels=ch_names,
         times=times,
         sfreq=fs

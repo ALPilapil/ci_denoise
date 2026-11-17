@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """
 evaluate_multisensory_a_vs_av.py
-Evaluates multisensory integration (Audio-only 'A' vs Audiovisual 'AV')
+Evaluates multisensory integration (Audio-only 'A' vs Audiovisual 'AV' vs Visual-only 'V')
 across cleaned epochs for both Cochlear Implant and Normal-Hearing cohorts.
+Implements the canonical additive model [AV - (A + V)] to rigorously test
+whether enhancement reflects true superadditive neural integration or linear superposition of the VEP.
 """
 
 import os
 import glob
 import numpy as np
 import pandas as pd
+import mne
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -63,6 +66,42 @@ def evaluate_cohort_multisensory(cohort_dir, cohort_type="ci"):
         p2_amp_av = float(np.max(erp_av[p2_mask]))
         p2_lat_av = float(times[p2_mask][np.argmax(erp_av[p2_mask])] * 1000.0)
         
+        # Condition V (Silent Visual speech) extraction
+        erp_v = None
+        if 'v_clean' in npz and len(npz['v_clean']) > 0:
+            erp_v = np.mean(npz['v_clean'][:, cz_idx, :], axis=0) * 1e6
+        else:
+            clean_fif = os.path.join(cohort_dir, f"trial_onsets_{sub}_sobi2pass-raw.fif")
+            if os.path.exists(clean_fif):
+                try:
+                    raw_c = mne.io.read_raw_fif(clean_fif, preload=True, verbose=False)
+                    v_trials = df[df['condition'] == 'V']
+                    v_segs = []
+                    fs_fif = raw_c.info['sfreq']
+                    t_pre_pts = int(0.2 * fs_fif)
+                    ep_len = int(0.8 * fs_fif)
+                    if 'Cz' in raw_c.ch_names:
+                        cz_c_idx = raw_c.ch_names.index('Cz')
+                        d_c = raw_c.get_data(picks=[cz_c_idx])
+                        for _, row in v_trials.iterrows():
+                            s0 = int(row['onset_s'] * fs_fif) - t_pre_pts
+                            s1 = s0 + ep_len
+                            if s0 >= 0 and s1 <= d_c.shape[1]:
+                                seg = d_c[0, s0:s1].copy()
+                                seg -= np.mean(seg[:t_pre_pts])
+                                v_segs.append(seg)
+                        if v_segs:
+                            erp_v = np.mean(v_segs, axis=0) * 1e6
+                except Exception:
+                    pass
+                    
+        p2_amp_v = float(np.max(erp_v[p2_mask])) if erp_v is not None else np.nan
+        p2_lat_v = float(times[p2_mask][np.argmax(erp_v[p2_mask])] * 1000.0) if erp_v is not None else np.nan
+        
+        # Canonical Additive Superposition Model: AV vs (A + V)
+        additive_expected = (p2_amp_a + p2_amp_v) if erp_v is not None else np.nan
+        interaction_diff = (p2_amp_av - additive_expected) if erp_v is not None else np.nan
+        
         results.append({
             'subject': sub,
             'cohort': cohort_type,
@@ -70,10 +109,14 @@ def evaluate_cohort_multisensory(cohort_dir, cohort_type="ci"):
             'n_pairs_av': len(av_indices),
             'p2_amp_a_uv': p2_amp_a,
             'p2_lat_a_ms': p2_lat_a,
+            'p2_amp_v_uv': p2_amp_v,
+            'p2_lat_v_ms': p2_lat_v,
             'p2_amp_av_uv': p2_amp_av,
             'p2_lat_av_ms': p2_lat_av,
             'multisensory_gain_uv': p2_amp_av - p2_amp_a,
-            'multisensory_gain_pct': ((p2_amp_av - p2_amp_a) / max(abs(p2_amp_a), 1e-6)) * 100.0
+            'multisensory_gain_pct': ((p2_amp_av - p2_amp_a) / max(abs(p2_amp_a), 1e-6)) * 100.0,
+            'additive_expected_uv': additive_expected,
+            'interaction_diff_uv': interaction_diff
         })
         
     return pd.DataFrame(results)
@@ -90,17 +133,27 @@ def main():
     df_ci = df_ci[df_ci['p2_amp_av_uv'].abs() < 50.0]
     
     print("\n" + "=" * 80)
-    print("MULTISENSORY INTEGRATION (A vs AV) SUMMARY")
+    print("MULTISENSORY INTEGRATION (A vs AV vs V) SUMMARY")
     print("=" * 80)
     print(f"Normal-Hearing (N = {len(df_nh)}):")
-    print(f"  P2 Amplitude Audio (A):       {df_nh['p2_amp_a_uv'].mean():.2f} +/- {df_nh['p2_amp_a_uv'].std():.2f} uV")
-    print(f"  P2 Amplitude Audiovisual (AV):{df_nh['p2_amp_av_uv'].mean():.2f} +/- {df_nh['p2_amp_av_uv'].std():.2f} uV")
-    print(f"  Multisensory Gain:            +{df_nh['multisensory_gain_uv'].mean():.2f} uV (+{df_nh['multisensory_gain_pct'].mean():.1f}%)")
+    print(f"  P2 Amplitude Audio (A):          {df_nh['p2_amp_a_uv'].mean():.2f} +/- {df_nh['p2_amp_a_uv'].std():.2f} uV")
+    if 'p2_amp_v_uv' in df_nh.columns and df_nh['p2_amp_v_uv'].notna().any():
+        print(f"  P2 Amplitude Visual (V):         {df_nh['p2_amp_v_uv'].dropna().mean():.2f} +/- {df_nh['p2_amp_v_uv'].dropna().std():.2f} uV")
+    print(f"  P2 Amplitude Audiovisual (AV):   {df_nh['p2_amp_av_uv'].mean():.2f} +/- {df_nh['p2_amp_av_uv'].std():.2f} uV")
+    print(f"  Direct Gain (AV - A):            +{df_nh['multisensory_gain_uv'].mean():.2f} uV (+{df_nh['multisensory_gain_pct'].mean():.1f}%)")
+    if 'interaction_diff_uv' in df_nh.columns and df_nh['interaction_diff_uv'].notna().any():
+        valid_int = df_nh['interaction_diff_uv'].dropna()
+        print(f"  Additive Interaction [AV-(A+V)]: {valid_int.mean():.2f} +/- {valid_int.std():.2f} uV")
     
     print(f"\nCochlear Implant (N = {len(df_ci)}):")
-    print(f"  P2 Amplitude Audio (A):       {df_ci['p2_amp_a_uv'].mean():.2f} +/- {df_ci['p2_amp_a_uv'].std():.2f} uV")
-    print(f"  P2 Amplitude Audiovisual (AV):{df_ci['p2_amp_av_uv'].mean():.2f} +/- {df_ci['p2_amp_av_uv'].std():.2f} uV")
-    print(f"  Multisensory Gain:            +{df_ci['multisensory_gain_uv'].mean():.2f} uV (+{df_ci['multisensory_gain_pct'].mean():.1f}%)")
+    print(f"  P2 Amplitude Audio (A):          {df_ci['p2_amp_a_uv'].mean():.2f} +/- {df_ci['p2_amp_a_uv'].std():.2f} uV")
+    if 'p2_amp_v_uv' in df_ci.columns and df_ci['p2_amp_v_uv'].notna().any():
+        print(f"  P2 Amplitude Visual (V):         {df_ci['p2_amp_v_uv'].dropna().mean():.2f} +/- {df_ci['p2_amp_v_uv'].dropna().std():.2f} uV")
+    print(f"  P2 Amplitude Audiovisual (AV):   {df_ci['p2_amp_av_uv'].mean():.2f} +/- {df_ci['p2_amp_av_uv'].std():.2f} uV")
+    print(f"  Direct Gain (AV - A):            +{df_ci['multisensory_gain_uv'].mean():.2f} uV (+{df_ci['multisensory_gain_pct'].mean():.1f}%)")
+    if 'interaction_diff_uv' in df_ci.columns and df_ci['interaction_diff_uv'].notna().any():
+        valid_int_ci = df_ci['interaction_diff_uv'].dropna()
+        print(f"  Additive Interaction [AV-(A+V)]: {valid_int_ci.mean():.2f} +/- {valid_int_ci.std():.2f} uV")
     print("=" * 80)
     
     df_all = pd.concat([df_nh, df_ci], ignore_index=True)
