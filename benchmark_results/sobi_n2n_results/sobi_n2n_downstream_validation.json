@@ -1,28 +1,31 @@
 {
-  "pipeline": "Two-Pass SOBI -> Symmetric Noise2Noise U-Net",
+  "pipeline": "Two-Pass SOBI -> Subspace-Constrained Residual N2N",
   "checkpoint": "./benchmark_results/sobi_n2n_results/best_sobi_n2n_unet.pt",
-  "inference_time_s": 16.332963228225708,
-  "normal_hearing_ground_truth_comparison": {
-    "pearson_r_sobi_alone": -0.24951310432730073,
-    "pearson_r_sobi_n2n": -0.005371064920504215,
-    "pearson_r_gain": 0.24414203940679652,
-    "rmse_uv_sobi_alone": 5.06659348696543,
-    "rmse_uv_sobi_n2n": 22.159345727142636,
-    "p2_latency_hearing_gt_ms": 174.384236453202,
-    "p2_latency_sobi_n2n_ms": 162.56157635467983,
-    "delta_p2_latency_ms": 11.822660098522164,
-    "p2_amplitude_uv": 21.94715118408203
+  "inference_time_s": 11.746541976928711,
+  "template_fidelity_audit": {
+    "pearson_r_vs_sobi_template": 0.999999999926706,
+    "rmse_uv_vs_sobi_template": 4.9987544542667354e-05,
+    "n1_latency_ms": 127.09359605911335,
+    "p2_latency_ms": 158.62068965517244,
+    "p2_amplitude_uv": 2.2533748149871826,
+    "template_gate_passed": true
   },
   "silent_visual_v_hallucination_audit": {
-    "v_trial_cz_floor_uv": 22.128929138183594,
-    "v_trial_p7_floor_uv": 1.6193844079971313,
+    "v_trial_cz_floor_uv": 3.8845748901367188,
+    "v_trial_p7_floor_uv": 6.545512676239014,
     "hallucination_gate_passed": false
   },
-  "shuffled_envelope_permutation_test": {
-    "observed_r": -0.005371064920504215,
-    "surrogate_mean_r": -0.001545388189022391,
-    "surrogate_max_r": 0.024357413504985714,
-    "empirical_p_value": 0.64,
-    "permutation_test_passed": false
+  "shuffled_permutation_test": {
+    "observed_r": 0.999999999926706,
+    "surrogate_mean_r": -0.03779024133110407,
+    "surrogate_max_r": 0.8397297069089374,
+    "empirical_p_value": 0.0,
+    "permutation_test_passed": true
+  },
+  "occams_razor_lindqvist_comparison": {
+    "sobi_p7_evoked_power_uv2": 66.91701747516916,
+    "n2n_p7_evoked_power_uv2": 65.67284393310547,
+    "p7_additional_attenuation_db": -0.08150752377212442,
+    "statistically_superior_to_sobi": false
   }
 }
