@@ -104,9 +104,9 @@ def compute_spatial_ratio(mixing_col, ch_names):
     mean_central = np.mean(central_powers) if central_powers else 1e-12
     return mean_mastoid / max(mean_central, 1e-12)
 
-def run_two_pass_sobi_subject(input_fif, output_fif=None, target_fs=256.0, max_passes=2, r_thresh=2.5):
+def run_two_pass_sobi_subject(input_fif, output_fif=None, target_fs=256.0, highpass=1.0, lowpass=45.0, max_passes=2, r_thresh=2.5):
     """
-    Executes automated two-pass SOBI with biological safeguards.
+    Executes automated two-pass SOBI with biological safeguards and zero-phase continuous pre-filtering.
     """
     t0 = time.time()
     print(f"\n[Two-Pass SOBI] Loading: {input_fif}")
@@ -122,6 +122,13 @@ def run_two_pass_sobi_subject(input_fif, output_fif=None, target_fs=256.0, max_p
     if raw.info['sfreq'] != target_fs:
         print(f"Resampling {raw.info['sfreq']} Hz -> {target_fs} Hz...")
         raw.resample(target_fs, verbose=False)
+        
+    # 3. Continuous zero-phase FIR pre-filtering (removes DC drift and anti-aliases)
+    l_freq = highpass if (highpass is not None and highpass > 0.0) else None
+    h_freq = lowpass if (lowpass is not None and lowpass > 0.0) else None
+    if l_freq is not None or h_freq is not None:
+        print(f"Applying zero-phase FIR filter ({l_freq} - {h_freq} Hz)...")
+        raw.filter(l_freq=l_freq, h_freq=h_freq, fir_design='firwin', phase='zero', verbose=False)
         
     fs = raw.info['sfreq']
     data = raw.get_data() # (n_channels, n_times)
@@ -261,6 +268,8 @@ def run_two_pass_sobi_subject(input_fif, output_fif=None, target_fs=256.0, max_p
         'output_fif': output_fif,
         'channels': ch_names,
         'sfreq': fs,
+        'highpass': highpass,
+        'lowpass': lowpass,
         'total_passes': len(pass_history),
         'total_runtime_s': total_runtime,
         'total_variance_original_uv2': float(total_var_orig * 1e12),
@@ -279,6 +288,8 @@ if __name__ == "__main__":
     parser.add_argument("--input-fif", required=True, help="Path to input raw FIF")
     parser.add_argument("--output-fif", default=None, help="Path to save cleaned raw FIF")
     parser.add_argument("--target-fs", type=float, default=256.0, help="Target sampling rate")
+    parser.add_argument("--highpass", type=float, default=1.0, help="High-pass filter cutoff in Hz (default: 1.0, 0.0 to disable)")
+    parser.add_argument("--lowpass", type=float, default=45.0, help="Low-pass filter cutoff in Hz (default: 45.0, 0.0 to disable)")
     parser.add_argument("--max-passes", type=int, default=2, help="Maximum SOBI passes (default 2)")
     parser.add_argument("--r-thresh", type=float, default=2.5, help="Mastoid-to-central ratio threshold")
     parser.add_argument("--output-json", default=None, help="Path to save summary JSON")
@@ -288,6 +299,8 @@ if __name__ == "__main__":
         input_fif=args.input_fif,
         output_fif=args.output_fif,
         target_fs=args.target_fs,
+        highpass=args.highpass,
+        lowpass=args.lowpass,
         max_passes=args.max_passes,
         r_thresh=args.r_thresh
     )

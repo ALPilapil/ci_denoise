@@ -25,6 +25,8 @@ python -u processing/two_pass_sobi_preprocessor.py \
     --input-fif   /quobyte/millerlmgrp/annotated_data/CMPy2/trial_onsets_0901y2-raw.fif \
     --output-fif  ./benchmark_results/sobi2pass_cache/trial_onsets_0901y2_sobi2pass-raw.fif \
     --target-fs   256.0 \
+    --highpass    1.0 \
+    --lowpass     45.0 \
     --max-passes  2 \
     --r-thresh    2.5 \
     --output-json ./benchmark_results/sobi2pass_cache/sobi2pass_summary_0901y2.json
