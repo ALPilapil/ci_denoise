@@ -26,4 +26,9 @@ temp/
 *.err
 *.out
 
-.sh
+# Large binary datasets and models
+*.fif
+*.pt
+*.zarr
+*.h5
+*.mat

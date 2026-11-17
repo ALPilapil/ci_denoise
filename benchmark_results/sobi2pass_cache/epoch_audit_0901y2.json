@@ -1,0 +1,20 @@
+{
+  "subject": "0901y2",
+  "condition_v_silent_audit": {
+    "single_trial_p7_rms_raw_uv": 495.5267158906108,
+    "single_trial_p7_rms_sobi_uv": 32.045883591361736,
+    "p7_rms_suppression_ratio": 15.463038005423716,
+    "averaged_erp_p7_floor_raw_uv": 154.99957752055548,
+    "averaged_erp_p7_floor_sobi_uv": 3.7276541767298106,
+    "averaged_erp_cz_floor_sobi_uv": 1.7390372812822126
+  },
+  "condition_a_cortical_erp_audit": {
+    "cz_n1_latency_ms": 131.03448275862073,
+    "cz_n1_amplitude_uv": 0.6226909153002226,
+    "cz_n1_gate_passed": true,
+    "cz_p2_latency_ms": 205.91133004926115,
+    "cz_p2_amplitude_uv": 5.351168862695839,
+    "cz_p2_gate_passed": true,
+    "peak_to_peak_n1_p2_uv": 4.728477947395616
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "pipeline": "Two-Pass SOBI -> Symmetric Noise2Noise U-Net",
+  "checkpoint": "./benchmark_results/sobi_n2n_results/best_sobi_n2n_unet.pt",
+  "inference_time_s": 16.332963228225708,
+  "normal_hearing_ground_truth_comparison": {
+    "pearson_r_sobi_alone": -0.24951310432730073,
+    "pearson_r_sobi_n2n": -0.005371064920504215,
+    "pearson_r_gain": 0.24414203940679652,
+    "rmse_uv_sobi_alone": 5.06659348696543,
+    "rmse_uv_sobi_n2n": 22.159345727142636,
+    "p2_latency_hearing_gt_ms": 174.384236453202,
+    "p2_latency_sobi_n2n_ms": 162.56157635467983,
+    "delta_p2_latency_ms": 11.822660098522164,
+    "p2_amplitude_uv": 21.94715118408203
+  },
+  "silent_visual_v_hallucination_audit": {
+    "v_trial_cz_floor_uv": 22.128929138183594,
+    "v_trial_p7_floor_uv": 1.6193844079971313,
+    "hallucination_gate_passed": false
+  },
+  "shuffled_envelope_permutation_test": {
+    "observed_r": -0.005371064920504215,
+    "surrogate_mean_r": -0.001545388189022391,
+    "surrogate_max_r": 0.024357413504985714,
+    "empirical_p_value": 0.64,
+    "permutation_test_passed": false
+  }
+}
