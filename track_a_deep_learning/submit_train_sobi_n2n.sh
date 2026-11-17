@@ -22,9 +22,9 @@ echo "Host: $(hostname) | Date: $(date)"
 echo "=========================================================="
 
 python -u track_a_deep_learning/train_sobi_n2n.py \
-    --sobi-fif     ./benchmark_results/sobi2pass_cache/trial_onsets_0901y2_sobi2pass-raw.fif \
+    --sobi-fif     ./benchmark_results/sobi_polarity_cohort/trial_onsets_0901y2_sobi2pass-raw.fif \
     --csv          /quobyte/millerlmgrp/annotated_data/CMPy2/trial_onsets_0901y2.csv \
-    --summary-json ./benchmark_results/sobi2pass_cache/sobi2pass_summary_0901y2.json \
+    --summary-json ./benchmark_results/sobi_polarity_cohort/sobi2pass_summary_0901y2.json \
     --output-dir   ./benchmark_results/sobi_n2n_results \
     --epochs       25
 
