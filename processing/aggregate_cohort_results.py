@@ -111,4 +111,9 @@ def aggregate_cohort(results_dir="./benchmark_results/sobi_polarity_cohort", out
     return df
 
 if __name__ == "__main__":
-    aggregate_cohort()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--results-dir", default="./benchmark_results/sobi_polarity_cohort", help="Directory with single-subject audit JSONs")
+    parser.add_argument("--output-dir", default="./benchmark_results/sobi_polarity_cohort", help="Directory to save summary CSV and plot")
+    args = parser.parse_args()
+    aggregate_cohort(results_dir=args.results_dir, output_dir=args.output_dir)
