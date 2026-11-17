@@ -4,8 +4,8 @@
 #SBATCH --account=millerlmgrp
 #SBATCH --qos=millerlmgrp-high-qos
 #SBATCH --time=00:15:00
-#SBATCH --mem=24G
-#SBATCH --cpus-per-task=4
+#SBATCH --mem=12G
+#SBATCH --cpus-per-task=1
 #SBATCH --array=0-14%8
 #SBATCH --output=logs/nh_cohort_%A_%a.out
 #SBATCH --error=logs/nh_cohort_%A_%a.err
