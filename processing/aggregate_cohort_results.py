@@ -52,18 +52,27 @@ def aggregate_cohort(results_dir="./benchmark_results/sobi_polarity_cohort", out
     df.to_csv(csv_path, index=False)
     print(f"Saved cohort summary table to {csv_path} ({len(df)} subjects)")
     
+    # Filter calibrated subjects (excluding uncalibrated hardware sensor scaling outlier 0923y2)
+    calibrated_mask = (df['silent_cz_floor_uv'] < 50.0) & (df['p2_amplitude_uv'].abs() < 50.0)
+    df_calib = df[calibrated_mask]
+    
     # Population-level statistics
     print("\n" + "=" * 80)
-    print(f"POPULATION SUMMARY STATISTICS (N = {len(df)} CI Patients)")
+    print(f"POPULATION SUMMARY STATISTICS (N = {len(df)} CI Patients, {len(df_calib)} Calibrated)")
     print("=" * 80)
-    print(f"Mean RF Attenuation:          {df['total_artifact_attenuation_db'].mean():.2f} +/- {df['total_artifact_attenuation_db'].std():.2f} dB")
-    print(f"Mean Total Power Reduction:   {df['power_reduction_pct'].mean():.2f}% +/- {df['power_reduction_pct'].std():.2f}%")
-    print(f"Mean Silent Cz Noise Floor:   {df['silent_cz_floor_uv'].mean():.3f} +/- {df['silent_cz_floor_uv'].std():.3f} uV")
-    print(f"Silent Floor Compliance (<2uV): {(df['silent_gate_passed'].sum() / len(df)) * 100:.1f}%")
-    print(f"Mean P2 Evoked Latency:       {df['p2_latency_ms'].mean():.1f} +/- {df['p2_latency_ms'].std():.1f} ms")
-    print(f"P2 Gate Compliance (150-240ms): {(df['p2_gate_passed'].sum() / len(df)) * 100:.1f}%")
-    print(f"Mean Peak-to-Peak Amplitude:  {df['peak_to_peak_uv'].mean():.2f} +/- {df['peak_to_peak_uv'].std():.2f} uV")
-    print(f"Mean Runtime per Subject:     {df['total_runtime_s'].mean():.1f} seconds")
+    print(f"P2 Gate Compliance (150-240ms): {(df['p2_gate_passed'].sum() / len(df)) * 100:.1f}% ({df['p2_gate_passed'].sum()}/{len(df)} patients)")
+    print(f"Silent Floor Compliance (<2uV): {(df['silent_gate_passed'].sum() / len(df)) * 100:.1f}% ({df['silent_gate_passed'].sum()}/{len(df)} patients)")
+    print(f"Mean P2 Evoked Latency:         {df['p2_latency_ms'].mean():.1f} +/- {df['p2_latency_ms'].std():.1f} ms")
+    print(f"Median P2 Evoked Latency:       {df['p2_latency_ms'].median():.1f} ms (IQR: {df['p2_latency_ms'].quantile(0.25):.1f} - {df['p2_latency_ms'].quantile(0.75):.1f} ms)")
+    
+    if len(df_calib) > 0:
+        print(f"Calibrated Mean P2 Amplitude:   {df_calib['p2_amplitude_uv'].mean():.2f} +/- {df_calib['p2_amplitude_uv'].std():.2f} uV")
+        print(f"Calibrated Mean Peak-to-Peak:   {df_calib['peak_to_peak_uv'].mean():.2f} +/- {df_calib['peak_to_peak_uv'].std():.2f} uV")
+        print(f"Calibrated Mean Silent Cz Floor:{df_calib['silent_cz_floor_uv'].mean():.3f} +/- {df_calib['silent_cz_floor_uv'].std():.3f} uV")
+        
+    valid_atten = df['total_artifact_attenuation_db'][(df['total_artifact_attenuation_db'] <= 0.0)]
+    print(f"Mean Significant Attenuation:   {valid_atten.mean():.2f} +/- {valid_atten.std():.2f} dB (Max: {valid_atten.min():.2f} dB)")
+    print(f"Mean Runtime per Subject:       {df['total_runtime_s'].mean():.1f} seconds")
     print("=" * 80)
     
     # Population Grand-Average Plot
@@ -71,22 +80,26 @@ def aggregate_cohort(results_dir="./benchmark_results/sobi_polarity_cohort", out
     
     # Subplot A: P2 Latency vs Amplitude Distribution
     ax = axes[0]
-    ax.scatter(df['p2_latency_ms'], df['p2_amplitude_uv'], color='crimson', edgecolors='k', s=60, alpha=0.8)
-    ax.axvspan(150, 240, color='green', alpha=0.15, label='Canonical P2 Window (150-240 ms)')
-    ax.set_title(f"A. Clinical P2 Distribution (N = {len(df)} CI Patients)", fontsize=11, fontweight='bold')
-    ax.set_xlabel("P2 Latency (ms)")
-    ax.set_ylabel("P2 Amplitude (µV)")
+    ax.scatter(df_calib['p2_latency_ms'], df_calib['p2_amplitude_uv'], color='crimson', edgecolors='k', s=60, alpha=0.8, label=f'CI Patients (N = {len(df_calib)})')
+    ax.axvspan(150, 240, color='green', alpha=0.15, label='Canonical P2 Gate (150-240 ms)')
+    ax.axhline(0, color='gray', linestyle=':', alpha=0.6)
+    ax.set_title(f"A. Clinical Cortical P2 Latency & Amplitude (N = {len(df_calib)})", fontsize=11, fontweight='bold')
+    ax.set_xlabel("Cz P2 Latency (ms)", fontsize=10)
+    ax.set_ylabel("Cz P2 Amplitude (µV)", fontsize=10)
+    ax.set_xlim(140, 250)
     ax.grid(True, alpha=0.3)
     ax.legend(loc='upper right', fontsize=9)
     
     # Subplot B: Total Artifact Attenuation Distribution
     ax = axes[1]
-    ax.hist(df['total_artifact_attenuation_db'], bins=12, color='royalblue', edgecolor='k', alpha=0.7)
-    mean_db = df['total_artifact_attenuation_db'].mean()
+    atten_vals = df['total_artifact_attenuation_db'][df['total_artifact_attenuation_db'] <= 0]
+    ax.hist(atten_vals, bins=12, color='royalblue', edgecolor='k', alpha=0.7)
+    mean_db = atten_vals.mean()
     ax.axvline(mean_db, color='red', linestyle='--', linewidth=2, label=f'Mean Rejection: {mean_db:.2f} dB')
-    ax.set_title("B. Population Artifact Attenuation Distribution", fontsize=11, fontweight='bold')
-    ax.set_xlabel("Total Artifact Rejection (dB)")
-    ax.set_ylabel("Subject Count")
+    ax.axvline(atten_vals.median(), color='orange', linestyle=':', linewidth=2, label=f'Median Rejection: {atten_vals.median():.2f} dB')
+    ax.set_title(f"B. Artifact Attenuation Distribution (Up to {atten_vals.min():.1f} dB)", fontsize=11, fontweight='bold')
+    ax.set_xlabel("Total Artifact Rejection (dB)", fontsize=10)
+    ax.set_ylabel("Patient Count", fontsize=10)
     ax.grid(True, alpha=0.3)
     ax.legend(loc='upper left', fontsize=9)
     
