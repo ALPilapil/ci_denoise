@@ -56,10 +56,16 @@ def run_sobi(
     if lags is None:
         lags = [1, 2, 4, 8, 16, 25, 50]
 
-    # Pre-whitening via SVD
+    # Pre-whitening via SVD / EVD with condition-number protection
     X = data - np.mean(data, axis=1, keepdims=True)
-    cov0 = (X @ X.T) / (n_times - 1)
-    d, u = np.linalg.eigh(cov0)
+    try:
+        cov0 = (X @ X.T) / (n_times - 1)
+        cov0 = 0.5 * (cov0 + cov0.T)
+        d, u = np.linalg.eigh(cov0)
+    except np.linalg.LinAlgError:
+        # Fallback to direct SVD on X avoiding condition squaring kappa(cov0) = kappa(X)^2
+        u, s, _ = np.linalg.svd(X, full_matrices=False)
+        d = (s ** 2) / (n_times - 1)
     idx = np.argsort(d)[::-1][:n_components]
     d = np.maximum(d[idx], 1e-12)
     u = u[:, idx]
