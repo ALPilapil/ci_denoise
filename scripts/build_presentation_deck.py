@@ -115,7 +115,8 @@ def create_deck(output_pptx="lab_meeting_ci_denoise_update.pptx"):
         ("Active Biological Rollback Safeguard:", "Evaluates candidate biological power (1–15 Hz) specifically on midline cortical leads (Cz, Fz, Pz). Guarantees >70% retention (cohort mean: 93.16%)."),
         ("Hardware Quality Gate & Exclusion:", "Detected floating-point saturation (10^68 µV^2) on 0923y2 and formally excluded it, establishing valid N=36 clinical CI cohort."),
         ("Full Cohort Re-Execution on Hive HPC:", "Executed Slurm array across 37 CI subjects and 15 NH controls; Adversarial Reviewer formally upgraded evaluation to ACCEPT (Strong Accept)."),
-        ("Downstream Neural Network Benchmarking:", "Benchmarked UNet1D, ResAttnUNet, STFT_MaskNet, and Conformer; trained Subspace-Constrained Symmetric Noise2Noise on real polarity pairs (-8.88 dB superiority)."),
+        ("Downstream Neural Network Benchmarking:", "Benchmarked UNet1D, ResAttnUNet, STFT_MaskNet, and Conformer; trained Subspace-Constrained Symmetric Noise2Noise on real polarity pairs (-13.98 dB superiority)."),
+        ("Full Cohort N2N Scale-Up (N=36 Valid Patients):", "Executed Slurm array across all 36 valid CI patients on Hive HPC; achieved mean -2.96 dB additional coil attenuation with 100% vertex preservation (r = 1.000000)."),
         ("mTRF Continuous Speech Deconvolution:", "Deconvolved speech tracking kernels with 500 phase-randomized surrogate permutations, recovering canonical P2 (p < 0.001)."),
     ]
     for b_title, b_desc in done_items:
@@ -214,7 +215,8 @@ def create_deck(output_pptx="lab_meeting_ci_denoise_update.pptx"):
     m_evals = [
         ("Direct UNet1D Baseline (10.8M params):", "Achieved largest RMSE reduction (4.64 -> 1.32 µV, -71% error reduction) and +44.0% additional 20-50 Hz hash suppression."),
         ("Residual Models Collapse on Real Data:", "ResAttnUNet, STFT_MaskNet, and Conformer predicted <0.2% change because synthetic mixture pre-training failed to transfer to real CI dynamics."),
-        ("Self-Supervised Noise2Noise:", "Overcame this limitation by training directly on polarity pairs (y_pos, y_neg), achieving -8.88 dB superiority over SOBI alone while strictly preserving cortical Cz ERP (r = 0.9999)."),
+        ("Self-Supervised Noise2Noise (25 Epochs):", "Trained directly on polarity pairs (y_pos, y_neg), achieving -13.98 dB superiority over SOBI alone while strictly preserving cortical Cz ERP (r = 1.0000)."),
+        ("Cohort Generalization (N=36 Patients):", "Slurm array evaluation demonstrated mean -2.96 dB additional coil attenuation (up to -14.97 dB) with zero Cz distortion across all 36 valid subjects."),
     ]
     for m_t, m_d in m_evals:
         p_m = tf6.add_paragraph()
@@ -300,10 +302,10 @@ def create_deck(output_pptx="lab_meeting_ci_denoise_update.pptx"):
     tf9.word_wrap = True
 
     next_items = [
-        ("1. Cohort-Wide Symmetric Noise2Noise Training:", "Scale Subspace-Constrained Symmetric N2N from single-subject (0901y2) to all 36 valid CI recipients via Slurm array jobs on Hive."),
-        ("2. NeurIPS / ICLR Track Manuscript Compilation:", "Draft the core biophysical disentanglement and self-supervised symmetry invariance theorems, supported by the complete 52-subject clinical audit table."),
-        ("3. COSYNE 2027 Continuous Speech Tracking Abstract:", "Package the continuous speech mTRF ridge deconvolution and phase-randomized surrogate results into an abstract submission."),
-        ("4. Turnkey Open-Source Toolbox Package:", "Package cidenoise as a reproducible Python library with turnkey CLI commands for automated clinical artifact excision."),
+        ("1. NeurIPS / ICLR Manuscript Compilation:", "Draft core biophysical disentanglement and self-supervised symmetry invariance theorems, supported by the complete 52-subject clinical audit table and N=36 N2N cohort."),
+        ("2. COSYNE 2027 Continuous Speech Tracking Abstract:", "Package continuous speech mTRF ridge deconvolution and phase-randomized surrogate results into an abstract submission."),
+        ("3. Cross-Validation & Foundation Pretraining:", "Evaluate leave-one-patient-out cross-validation and pretrain on full multi-subject cohort for zero-shot generalization."),
+        ("4. Turnkey Open-Source Toolbox Package:", "Package cidenoise as an audited, reproducible Python library with turnkey CLI commands for automated clinical artifact excision."),
     ]
     for n_t, n_d in next_items:
         p_n = tf9.add_paragraph()
