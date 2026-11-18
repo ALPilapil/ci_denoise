@@ -92,6 +92,13 @@ Empirical Group Delay & $0.0\text{ ms}$ & $0.0\text{ ms}$ & Zero phase distortio
 \end{tabular}
 \end{table}
 
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/fig1_biophysical_evaluation.png}
+\caption{Biophysical evaluation suite across CI recipients and normal-hearing controls. (A) Clean pass-through validation demonstrates $r=0.9757$ template preservation with complete neural delta-theta and alpha-beta band retention. (B) Silent visual control ($V$) demonstrates zero neural hallucination, yielding $1.31\times$ lower noise floor during silence than active sound. (C) Cohort attenuation delivers an average coil suppression of $17.5\text{ dB}$ ($61.2\%$ RMS reduction) and $66.1\%$ suppression of RF hash. (D) Midline cortical retention preserves $123.4\%$ of low-frequency biological neural power across diverse unilateral and bilateral recipients.}
+\label{fig:biophysical_suite}
+\end{figure}
+
 \subsection{Single-Subject vs Multi-Subject Foundation N2N}
 To evaluate cross-subject generalization across diverse implant models and lateralizations, we benchmarked a single-subject N2N model against a Multi-Subject Foundation Model pre-trained across $N=8$ pooled CI recipients ($1,000$ sentence-disjoint polarity pairs). As summarized in Table~\ref{tab:foundation_comp}, the Foundation Model achieved an additional $-1.89\text{ dB}$ cohort-wide artifact attenuation (reaching a mean of $-4.85\text{ dB}$ and peak attenuation of $-23.09\text{ dB}$) while retaining exact $1.000000$ template fidelity at vertex lead Cz.
 
@@ -143,7 +150,14 @@ All-Gate Pass Rate & $69.4\%$ & $66.7\%$ & $100.0\%$ \\
 \end{tabular}
 \end{table}
 
-In $N=23$ paired recipients evaluated at both Year 2 and Year 3, cortical P2 latencies remained stable ($195.46 \pm 29.94\text{ ms}$ vs $196.66 \pm 29.25\text{ ms}$, paired $t$-test $p=0.878$). In patient \texttt{0901}, prolonged auditory latency contracted by $27.6\text{ ms}$ ($209.9 \to 182.3\text{ ms}$), converging within $2.3\text{ ms}$ of the canonical normal-hearing benchmark ($180\text{ ms}$). Furthermore, patient \texttt{0938}, who completed continuous recordings across all three follow-up intervals, exhibited a monotonic $6.25\times$ surge in cortical P2 amplitude ($0.141\ \mu\text{V}$ at Year 2 $\to$ $0.502\ \mu\text{V}$ at Year 3 $\to$ $0.882\ \mu\text{V}$ at Year 4) at stable latency ($202.0\text{ ms}$), demonstrating measurable cortical neuroplastic adaptation over two full years of auditory implant rehabilitation.
+In $N=23$ paired recipients evaluated at both Year 2 and Year 3, cortical P2 latencies remained stable ($195.46 \pm 29.94\text{ ms}$ vs $196.66 \pm 29.25\text{ ms}$, paired $t$-test $p=0.878$). In patient \texttt{0901}, prolonged auditory latency contracted by $27.6\text{ ms}$ ($209.9 \to 182.3\text{ ms}$), converging within $2.3\text{ ms}$ of the canonical normal-hearing benchmark ($180\text{ ms}$). Furthermore, patient \texttt{0938}, who completed continuous recordings across all three follow-up intervals, exhibited a monotonic $6.25\times$ surge in cortical P2 amplitude ($0.141\ \mu\text{V}$ at Year 2 $\to$ $0.502\ \mu\text{V}$ at Year 3 $\to$ $0.882\ \mu\text{V}$ at Year 4) at stable latency ($202.0\text{ ms}$), demonstrating measurable cortical neuroplastic adaptation over two full years of auditory implant rehabilitation (Figure~\ref{fig:longitudinal_tracking}).
+
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/fig2_longitudinal_tracking.png}
+\caption{Longitudinal auditory cortical neuroplasticity tracking across multi-year CI cohorts. (A) Cortical P2 latency dynamics across $N=23$ paired recipients evaluated at Year 2 and Year 3, showing stability around canonical normal-hearing latency window (160--200 ms) and $27.6\text{ ms}$ latency contraction in patient \texttt{0901}. (B) Cortical P2 amplitude dynamics across $N=23$ paired recipients. (C) Within-patient multi-year tracking in patient \texttt{0938} across three consecutive annual visits (Year 2, Year 3, Year 4), demonstrating a monotonic $6.25\times$ surge in cortical P2 amplitude ($0.141 \to 0.502 \to 0.882\ \mu\text{V}$) at stable latency ($202.0\text{ ms}$). (D) Cohort-wide distribution of P2 latency shifts ($\Delta t = +1.20\text{ ms}$, paired $t$-test $p=0.878$).}
+\label{fig:longitudinal_tracking}
+\end{figure}
 
 \section{Conclusion}
 The \texttt{cidenoise} framework resolves the trade-off between electrical artifact suppression and neural waveform fidelity in continuous speech CI EEG, providing an audited, open-source pipeline for clinical and neuroengineering applications.
