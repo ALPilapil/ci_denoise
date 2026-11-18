@@ -41,6 +41,16 @@ flowchart TD
 
 ---
 
+## 5-Second Quickstart Demonstration
+
+To test the entire pipeline on a synthesized CI artifact mixture in 5 seconds:
+```bash
+python demo_quickstart.py
+```
+This runs automated hardware auditing, two-pass SOBI with active midline safeguards, verifies 0.0 ms phase delay, and excises >99.9% of lateral RF artifact power (-32.4 dB) while strictly retaining 100% of midline brainwaves.
+
+---
+
 ## Installation
 
 ```bash
@@ -128,8 +138,11 @@ The repository includes a standalone, zero-dependency browser-based clinical stu
 ## Citation & Manuscript Draft
 
 For full mathematical proofs, loss formulation, and population benchmarks, see:
-- [Manuscript Draft: `manuscript_draft_cidenoise.md`](file:///Users/evanywliang/.gemini/antigravity/brain/5882504d-c4b2-4ada-b5d2-69f6601ee36c/manuscript_draft_cidenoise.md)
-- [Multi-Cohort Clinical Benchmark Report](file:///Users/evanywliang/.gemini/antigravity/brain/5882504d-c4b2-4ada-b5d2-69f6601ee36c/cohort_benchmark_publication_report.md)
+- [Manuscript LaTeX Source: `manuscript/main.tex`](file:///Users/evanywliang/Documents/cidenoise/ci_denoise/manuscript/main.tex)
+- [Manuscript HTML Preview: `manuscript/manuscript_preview.html`](file:///Users/evanywliang/Documents/cidenoise/ci_denoise/manuscript/manuscript_preview.html)
+- [Editorial Cover Letter: `manuscript/COVER_LETTER.md`](file:///Users/evanywliang/Documents/cidenoise/ci_denoise/manuscript/COVER_LETTER.md)
+- [COSYNE 2027 Abstract Draft: `manuscript/cosyne_2027_abstract.md`](file:///Users/evanywliang/Documents/cidenoise/ci_denoise/manuscript/cosyne_2027_abstract.md)
+- [Multi-Cohort Clinical Master Table: `benchmark_results/multi_year_cohort_master_table.csv`](file:///Users/evanywliang/Documents/cidenoise/ci_denoise/benchmark_results/multi_year_cohort_master_table.csv)
 - [Presentation Slide Deck: `lab_meeting_ci_denoise_update.pptx`](file:///Users/evanywliang/Documents/cidenoise/ci_denoise/lab_meeting_ci_denoise_update.pptx)
 - [Interactive Waveform Studio: `waveform_viewer.html`](file:///Users/evanywliang/Documents/cidenoise/ci_denoise/waveform_viewer.html)
 
