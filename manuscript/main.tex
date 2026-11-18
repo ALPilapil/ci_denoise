@@ -130,6 +130,13 @@ Forward encoding models relating speech acoustic envelopes $S(t)$ to scalp respo
     \item Canonical positive P2 cortical tracking was recovered at $209.9\text{ ms}$ ($p < 0.001$).
 \end{itemize}
 
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/fig3_mtrf_deconvolution.png}
+\caption{Forward continuous speech temporal response function (mTRF) ridge deconvolution. (A) Forward encoding weights $\mathbf{w}(\tau)$ across auditory cortical lags ($\tau \in [-100, 450]\text{ ms}$). Direct UNet1D exhibits a pathological $10\times$ inflation of the non-physiological zero-lag stimulus artifact spike ($0.5546$). In contrast, Two-Pass SOBI followed by Subspace-Constrained N2N eliminates the artifact spike ($0.0417$), recovering the canonical auditory P2 cortical tracking peak at $209.9\text{ ms}$ matching normal-hearing latency profiles. (B) Phase-randomized surrogate envelope significance testing ($N=500$ Fourier permutations) demonstrating statistical significance ($p < 0.001$) of the recovered speech tracking response.}
+\label{fig:mtrf_deconvolution}
+\end{figure}
+
 \subsection{Longitudinal Neuroplastic Tracking Across Multi-Year Cohorts}
 To determine whether the Foundation N2N model maintains biophysical stability across extended rehabilitative timelines and enables tracking of auditory neuroplastic recovery, we evaluated the model zero-shot on longitudinal follow-up cohorts from Year 3 (\texttt{CMPy3}, $N=27$) and Year 4 (\texttt{CMPy4}, $N=7$).
 
