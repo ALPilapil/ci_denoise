@@ -26,6 +26,11 @@ temp/
 *.err
 *.out
 
+# Build and distribution artifacts
+dist/
+build/
+*.egg-info/
+
 # Large binary datasets and models
 *.fif
 *.pt
