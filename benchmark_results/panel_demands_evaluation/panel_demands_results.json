@@ -1,0 +1,180 @@
+{
+  "Experiment_A_Clean_PassThrough": {
+    "Mean_Channel_Correlation": 0.845,
+    "Cz_Channel_Correlation": 0.9696,
+    "Mean_RMS_Preservation_Ratio": 0.7213,
+    "Delta_Theta_1_8Hz_Retention_Pct": 49.0,
+    "Alpha_Beta_8_20Hz_Retention_Pct": 54.8,
+    "Cz_ERP_Waveform_Retention_Corr": 0.9757
+  },
+  "Experiment_B_Silent_Visual_Leakage": {
+    "Mean_Noise_RMS_Audio_Active_uV": 2.91,
+    "Mean_Noise_RMS_Visual_Silent_uV": 3.81,
+    "Mean_Raw_RMS_Visual_Silent_uV": 9.69,
+    "Noise_Suppression_in_Silence_Ratio": 1.3118
+  },
+  "Experiment_C_TRF_CrossCorr": {
+    "Zero_Lag_0ms_Raw_CI_Peak_uV": 1.02,
+    "Zero_Lag_0ms_Denoised_Peak_uV": 0.78,
+    "Zero_Lag_Electrical_Artifact_Attenuation_dB": 2.33,
+    "Physiological_100_250ms_Denoised_Peak_uV": 0.58,
+    "Physiological_100_250ms_Hearing_Peak_uV": 0.96,
+    "Physiological_to_ZeroLag_Ratio_Denoised": 0.75
+  },
+  "Experiment_D_Linear_Baselines": [
+    {
+      "Method": "Raw_CI",
+      "P7_Coil_RMS_Red_Pct": 0.0,
+      "RF_20_50Hz_Hash_Red_Pct": 0.0,
+      "ERP_Corr_with_Hearing": 0.2335,
+      "ERP_RMSE_uV": 0.91,
+      "P2_Latency_ms": -78.1
+    },
+    {
+      "Method": "Linear_SSP",
+      "P7_Coil_RMS_Red_Pct": 100.0,
+      "RF_20_50Hz_Hash_Red_Pct": 0.0,
+      "ERP_Corr_with_Hearing": 0.2335,
+      "ERP_RMSE_uV": 0.91,
+      "P2_Latency_ms": -78.1
+    },
+    {
+      "Method": "Linear_SOBI",
+      "P7_Coil_RMS_Red_Pct": 99.6,
+      "RF_20_50Hz_Hash_Red_Pct": 0.0,
+      "ERP_Corr_with_Hearing": 0.2335,
+      "ERP_RMSE_uV": 0.91,
+      "P2_Latency_ms": -78.1
+    },
+    {
+      "Method": "UNet1D_Baseline",
+      "P7_Coil_RMS_Red_Pct": 99.8,
+      "RF_20_50Hz_Hash_Red_Pct": 48.7,
+      "ERP_Corr_with_Hearing": 0.2457,
+      "ERP_RMSE_uV": 0.64,
+      "P2_Latency_ms": -82.0
+    }
+  ],
+  "Experiment_E_Cohort_Validation": [
+    {
+      "Subject": "0901y2",
+      "Laterality": [
+        "LEFT_CI",
+        0.9976343459141431,
+        27047.353349315552,
+        32.03022720013617
+      ],
+      "Coil_Channel": "P8",
+      "Coil_RMS_Atten_Pct": 99.8,
+      "Coil_RMS_Atten_dB": 53.9,
+      "RF_20_50Hz_Hash_Atten_Pct": 48.7,
+      "Neural_1_15Hz_Power_Retained_Pct": 717.5
+    },
+    {
+      "Subject": "0902y2",
+      "Laterality": [
+        "LEFT_CI",
+        0.22754258120932877,
+        35.4424054828856,
+        22.30289154456083
+      ],
+      "Coil_Channel": "P8",
+      "Coil_RMS_Atten_Pct": 42.4,
+      "Coil_RMS_Atten_dB": 4.8,
+      "RF_20_50Hz_Hash_Atten_Pct": 62.3,
+      "Neural_1_15Hz_Power_Retained_Pct": 33.1
+    },
+    {
+      "Subject": "0903y2",
+      "Laterality": [
+        "RIGHT_CI",
+        -0.3981359163060877,
+        12.108463579000277,
+        28.128074559927555
+      ],
+      "Coil_Channel": "P8",
+      "Coil_RMS_Atten_Pct": 33.6,
+      "Coil_RMS_Atten_dB": 3.6,
+      "RF_20_50Hz_Hash_Atten_Pct": 72.6,
+      "Neural_1_15Hz_Power_Retained_Pct": 32.2
+    },
+    {
+      "Subject": "0904y2",
+      "Laterality": [
+        "BILATERAL_OR_BALANCED",
+        -0.07031194908617391,
+        56.94026900367486,
+        65.55301021553446
+      ],
+      "Coil_Channel": "P8",
+      "Coil_RMS_Atten_Pct": 50.5,
+      "Coil_RMS_Atten_dB": 6.1,
+      "RF_20_50Hz_Hash_Atten_Pct": 91.6,
+      "Neural_1_15Hz_Power_Retained_Pct": 18.1
+    },
+    {
+      "Subject": "0905y2",
+      "Laterality": [
+        "BILATERAL_OR_BALANCED",
+        -0.02486723406901631,
+        41.17360523622511,
+        43.27357298348254
+      ],
+      "Coil_Channel": "P8",
+      "Coil_RMS_Atten_Pct": 56.0,
+      "Coil_RMS_Atten_dB": 7.1,
+      "RF_20_50Hz_Hash_Atten_Pct": 22.6,
+      "Neural_1_15Hz_Power_Retained_Pct": 49.9
+    },
+    {
+      "Subject": "0906y2",
+      "Laterality": [
+        "BILATERAL_OR_BALANCED",
+        -0.025920539015648073,
+        25.457952600209044,
+        26.81283971170898
+      ],
+      "Coil_Channel": "P8",
+      "Coil_RMS_Atten_Pct": 30.8,
+      "Coil_RMS_Atten_dB": 3.2,
+      "RF_20_50Hz_Hash_Atten_Pct": 68.6,
+      "Neural_1_15Hz_Power_Retained_Pct": 46.9
+    },
+    {
+      "Subject": "0907y2",
+      "Laterality": [
+        "LEFT_CI",
+        0.24179442709746207,
+        35.050324404408755,
+        21.400765469354567
+      ],
+      "Coil_Channel": "P8",
+      "Coil_RMS_Atten_Pct": 76.4,
+      "Coil_RMS_Atten_dB": 12.6,
+      "RF_20_50Hz_Hash_Atten_Pct": 64.3,
+      "Neural_1_15Hz_Power_Retained_Pct": 51.3
+    },
+    {
+      "Subject": "0908y2",
+      "Laterality": [
+        "LEFT_CI",
+        0.975031119208964,
+        7888.705914874546,
+        99.731166596976
+      ],
+      "Coil_Channel": "P8",
+      "Coil_RMS_Atten_Pct": 99.7,
+      "Coil_RMS_Atten_dB": 49.1,
+      "RF_20_50Hz_Hash_Atten_Pct": 98.2,
+      "Neural_1_15Hz_Power_Retained_Pct": 38.4
+    }
+  ],
+  "Experiment_E_Cohort_Summary": {
+    "N_Subjects": 8,
+    "Mean_Coil_Atten_Pct": 61.2,
+    "Std_Coil_Atten_Pct": 27.7,
+    "Mean_Coil_Atten_dB": 17.5,
+    "Mean_RF_Hash_Atten_Pct": 66.1,
+    "Mean_Neural_LF_Power_Retained_Pct": 123.4
+  }
+}
