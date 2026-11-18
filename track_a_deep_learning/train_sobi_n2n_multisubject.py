@@ -147,12 +147,12 @@ def main():
         val_loss /= len(val_loader)
         ep_time = time.time() - t0
 
-        print(f"Epoch {epoch:02d}/{args.epochs:02d} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | Time: {ep_time:.1f}s")
+        print(f"Epoch {epoch:02d}/{args.epochs:02d} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | Time: {ep_time:.1f}s", flush=True)
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             torch.save(model.state_dict(), ckpt_path)
-            print(f"  --> Saved new best foundation checkpoint: {ckpt_path}")
+            print(f"  --> Saved new best foundation checkpoint: {ckpt_path}", flush=True)
 
         history.append({
             'epoch': epoch,
