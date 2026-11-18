@@ -159,5 +159,45 @@ class TestCIDenoiseBiophysics(unittest.TestCase):
             self.assertEqual(report["status"], "PASSED")
             self.assertFalse(report["hardware_saturation_detected"])
 
+    def test_batch_process_cohort(self):
+        """Verify turnkey batch_process_cohort scans, audits, cleans, and outputs summary CSV."""
+        import tempfile
+        import csv
+        from scripts.batch_process_cohort import batch_process
+        
+        with tempfile.TemporaryDirectory() as tmp_in, tempfile.TemporaryDirectory() as tmp_out:
+            # Save normal recording
+            raw_path = os.path.join(tmp_in, "patient_001_raw.fif")
+            self.raw.save(raw_path, overwrite=True, verbose=False)
+            
+            # Save saturated recording (> 1.0 V^2)
+            data_sat = self.raw.get_data().copy()
+            data_sat[0] = 1e3 * np.sin(2 * np.pi * 10 * np.arange(self.n_times) / self.fs)
+            raw_sat = mne.io.RawArray(data_sat, self.raw.info, verbose=False)
+            sat_path = os.path.join(tmp_in, "patient_002_raw.fif")
+            raw_sat.save(sat_path, overwrite=True, verbose=False)
+            
+            summary_csv = os.path.join(tmp_out, "batch_summary.csv")
+            batch_process(
+                input_dir=tmp_in,
+                output_dir=tmp_out,
+                pattern="*.fif",
+                method="sobi-2pass",
+                summary_csv=summary_csv
+            )
+            
+            self.assertTrue(os.path.exists(summary_csv), "Summary CSV must be created")
+            with open(summary_csv, "r") as f:
+                reader = list(csv.DictReader(f))
+                
+            self.assertEqual(len(reader), 2, "Both files must be audited and logged")
+            
+            status_map = {row["recording"]: row["status"] for row in reader}
+            self.assertEqual(status_map["patient_001_raw"], "COMPLETED")
+            self.assertEqual(status_map["patient_002_raw"], "EXCLUDED_SATURATION")
+            
+            clean_fif = os.path.join(tmp_out, "patient_001_raw_clean.fif")
+            self.assertTrue(os.path.exists(clean_fif), "Cleaned FIF must exist for valid patient")
+
 if __name__ == '__main__':
     unittest.main()
