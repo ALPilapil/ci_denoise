@@ -77,12 +77,17 @@ def main():
     )
     
     print("\n[4/4] Validating Denoising Performance:")
-    p7_raw_var = np.var(raw.get_data()[p7_idx])
-    p7_clean_var = np.var(raw_clean.get_data()[p7_idx])
+    raw_p7_idx = raw.ch_names.index('P7')
+    clean_p7_idx = raw_clean.ch_names.index('P7')
+    raw_cz_idx = raw.ch_names.index('Cz')
+    clean_cz_idx = raw_clean.ch_names.index('Cz')
+    
+    p7_raw_var = np.var(raw.get_data()[raw_p7_idx])
+    p7_clean_var = np.var(raw_clean.get_data()[clean_p7_idx])
     p7_atten_db = 10 * np.log10(p7_clean_var / p7_raw_var)
     
-    cz_raw = raw.get_data()[cz_idx]
-    cz_clean = raw_clean.get_data()[cz_idx]
+    cz_raw = raw.get_data()[raw_cz_idx]
+    cz_clean = raw_clean.get_data()[clean_cz_idx]
     cz_r = np.corrcoef(cz_raw, cz_clean)[0, 1]
     
     print(f"  • Mastoid P7 Artifact Attenuation: {p7_atten_db:.2f} dB (Power reduced by {(1 - p7_clean_var/p7_raw_var)*100:.1f}%)")
