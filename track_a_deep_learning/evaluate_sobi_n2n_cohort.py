@@ -45,18 +45,18 @@ CANONICAL_20_CHS = [
     'O1', 'Oz', 'O2'
 ]
 
-DATA_DIR = "/quobyte/millerlmgrp/annotated_data/CMPy2"
-SOBI_DIR = "./benchmark_results/sobi_polarity_cohort"
+DATA_DIR_DEFAULT = "/quobyte/millerlmgrp/annotated_data/CMPy2"
+SOBI_DIR_DEFAULT = "./benchmark_results/sobi_polarity_cohort"
 
-def get_ci_subjects():
-    pattern = os.path.join(DATA_DIR, "trial_onsets_09*y2-raw.fif")
+def get_ci_subjects(data_dir=DATA_DIR_DEFAULT, sobi_dir=SOBI_DIR_DEFAULT, year_tag="y2"):
+    pattern = os.path.join(data_dir, f"trial_onsets_09*{year_tag}-raw.fif")
     files = sorted(glob.glob(pattern))
     subjects = []
     for f in files:
         sub = os.path.basename(f).replace("trial_onsets_", "").replace("-raw.fif", "")
-        csv_file = os.path.join(DATA_DIR, f"trial_onsets_{sub}.csv")
-        sobi_fif = os.path.join(SOBI_DIR, f"trial_onsets_{sub}_sobi2pass-raw.fif")
-        summary_json = os.path.join(SOBI_DIR, f"sobi2pass_summary_{sub}.json")
+        csv_file = os.path.join(data_dir, f"trial_onsets_{sub}.csv")
+        sobi_fif = os.path.join(sobi_dir, f"trial_onsets_{sub}_sobi2pass-raw.fif")
+        summary_json = os.path.join(sobi_dir, f"sobi2pass_summary_{sub}.json")
         subjects.append({
             'subject_id': sub,
             'raw_fif': f,
@@ -325,16 +325,26 @@ def aggregate_cohort(output_dir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate SOBI-N2N Across Cohort")
+    parser.add_argument("--data-dir", default=DATA_DIR_DEFAULT, help="Input raw dataset directory")
+    parser.add_argument("--sobi-dir", default=SOBI_DIR_DEFAULT, help="Directory containing SOBI FIFs and summaries")
+    parser.add_argument("--year-tag", default="y2", help="Year tag string, e.g. y2, y3, y4")
     parser.add_argument("--task-id", type=int, default=None, help="Task ID for Slurm array (0-indexed)")
     parser.add_argument("--subject-id", type=str, default=None, help="Specific subject to evaluate")
     parser.add_argument("--checkpoint", default="./benchmark_results/sobi_n2n_results/best_sobi_n2n_unet.pt", help="N2N checkpoint")
     parser.add_argument("--output-dir", default="./benchmark_results/sobi_n2n_cohort", help="Output directory")
     parser.add_argument("--aggregate", action="store_true", help="Aggregate all evaluation records")
+    parser.add_argument("--list-only", action="store_true", help="Print discovered subjects and exit")
     args = parser.parse_args()
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    subjects = get_ci_subjects()
+    subjects = get_ci_subjects(args.data_dir, args.sobi_dir, args.year_tag)
     
+    if args.list_only:
+        print(f"Discovered {len(subjects)} CI subjects with year tag '{args.year_tag}' in {args.data_dir}:")
+        for i, s in enumerate(subjects):
+            print(f"  [{i:02d}] {s['subject_id']}")
+        sys.exit(0)
+        
     if args.aggregate:
         aggregate_cohort(args.output_dir)
     elif args.task_id is not None:
