@@ -14,11 +14,21 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-COHORT_DIR = "./benchmark_results/sobi_n2n_cohort"
-OUTPUT_PNG = "./benchmark_results/sobi_n2n_cohort/sobi_n2n_cohort_validation_figure.png"
+import argparse
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Plot N2N Cohort Evaluation Summary")
+    parser.add_argument("--cohort-dir", type=str, default="./benchmark_results/sobi_n2n_cohort")
+    parser.add_argument("--output-png", type=str, default=None)
+    parser.add_argument("--title-suffix", type=str, default="")
+    return parser.parse_args()
 
 def main():
-    files = sorted(glob.glob(os.path.join(COHORT_DIR, "sobi_n2n_eval_*.json")))
+    args = parse_args()
+    cohort_dir = args.cohort_dir
+    output_png = args.output_png or os.path.join(cohort_dir, "sobi_n2n_cohort_validation_figure.png")
+    
+    files = sorted(glob.glob(os.path.join(cohort_dir, "sobi_n2n_eval_*.json")))
     records = []
     for f in files:
         if "summary" in f:
@@ -99,11 +109,12 @@ def main():
     ax_d.legend(loc="upper left", frameon=True, fontsize=9)
     ax_d.grid(True, alpha=0.25)
     
-    plt.suptitle("Clinical CI Cohort Validation: Two-Pass SOBI + Subspace-Constrained N2N (N=36)", fontsize=15, fontweight="bold", y=0.98)
-    os.makedirs(os.path.dirname(OUTPUT_PNG), exist_ok=True)
-    plt.savefig(OUTPUT_PNG, dpi=200, bbox_inches="tight")
+    title_str = f"Clinical CI Cohort Validation: Two-Pass SOBI + Subspace-Constrained N2N (N=36){args.title_suffix}"
+    plt.suptitle(title_str, fontsize=15, fontweight="bold", y=0.98)
+    os.makedirs(os.path.dirname(output_png), exist_ok=True)
+    plt.savefig(output_png, dpi=200, bbox_inches="tight")
     plt.close()
-    print(f"Diagnostic figure successfully saved to: {OUTPUT_PNG}")
+    print(f"Diagnostic figure successfully saved to: {output_png}")
 
 if __name__ == "__main__":
     main()

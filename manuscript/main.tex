@@ -92,6 +92,29 @@ Empirical Group Delay & $0.0\text{ ms}$ & $0.0\text{ ms}$ & Zero phase distortio
 \end{tabular}
 \end{table}
 
+\subsection{Single-Subject vs Multi-Subject Foundation N2N}
+To evaluate cross-subject generalization across diverse implant models and lateralizations, we benchmarked a single-subject N2N model against a Multi-Subject Foundation Model pre-trained across $N=8$ pooled CI recipients ($1,000$ sentence-disjoint polarity pairs). As summarized in Table~\ref{tab:foundation_comp}, the Foundation Model achieved an additional $-1.89\text{ dB}$ cohort-wide artifact attenuation (reaching a mean of $-4.85\text{ dB}$ and peak attenuation of $-23.09\text{ dB}$) while retaining exact $1.000000$ template fidelity at vertex lead Cz.
+
+\begin{table}[h!]
+\centering
+\caption{Cross-subject generalization and ablation of Foundation N2N on clinical CI cohort ($N=36$).}
+\label{tab:foundation_comp}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{Single-Subject N2N} & \textbf{Foundation N2N (Pooled)} & \textbf{Cohort Gain} \\
+\midrule
+Training Population & 1 CI Recipient (164 pairs) & 8 CI Recipients (1,000 pairs) & $6.1\times$ data diversity \\
+Best Validation Loss & $0.2831$ & $0.2796$ & $-1.24\%$ loss reduction \\
+Mean P7 Attenuation & $-2.96\text{ dB}$ & $-4.85\text{ dB}$ & $\mathbf{-1.89\text{ dB}}$ improvement \\
+Median P7 Attenuation & $-1.61\text{ dB}$ & $-2.00\text{ dB}$ & $-0.39\text{ dB}$ improvement \\
+Maximum P7 Attenuation & $-14.97\text{ dB}$ & $-23.09\text{ dB}$ & $-8.12\text{ dB}$ peak gain \\
+Cz Biological Fidelity ($r$) & $1.000000$ & $1.000000$ & Exact invariant retention \\
+Silent Visual Floor (Cz) & $1.026\ \mu\text{V}$ & $1.026\ \mu\text{V}$ & Meets $< 2.0\ \mu\text{V}$ gate \\
+All-Gate Cohort Pass Rate & $63.9\%$ (23 / 36) & $69.4\%$ (25 / 36) & $+5.5\%$ clinical compliance \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Continuous Speech mTRF Ridge Deconvolution}
 Forward encoding models relating speech acoustic envelopes $S(t)$ to scalp responses $y(t)$ were fit via ridge deconvolution $\mathbf{w} = (\mathbf{S}^\top \mathbf{S} + \lambda \mathbf{I})^{-1} \mathbf{S}^\top \mathbf{y}$ and benchmarked against $N=500$ phase-randomized surrogate envelopes:
 \begin{itemize}

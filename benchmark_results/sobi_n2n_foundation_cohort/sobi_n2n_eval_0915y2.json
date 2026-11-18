@@ -1,0 +1,20 @@
+{
+  "subject": "0915y2",
+  "hardware_failure": false,
+  "evaluated": true,
+  "inference_time_s": 9.199699401855469,
+  "cz_template_r": 0.9999999999999799,
+  "cz_rmse_uv": 4.3523710686979977e-07,
+  "p2_latency_ms": 213.7931034482759,
+  "p2_amplitude_uv": 3.6351170539855957,
+  "sobi_p7_power_uv2": 2209.3265946688007,
+  "n2n_p7_power_uv2": 1160.34423828125,
+  "p7_additional_attenuation_db": -2.796730702929424,
+  "v_cz_noise_floor_uv": 1.4458340406417847,
+  "v_p7_noise_floor_uv": 11.727997779846191,
+  "gates_passed": {
+    "cz_template_gate": true,
+    "silence_gate": true,
+    "p7_attenuation_gate": true
+  }
+}

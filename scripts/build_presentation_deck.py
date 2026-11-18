@@ -216,7 +216,7 @@ def create_deck(output_pptx="lab_meeting_ci_denoise_update.pptx"):
         ("Direct UNet1D Baseline (10.8M params):", "Achieved largest RMSE reduction (4.64 -> 1.32 µV, -71% error reduction) and +44.0% additional 20-50 Hz hash suppression."),
         ("Residual Models Collapse on Real Data:", "ResAttnUNet, STFT_MaskNet, and Conformer predicted <0.2% change because synthetic mixture pre-training failed to transfer to real CI dynamics."),
         ("Self-Supervised Noise2Noise (25 Epochs):", "Trained directly on polarity pairs (y_pos, y_neg), achieving -13.98 dB superiority over SOBI alone while strictly preserving cortical Cz ERP (r = 1.0000)."),
-        ("Cohort Generalization (N=36 Patients):", "Slurm array evaluation demonstrated mean -2.96 dB additional coil attenuation (up to -14.97 dB) with zero Cz distortion across all 36 valid subjects."),
+        ("Multi-Subject Foundation Model (N=36 Patients):", "Pretrained on 8 pooled CI recipients (1,000 pairs), achieving -4.85 dB mean additional attenuation across all 36 CI patients (up to -23.09 dB), gaining an extra -1.89 dB over single-subject with zero Cz distortion."),
     ]
     for m_t, m_d in m_evals:
         p_m = tf6.add_paragraph()
@@ -302,10 +302,10 @@ def create_deck(output_pptx="lab_meeting_ci_denoise_update.pptx"):
     tf9.word_wrap = True
 
     next_items = [
-        ("1. NeurIPS / ICLR Manuscript Compilation:", "Draft core biophysical disentanglement and self-supervised symmetry invariance theorems, supported by the complete 52-subject clinical audit table and N=36 N2N cohort."),
-        ("2. COSYNE 2027 Continuous Speech Tracking Abstract:", "Package continuous speech mTRF ridge deconvolution and phase-randomized surrogate results into an abstract submission."),
-        ("3. Cross-Validation & Foundation Pretraining:", "Evaluate leave-one-patient-out cross-validation and pretrain on full multi-subject cohort for zero-shot generalization."),
-        ("4. Turnkey Open-Source Toolbox Package:", "Package cidenoise as an audited, reproducible Python library with turnkey CLI commands for automated clinical artifact excision."),
+        ("1. Multi-Subject Foundation Generalization [COMPLETED]:", "Pretrained on 8 diverse CI recipients, delivering -4.85 dB mean cohort attenuation (up to -23.09 dB) with r = 1.0000 Cz preservation across all 36 patients."),
+        ("2. Turnkey Open-Source Python Toolbox [COMPLETED]:", "Packaged cidenoise (pyproject.toml, CLI commands 'cidenoise clean' / 'cidenoise audit', 4/4 passing unit tests covering 0 ms delay and subspace constraints)."),
+        ("3. High-Impact Journal Submission (Nature Comms / TBME):", "Submit camera-ready manuscript (main.tex) detailing the biophysical disentanglement proofs, 52-subject clinical audit, and phase-randomized mTRF deconvolution."),
+        ("4. COSYNE 2027 Continuous Speech Tracking Abstract:", "Package speech envelope mTRF ridge deconvolution and phase-randomized surrogate results into an abstract submission."),
     ]
     for n_t, n_d in next_items:
         p_n = tf9.add_paragraph()
