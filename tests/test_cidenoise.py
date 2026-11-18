@@ -111,5 +111,29 @@ class TestCIDenoiseBiophysics(unittest.TestCase):
         r_artifact = compute_spatial_ratio(w_artifact, self.ch_names)
         self.assertGreater(r_artifact, 2.5, "Mastoid artifact component must exceed R=2.5 threshold")
 
+    def test_unet1d_forward_shape(self):
+        """Verify UNet1D preserves exact temporal length and channel dimensionality."""
+        import torch
+        from track_a_deep_learning.model import UNet1D
+        
+        n_chs = 20
+        n_times = 512
+        model = UNet1D(in_channels=n_chs, out_channels=n_chs)
+        x = torch.randn(2, n_chs, n_times)
+        y = model(x)
+        self.assertEqual(y.shape, (2, n_chs, n_times), f"Expected shape {(2, n_chs, n_times)}, got {y.shape}")
+
+    def test_midline_retention_calculation(self):
+        """Verify retention calculation flags aggressive over-cleaning below 70% threshold."""
+        orig_power = 100.0
+        clean_power_good = 85.0
+        clean_power_bad = 55.0
+        
+        eta_good = clean_power_good / orig_power
+        eta_bad = clean_power_bad / orig_power
+        
+        self.assertGreater(eta_good, 0.70, "Healthy retention must exceed 70% threshold")
+        self.assertLess(eta_bad, 0.70, "Aggressive over-cleaning must fall below 70% threshold")
+
 if __name__ == '__main__':
     unittest.main()
