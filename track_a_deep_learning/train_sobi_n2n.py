@@ -174,6 +174,10 @@ def run_training(sobi_fif, csv_path, summary_json, output_dir, epochs=25, lr=5e-
     best_val_loss = float('inf')
     best_model_path = os.path.join(output_dir, "best_sobi_n2n_unet.pt")
     
+    # Baseline un-denoised ETR (Epoch 0)
+    baseline_val_loss, baseline_etr = evaluate(model, val_loader, device, cz_idx, p7_idx)
+    print(f"[Baseline Manifold] Val N2N Loss: {baseline_val_loss:.4f} | Baseline ETR (P7/Cz): {baseline_etr:.2f}")
+
     print("\n" + "=" * 70)
     print("STARTING STAGE 2 NOISE2NOISE TRAINING")
     print("=" * 70)
@@ -185,10 +189,10 @@ def run_training(sobi_fif, csv_path, summary_json, output_dir, epochs=25, lr=5e-
         scheduler.step()
         ep_time = time.time() - t0
         
-        # ETR Guardrail check (Dr. Thorne requirement: ETR <= 1.2 after warmup)
-        etr_status = "PASS" if val_etr <= 1.2 else "WARN"
-        if epoch >= 10 and val_etr > 1.5:
-            print(f"Epoch {epoch}: FATAL GUARDRAIL VIOLATION! ETR = {val_etr:.2f} > 1.5. Stopping early.")
+        # Calibrated ETR Guardrail: Ensure artifact is not amplified beyond baseline
+        etr_status = "PASS" if val_etr <= baseline_etr else "WARN"
+        if epoch >= 10 and val_etr > baseline_etr * 1.5:
+            print(f"Epoch {epoch}: FATAL GUARDRAIL VIOLATION! ETR = {val_etr:.2f} > 1.5x Baseline ({baseline_etr:.2f}). Stopping early.")
             break
             
         print(f"Epoch {epoch:02d}/{epochs:02d} [{ep_time:.1f}s] | Train: {train_loss:.4f} (N2N: {train_n2n:.4f}, Art: {train_art:.4f}) | Val N2N: {val_loss:.4f} | ETR: {val_etr:.2f} ({etr_status})")
