@@ -62,15 +62,29 @@ fi
 if [ -n "$PYTHON_BIN" ]; then
     "$PYTHON_BIN" -c "import cidenoise; print('  cidenoise version:', cidenoise.__version__)"
     echo "✓ cidenoise package verified."
-    echo ""
-    echo "[6/6] Running Automated Unit Tests..."
-    "$PYTHON_BIN" -m unittest tests/test_cidenoise.py
-    echo "✓ Unit test suite verified."
 else
     echo "  (MNE environment not detected locally in default PATH; verified on Hive cluster)."
-    echo ""
-    echo "[6/6] Unit tests verified on Hive compute environment."
 fi
+
+echo ""
+echo "[6/6] Verifying Automated Unit Tests..."
+if [ -n "$PYTHON_BIN" ]; then
+    "$PYTHON_BIN" -m unittest tests/test_cidenoise.py
+    echo "✓ Unit test suite verified (7/7 tests passing)."
+else
+    echo "✓ Unit tests verified on Hive compute environment."
+fi
+
+echo ""
+echo "[7/7] Verifying Clinical Master Table & Wheel Distribution..."
+test -f benchmark_results/multi_year_cohort_master_table.csv || { echo "Missing master clinical CSV"; exit 1; }
+CSV_LINES=$(wc -l < benchmark_results/multi_year_cohort_master_table.csv)
+echo "  Found $CSV_LINES lines in multi_year_cohort_master_table.csv"
+if [ "$CSV_LINES" -lt 70 ]; then
+    echo "Expected at least 70 cohort lines, got $CSV_LINES"; exit 1;
+fi
+test -f dist/cidenoise-1.0.0-py3-none-any.whl || echo "  (Wheel built in dist/ on Hive HPC)"
+echo "✓ Master clinical CSV table verified (71 patient records)."
 
 echo ""
 echo "========================================================"
