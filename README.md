@@ -9,7 +9,7 @@
 
 ---
 
-## Key Clinical Results (UC Davis CMPy2 Cohort: N=37 CI, N=15 NH)
+## Key Clinical Results (UC Davis Multi-Year Cohort: 70 CI Patients across Years 2, 3, and 4)
 
 | Pipeline Stage | Biophysical Metric | Achieved Value | Clinical Compliance |
 | :--- | :--- | :---: | :--- |
@@ -17,9 +17,11 @@
 | **Stage 1: Two-Pass SOBI** | Mastoid Coil Attenuation | **$13.2\text{ dB}$** ($64.4\%$ power reduction) | Systematic suppression of continuous RF hash |
 | **Stage 1: Two-Pass SOBI** | Midline Cortical Retention (Cz/Fz/Pz) | **$93.16\%$** (Cohort Mean) | Active safeguard prevents over-cleaning ($> 70\%$) |
 | **Stage 1: Two-Pass SOBI** | Group Delay / Phase Distortion | **$0.0\text{ ms}$** ($\tau_g = 0$) | Continuous zero-phase FIR ($1.0\text{--}45.0\text{ Hz}$) |
-| **Stage 2: Symmetric N2N** | Additional Mastoid Coil Attenuation | **$-13.98\text{ dB}$** (`0901y2`) | Eliminates residual coil non-linearities |
+| **Stage 2: Foundation N2N** | Cohort Attenuation Gain (Pooled N=8) | **$-4.85\text{ dB}$** (up to **$-23.09\text{ dB}$**) | $-1.89\text{ dB}$ net gain over single-subject training |
 | **Stage 2: Symmetric N2N** | Midline Vertex Fidelity (Cz $r$) | **$1.000000$** ($\text{RMSE} < 0.0001\ \mu\text{V}$) | Subspace constraint $\mathbf{P}_{\text{art}}$ prevents distortion |
-| **Stage 2: Symmetric N2N** | Silent Visual Baseline ($V$) Floor | **$1.026\ \mu\text{V}$** (Cohort Mean) | Complies with Dr. Vance $< 2.0\ \mu\text{V}$ silence gate |
+| **Stage 2: Symmetric N2N** | Silent Visual Baseline ($V$) Floor | **$1.026\ \mu\text{V}$** (Cohort Mean) | Complies with $< 2.0\ \mu\text{V}$ silence gate |
+| **Longitudinal Tracking** | Multi-Year Zero-Shot Stability | **$100\%$ Cz $r = 1.000000$** across Y3 ($N=27$) & Y4 ($N=7$) | Universal subspace invariance without retraining |
+| **Neuroplastic Recovery** | Patient `0938` P2 Amplitude Surge | **$6.25\times$ growth** ($0.141 \to 0.502 \to 0.882\ \mu\text{V}$) | Demonstrates multi-year auditory cortical recovery |
 | **mTRF Speech Tracking** | Zero-Lag Stimulus Artifact Spike | **$0.0417$** (vs. $0.5546$ in unconstrained UNet) | Recovers canonical P2 tracking ($209.9\text{ ms}$, $p < 0.001$) |
 
 ---
@@ -115,12 +117,21 @@ python -m unittest tests/test_cidenoise.py
 
 ---
 
+## Interactive Clinical Waveform Studio
+
+The repository includes a standalone, zero-dependency browser-based clinical studio:
+- Open [`waveform_viewer.html`](file:///Users/evanywliang/Documents/cidenoise/ci_denoise/waveform_viewer.html) in any web browser.
+- Allows interactive filtering, channel-by-channel inspection, and comparison across 183 clinical cohort records spanning Raw, SOBI 2-Pass, Single-Subject N2N, Multi-Subject Foundation N2N, and Longitudinal follow-up years (Year 3 and Year 4).
+
+---
+
 ## Citation & Manuscript Draft
 
 For full mathematical proofs, loss formulation, and population benchmarks, see:
 - [Manuscript Draft: `manuscript_draft_cidenoise.md`](file:///Users/evanywliang/.gemini/antigravity/brain/5882504d-c4b2-4ada-b5d2-69f6601ee36c/manuscript_draft_cidenoise.md)
 - [Multi-Cohort Clinical Benchmark Report](file:///Users/evanywliang/.gemini/antigravity/brain/5882504d-c4b2-4ada-b5d2-69f6601ee36c/cohort_benchmark_publication_report.md)
 - [Presentation Slide Deck: `lab_meeting_ci_denoise_update.pptx`](file:///Users/evanywliang/Documents/cidenoise/ci_denoise/lab_meeting_ci_denoise_update.pptx)
+- [Interactive Waveform Studio: `waveform_viewer.html`](file:///Users/evanywliang/Documents/cidenoise/ci_denoise/waveform_viewer.html)
 
 ```bibtex
 @article{liang2026cidenoise,
