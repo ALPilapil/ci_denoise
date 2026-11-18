@@ -182,26 +182,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    /* CSS for citations */
-    div.csl-bib-body { }
-    div.csl-entry {
-      clear: both;
-    }
-    .hanging-indent div.csl-entry {
-      margin-left:2em;
-      text-indent:-2em;
-    }
-    div.csl-left-margin {
-      min-width:2em;
-      float:left;
-    }
-    div.csl-right-inline {
-      margin-left:2em;
-      padding-left:1em;
-    }
-    div.csl-indent {
-      margin-left: 2em;
-    }  </style>
+  </style>
   <script defer=""
   src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
@@ -291,25 +272,66 @@ auditory P2 tracking latency (<span class="math inline">209.9\text{
 ms}</span>, <span class="math inline">p &lt; 0.001</span>).</p>
 </div>
 </header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#introduction" id="toc-introduction">Introduction</a></li>
+<li><a href="#biophysical-formulation-architecture"
+id="toc-biophysical-formulation-architecture">Biophysical Formulation
+&amp; Architecture</a>
+<ul>
+<li><a href="#continuous-zero-phase-pre-filtering-hardware-qa"
+id="toc-continuous-zero-phase-pre-filtering-hardware-qa">Continuous
+Zero-Phase Pre-Filtering &amp; Hardware QA</a></li>
+<li><a href="#stage-1-two-pass-sobi-with-active-safeguards"
+id="toc-stage-1-two-pass-sobi-with-active-safeguards">Stage 1: Two-Pass
+SOBI with Active Safeguards</a></li>
+<li><a href="#stage-2-subspace-constrained-symmetric-noise2noise"
+id="toc-stage-2-subspace-constrained-symmetric-noise2noise">Stage 2:
+Subspace-Constrained Symmetric Noise2Noise</a></li>
+</ul></li>
+<li><a href="#experiments-population-results"
+id="toc-experiments-population-results">Experiments &amp; Population
+Results</a>
+<ul>
+<li><a href="#clinical-cohort-comparison-n36-ci-vs-n15-nh"
+id="toc-clinical-cohort-comparison-n36-ci-vs-n15-nh">Clinical Cohort
+Comparison (N=36 CI vs N=15 NH)</a></li>
+<li><a href="#single-subject-vs-multi-subject-foundation-n2n"
+id="toc-single-subject-vs-multi-subject-foundation-n2n">Single-Subject
+vs Multi-Subject Foundation N2N</a></li>
+<li><a href="#continuous-speech-mtrf-ridge-deconvolution"
+id="toc-continuous-speech-mtrf-ridge-deconvolution">Continuous Speech
+mTRF Ridge Deconvolution</a></li>
+<li><a
+href="#longitudinal-neuroplastic-tracking-across-multi-year-cohorts"
+id="toc-longitudinal-neuroplastic-tracking-across-multi-year-cohorts">Longitudinal
+Neuroplastic Tracking Across Multi-Year Cohorts</a></li>
+</ul></li>
+<li><a href="#conclusion" id="toc-conclusion">Conclusion</a></li>
+<li><a href="#data-availability" id="toc-data-availability">Data
+Availability</a></li>
+<li><a href="#code-availability" id="toc-code-availability">Code
+Availability</a></li>
+</ul>
+</nav>
 <h1 id="introduction">Introduction</h1>
 <p>Recording continuous speech-evoked electroencephalography (EEG) in
 deaf individuals fitted with cochlear implants (CIs) provides vital
 biomarkers for auditory cognitive neuroscience and rehabilitative
-mapping <span class="citation" data-cites="somers2019eeg">(Somers et al.
-2019)</span>. However, transcutaneous inductive radio-frequency (RF)
-link transmission and continuous pulse trains propagate volume-conducted
-electrical artifacts that exceed underlying cortical brain potentials
-(<span class="math inline">3\text{--}8\ \mu\text{V}</span>) by over
-<span class="math inline">30\text{--}40\text{ dB}</span> on lateral
-mastoid leads <span class="citation"
-data-cites="hofmann2012artefact">(Hofmann and Wouters 2012)</span>.</p>
+mapping <span class="citation" data-cites="somers2019eeg"></span>.
+However, transcutaneous inductive radio-frequency (RF) link transmission
+and continuous pulse trains propagate volume-conducted electrical
+artifacts that exceed underlying cortical brain potentials (<span
+class="math inline">3\text{--}8\ \mu\text{V}</span>) by over <span
+class="math inline">30\text{--}40\text{ dB}</span> on lateral mastoid
+leads <span class="citation"
+data-cites="hofmann2012artefact"></span>.</p>
 <p>Existing clinical methods exhibit severe fundamental limitations:</p>
 <ol>
 <li><p><strong>Linear BSS Over-Cleaning:</strong> Standard FastICA and
 Infomax often prune genuine cortical dipoles due to spatial overlap
 between temporal lobes and mastoid sensors <span class="citation"
-data-cites="hofmann2012artefact">(Hofmann and Wouters
-2012)</span>.</p></li>
+data-cites="hofmann2012artefact"></span>.</p></li>
 <li><p><strong>Sim-to-Real Transfer Failure:</strong> Neural networks
 trained on synthetically mixed clean hearing data with synthetic pulse
 trains fail to predict non-linear electrical conduction in real human
@@ -319,8 +341,7 @@ class="math inline">&lt;0.2\%</span> artifact removal).</p></li>
 mTRF:</strong> Unconstrained deep architectures latch onto speech
 acoustic envelope triggers, inflating artificial zero-lag peaks in
 forward encoding models <span class="citation"
-data-cites="crosse2016multivariate">(Crosse et al.
-2016)</span>.</p></li>
+data-cites="crosse2016multivariate"></span>.</p></li>
 </ol>
 <h1 id="biophysical-formulation-architecture">Biophysical Formulation
 &amp; Architecture</h1>
@@ -345,9 +366,9 @@ SOBI with Active Safeguards</h2>
 <p>SOBI diagonalizes multiple second-order cross-correlation matrices
 <span class="math inline">\mathbf{R}_X(\tau_m)</span> across delays
 <span class="math inline">\tau_m \in \{1, 2, 4, 8, 16, 32, 64\}</span>
-<span class="citation" data-cites="belouchrani1997blind">(Belouchrani et
-al. 1997)</span>. Components are classified as artifactual via the
-Mastoid-to-Central Ratio: <span class="math display">\begin{equation}
+<span class="citation" data-cites="belouchrani1997blind"></span>.
+Components are classified as artifactual via the Mastoid-to-Central
+Ratio: <span class="math display">\begin{equation}
 R_k = \frac{\frac{1}{|\mathcal{M}|} \sum_{m \in \mathcal{M}} |A_{m,
 k}|}{\frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} |A_{c, k}|} \ge
 2.5
@@ -371,8 +392,8 @@ class="math inline">a_1 \approx -a_2</span>). A 1D U-Net <span
 class="math inline">f_\theta</span> is trained self-supervised via
 symmetric <span class="math inline">L_1</span> loss inspired by
 Noise2Noise formulations <span class="citation"
-data-cites="lehtinen2018noise2noise">(Lehtinen et al. 2018)</span>:
-<span class="math display">\begin{equation}
+data-cites="lehtinen2018noise2noise"></span>: <span
+class="math display">\begin{equation}
 \mathcal{L}_{\text{sym}} = \frac{1}{2} \|f_\theta(y_1) - y_2\|_1 +
 \frac{1}{2} \|f_\theta(y_2) - y_1\|_1
 \end{equation}</span> To strictly preserve auditory vertex leads and
@@ -736,37 +757,21 @@ distribution of P2 latency shifts (<span class="math inline">\Delta t =
 electrical artifact suppression and neural waveform fidelity in
 continuous speech CI EEG, providing an audited, open-source pipeline for
 clinical and neuroengineering applications.</p>
-<div id="refs" class="references csl-bib-body hanging-indent"
-role="list">
-<div id="ref-belouchrani1997blind" class="csl-entry" role="listitem">
-Belouchrani, Adel, Karim Abed-Meraim, Jean-François Cardoso, and Eric
-Moulines. 1997. <span>“A Blind Source Separation Technique Based on
-Second-Order Statistics.”</span> <em>IEEE Transactions on Signal
-Processing</em> 45 (2): 434–44.
-</div>
-<div id="ref-crosse2016multivariate" class="csl-entry" role="listitem">
-Crosse, Michael J, Giovanni M Di Liberto, Adam Bednar, and Edmund C
-Lalor. 2016. <span>“The Multivariate Temporal Response Function (mTRF)
-Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous
-Stimuli.”</span> <em>Frontiers in Human Neuroscience</em> 10: 604.
-</div>
-<div id="ref-hofmann2012artefact" class="csl-entry" role="listitem">
-Hofmann, Michael, and Jan Wouters. 2012. <span>“Artefact Removal from
-Cochlear Implant Evoked Auditory Cortical Potentials Using Independent
-Component Analysis.”</span> <em>Journal of Neuroscience Methods</em> 204
-(1): 155–64.
-</div>
-<div id="ref-lehtinen2018noise2noise" class="csl-entry" role="listitem">
-Lehtinen, Jaakko, Jacob Munkberg, Jon Hasselgren, et al. 2018.
-<span>“Noise2Noise: Learning Image Restoration Without Clean
-Data.”</span> <em>arXiv Preprint arXiv:1803.04189</em>.
-</div>
-<div id="ref-somers2019eeg" class="csl-entry" role="listitem">
-Somers, Ben, Eline Verschueren, and Tom Francart. 2019. <span>“EEG-Based
-Speech Tracking in Cochlear Implant Users.”</span> <em>Journal of Neural
-Engineering</em> 16 (6): 066007.
-</div>
-</div>
+<h1 class="unnumbered" id="data-availability">Data Availability</h1>
+<p>The clinical EEG evaluation metrics and forward response functions
+supporting the findings of this study are available in Supplementary
+Data 1 (<code>multi_year_cohort_master_table.csv</code>) and online in
+the interactive browser studio at <a
+href="https://alpilapil.github.io/ci_denoise/"
+class="uri">https://alpilapil.github.io/ci_denoise/</a>. Raw
+physiological archives are accessible under institutional data usage
+agreements with the UC Davis Center for Mind and Brain.</p>
+<h1 class="unnumbered" id="code-availability">Code Availability</h1>
+<p>The complete <code>cidenoise</code> Python toolbox, automated test
+suite, multi-subject foundation model weights, and 6-second quickstart
+demonstration script are open-source and freely available under the MIT
+license at <a href="https://github.com/ALPilapil/ci_denoise"
+class="uri">https://github.com/ALPilapil/ci_denoise</a>.</p>
 <section id="footnotes" class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />
