@@ -1,7 +1,7 @@
 {
   "pipeline": "Two-Pass SOBI -> Subspace-Constrained Residual N2N",
   "checkpoint": "./benchmark_results/sobi_n2n_results/best_sobi_n2n_unet.pt",
-  "inference_time_s": 18.910338163375854,
+  "inference_time_s": 13.118300437927246,
   "template_fidelity_audit": {
     "pearson_r_vs_sobi_template": 0.9999999999999805,
     "rmse_uv_vs_sobi_template": 1.763293143011404e-07,
@@ -12,20 +12,20 @@
   },
   "silent_visual_v_hallucination_audit": {
     "v_trial_cz_floor_uv": 1.0871886014938354,
-    "v_trial_p7_floor_uv": 12.495863914489746,
+    "v_trial_p7_floor_uv": 7.2328104972839355,
     "hallucination_gate_passed": true
   },
   "shuffled_permutation_test": {
     "observed_r": 0.9999999999999805,
-    "surrogate_mean_r": 0.02281021119369088,
-    "surrogate_max_r": 0.898404296979128,
+    "surrogate_mean_r": -0.03786355380386046,
+    "surrogate_max_r": 0.9389796382515561,
     "empirical_p_value": 0.0,
     "permutation_test_passed": true
   },
   "occams_razor_lindqvist_comparison": {
     "sobi_p7_evoked_power_uv2": 265.06706299004105,
-    "n2n_p7_evoked_power_uv2": 34.30778121948242,
-    "p7_additional_attenuation_db": -8.879631340980595,
+    "n2n_p7_evoked_power_uv2": 10.595349311828613,
+    "p7_additional_attenuation_db": -13.982404867374413,
     "statistically_superior_to_sobi": true
   }
 }
