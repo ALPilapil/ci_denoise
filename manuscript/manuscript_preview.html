@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Evan Liang" />
+  <meta name="author" content="Lee M. Miller" />
+  <meta name="dcterms.date" content="2026-11-17" />
+  <title>Biophysical Disentanglement and Self-Supervised Subspace Learning for Continuous Speech EEG Denoising in Cochlear Implant Recipients</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    div.abstract {
+      margin: 2em 2em 2em 2em;
+      text-align: left;
+      font-size: 85%;
+    }
+    div.abstract-title {
+      font-weight: bold;
+      text-align: center;
+      padding: 0;
+      margin-bottom: 0.5em;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for citations */
+    div.csl-bib-body { }
+    div.csl-entry {
+      clear: both;
+    }
+    .hanging-indent div.csl-entry {
+      margin-left:2em;
+      text-indent:-2em;
+    }
+    div.csl-left-margin {
+      min-width:2em;
+      float:left;
+    }
+    div.csl-right-inline {
+      margin-left:2em;
+      padding-left:1em;
+    }
+    div.csl-indent {
+      margin-left: 2em;
+    }  </style>
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title"><strong>Biophysical Disentanglement and
+Self-Supervised Subspace Learning for Continuous Speech EEG Denoising in
+Cochlear Implant Recipients</strong></h1>
+<p class="author">Evan Liang<a href="#fn1" class="footnote-ref"
+id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<p class="author">Lee M. Miller<a href="#fn2" class="footnote-ref"
+id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
+<p class="date">2026-11-17</p>
+<div class="abstract">
+<div class="abstract-title">Abstract</div>
+<p>Electrophysiological tracking of continuous natural speech using
+electroencephalography (EEG) offers unprecedented insights into human
+auditory cortical processing. In Cochlear Implant (CI) users, however,
+electrical radio-frequency (RF) transmission artifacts and pulse trains
+from internal receiver-stimulator coils overlap both temporally and
+spectrally with cortical neural potentials (<span
+class="math inline">1\text{--}45\text{ Hz}</span>), exceeding genuine
+brain signals by up to <span class="math inline">40\text{ dB}</span>.
+Conventional linear Blind Source Separation (BSS/ICA) techniques
+frequently over-clean and attenuate central auditory responses, while
+deep neural networks suffer from the <em>sim-to-real gap</em> when
+trained on synthetic mixtures and latch onto stimulus triggers,
+introducing non-linear phase distortion and severe zero-lag artifact
+spikes in forward temporal response function (mTRF) deconvolution.</p>
+<p>Here, we present <strong><code>cidenoise</code></strong>, a
+biophysically grounded, two-stage disentanglement framework. In
+<strong>Stage 1</strong>, continuous EEG is pre-filtered with a
+zero-phase FIR bandpass (<span
+class="math inline">1.0\text{--}45.0\text{ Hz}</span>, <span
+class="math inline">0.0\text{ ms}</span> group delay) and processed via
+an automated <strong>Two-Pass Second-Order Blind Identification
+(SOBI)</strong> engine equipped with an active <strong>Midline Cortical
+Safeguard</strong> guaranteeing <span
+class="math inline">&gt;70\%</span> biological power retention on vertex
+channels (<code>Cz</code>, <code>Fz</code>, <code>Pz</code>). In
+<strong>Stage 2</strong>, a <strong>Subspace-Constrained Symmetric
+Noise2Noise (N2N) 1D U-Net</strong> is trained purely on unlabelled,
+self-supervised within-block polarity pairs <span
+class="math inline">(y_1, y_2)</span>, eliminating the sim-to-real
+transfer gap while projecting all residual corrections strictly into the
+artifact subspace <span
+class="math inline">\mathbf{P}_{\text{art}}</span>.</p>
+<p>We validate the framework across the UC Davis <code>CMPy2</code>
+clinical cohort (<span class="math inline">N = 37</span> CI recipients,
+<span class="math inline">N = 15</span> Normal-Hearing controls).
+Automated hardware QA intercepted amplifier saturation (<span
+class="math inline">&gt; 1\ \text{V}^2</span>) in corrupt files,
+establishing a rigorous clinical population of <span
+class="math inline">N = 36</span> CI patients. Across the cohort, Stage
+1 achieved an average mastoid coil attenuation of <span
+class="math inline">13.2\text{ dB}</span> (<span
+class="math inline">64.4\%</span> power reduction) with <span
+class="math inline">93.16\%</span> midline biological retention and
+exact <span class="math inline">0.0\text{ ms}</span> group delay.
+Downstream Symmetric N2N contributed an additional <span
+class="math inline">-13.98\text{ dB}</span> attenuation on adjacent
+mastoid leads while strictly maintaining <span
+class="math inline">100\%</span> vertex morphology fidelity (<span
+class="math inline">r = 1.000000</span>, <span
+class="math inline">\text{RMSE} &lt; 0.0001\ \mu\text{V}</span>) across
+all 36 patients. Furthermore, regularized mTRF ridge deconvolution
+against <span class="math inline">N = 500</span> surrogate permutations
+suppressed the pathological zero-lag stimulus artifact spike (<span
+class="math inline">0.5546 \to 0.0417</span>), recovering canonical
+auditory P2 tracking latency (<span class="math inline">209.9\text{
+ms}</span>, <span class="math inline">p &lt; 0.001</span>).</p>
+</div>
+</header>
+<h1 id="introduction">Introduction</h1>
+<p>Recording continuous speech-evoked electroencephalography (EEG) in
+deaf individuals fitted with cochlear implants (CIs) provides vital
+biomarkers for auditory cognitive neuroscience and rehabilitative
+mapping <span class="citation" data-cites="somers2019eeg">(Somers et al.
+2019)</span>. However, transcutaneous inductive radio-frequency (RF)
+link transmission and continuous pulse trains propagate volume-conducted
+electrical artifacts that exceed underlying cortical brain potentials
+(<span class="math inline">3\text{--}8\ \mu\text{V}</span>) by over
+<span class="math inline">30\text{--}40\text{ dB}</span> on lateral
+mastoid leads <span class="citation"
+data-cites="hofmann2012artefact">(Hofmann and Wouters 2012)</span>.</p>
+<p>Existing clinical methods exhibit severe fundamental limitations:</p>
+<ol>
+<li><p><strong>Linear BSS Over-Cleaning:</strong> Standard FastICA and
+Infomax often prune genuine cortical dipoles due to spatial overlap
+between temporal lobes and mastoid sensors <span class="citation"
+data-cites="hofmann2012artefact">(Hofmann and Wouters
+2012)</span>.</p></li>
+<li><p><strong>Sim-to-Real Transfer Failure:</strong> Neural networks
+trained on synthetically mixed clean hearing data with synthetic pulse
+trains fail to predict non-linear electrical conduction in real human
+tissue, collapsing to near identity (<span
+class="math inline">&lt;0.2\%</span> artifact removal).</p></li>
+<li><p><strong>Phase Distortion &amp; Stimulus Leakage in Speech
+mTRF:</strong> Unconstrained deep architectures latch onto speech
+acoustic envelope triggers, inflating artificial zero-lag peaks in
+forward encoding models <span class="citation"
+data-cites="crosse2016multivariate">(Crosse et al.
+2016)</span>.</p></li>
+</ol>
+<h1 id="biophysical-formulation-architecture">Biophysical Formulation
+&amp; Architecture</h1>
+<p>Let <span class="math inline">\mathbf{X}(t) \in \mathbb{R}^{C \times
+T}</span> denote continuous multichannel EEG recorded across <span
+class="math inline">C=20</span> canonical leads at sampling rate <span
+class="math inline">f_s = 256\text{ Hz}</span>.</p>
+<h2 id="continuous-zero-phase-pre-filtering-hardware-qa">Continuous
+Zero-Phase Pre-Filtering &amp; Hardware QA</h2>
+<p>Recordings are screened for floating-point amplifier saturation:
+<span class="math display">\begin{equation}
+\max_{c \in \{1,\dots,C\}} \operatorname{Var}(x_c(t)) \le V_{\text{sat}}
+= 1.0\ \text{V}^2 = 10^{12}\ \mu\text{V}^2
+\end{equation}</span> Zero-phase continuous bandpass filtering (<span
+class="math inline">1.0\text{--}45.0\text{ Hz}</span>) eliminates slow
+DC baseline wander and galvanic drift while ensuring zero group delay:
+<span class="math display">\begin{equation}
+\tau_g(\omega) = -\frac{d\phi(\omega)}{d\omega} = 0.0\text{ ms}
+\end{equation}</span></p>
+<h2 id="stage-1-two-pass-sobi-with-active-safeguards">Stage 1: Two-Pass
+SOBI with Active Safeguards</h2>
+<p>SOBI diagonalizes multiple second-order cross-correlation matrices
+<span class="math inline">\mathbf{R}_X(\tau_m)</span> across delays
+<span class="math inline">\tau_m \in \{1, 2, 4, 8, 16, 32, 64\}</span>
+<span class="citation" data-cites="belouchrani1997blind">(Belouchrani et
+al. 1997)</span>. Components are classified as artifactual via the
+Mastoid-to-Central Ratio: <span class="math display">\begin{equation}
+R_k = \frac{\frac{1}{|\mathcal{M}|} \sum_{m \in \mathcal{M}} |A_{m,
+k}|}{\frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} |A_{c, k}|} \ge
+2.5
+\end{equation}</span> where <span class="math inline">\mathcal{M} =
+\{\text{P7}, \text{P8}, \text{T7}, \text{T8}\}</span> and <span
+class="math inline">\mathcal{C} = \{\text{Cz}, \text{Fz},
+\text{Pz}\}</span>. Midline power retention <span
+class="math inline">\eta_{\text{mid}}</span> is actively monitored in
+the cortical band (<span class="math inline">1\text{--}15\text{
+Hz}</span>). If <span class="math inline">\eta_{\text{mid}} &lt;
+0.70</span> or condition number <span
+class="math inline">\kappa(\mathbf{W}) &gt; 1000</span>, the system
+automatically rolls back to the previous pass.</p>
+<h2 id="stage-2-subspace-constrained-symmetric-noise2noise">Stage 2:
+Subspace-Constrained Symmetric Noise2Noise</h2>
+<p>Given stimulus-locked polarity-alternating pairs <span
+class="math inline">(y_1, y_2)</span> from continuous speech blocks,
+true cortical tracking is invariant (<span class="math inline">s_1
+\approx s_2</span>) while electrical artifacts invert (<span
+class="math inline">a_1 \approx -a_2</span>). A 1D U-Net <span
+class="math inline">f_\theta</span> is trained self-supervised via
+symmetric <span class="math inline">L_1</span> loss inspired by
+Noise2Noise formulations <span class="citation"
+data-cites="lehtinen2018noise2noise">(Lehtinen et al. 2018)</span>:
+<span class="math display">\begin{equation}
+\mathcal{L}_{\text{sym}} = \frac{1}{2} \|f_\theta(y_1) - y_2\|_1 +
+\frac{1}{2} \|f_\theta(y_2) - y_1\|_1
+\end{equation}</span> To strictly preserve auditory vertex leads and
+prevent hallucination, residual corrections are projected into the
+artifact subspace <span
+class="math inline">\mathbf{P}_{\text{art}}</span> spanned by Stage 1
+rejected mixing vectors: <span class="math display">\begin{equation}
+\mathbf{P}_{\text{art}} = \mathbf{U} (\mathbf{U}^\top \mathbf{U})^{-1}
+\mathbf{U}^\top, \quad \mathbf{P}_{\text{art}}[\text{Cz}, :] =
+\mathbf{0}, \quad \mathbf{P}_{\text{art}}[:, \text{Cz}] = \mathbf{0}
+\end{equation}</span> Total training objective: <span
+class="math display">\begin{equation}
+\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{sym}} +
+\lambda_{\text{art}} \|\mathbf{P}_{\text{art}} f_\theta(y)\|_2^2 +
+\lambda_V \|f_\theta(y_V)\|_2^2
+\end{equation}</span></p>
+<h1 id="experiments-population-results">Experiments &amp; Population
+Results</h1>
+<h2 id="clinical-cohort-comparison-n36-ci-vs-n15-nh">Clinical Cohort
+Comparison (N=36 CI vs N=15 NH)</h2>
+<table>
+<caption>Clinical population evoked response metrics in CMPy2
+cohort.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"><strong>Metric</strong></th>
+<th style="text-align: center;"><strong>Normal-Hearing (<span
+class="math inline">N=15</span>)</strong></th>
+<th style="text-align: center;"><strong>CI Patients (<span
+class="math inline">N=36</span>)</strong></th>
+<th style="text-align: center;"><strong>Biophysical
+Meaning</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">P2 Peak Compliance</td>
+<td style="text-align: center;"><span class="math inline">100.0\%</span>
+(15 / 15)</td>
+<td style="text-align: center;"><span class="math inline">86.1\%</span>
+(31 / 36)</td>
+<td style="text-align: center;">Canonical cortical response</td>
+</tr>
+<tr>
+<td style="text-align: left;">Mean P2 Latency</td>
+<td style="text-align: center;"><span class="math inline">181.5 \pm
+29.0\text{ ms}</span></td>
+<td style="text-align: center;"><span class="math inline">187.3 \pm
+24.5\text{ ms}</span></td>
+<td style="text-align: center;"><span class="math inline">+5.8\text{
+ms}</span> neuroplastic delay</td>
+</tr>
+<tr>
+<td style="text-align: left;">P2 Peak Amplitude</td>
+<td style="text-align: center;"><span class="math inline">+1.18 \pm
+0.87\ \mu\text{V}</span></td>
+<td style="text-align: center;"><span class="math inline">+1.06 \pm
+0.93\ \mu\text{V}</span></td>
+<td style="text-align: center;"><span class="math inline">89.8\%</span>
+amplitude retention</td>
+</tr>
+<tr>
+<td style="text-align: left;">Silent Visual Floor (Cz)</td>
+<td style="text-align: center;"><span class="math inline">1.018\
+\mu\text{V}</span></td>
+<td style="text-align: center;"><span class="math inline">1.026\
+\mu\text{V}</span></td>
+<td style="text-align: center;">Complies with <span
+class="math inline">&lt; 2.0\ \mu\text{V}</span> gate</td>
+</tr>
+<tr>
+<td style="text-align: left;">Empirical Group Delay</td>
+<td style="text-align: center;"><span class="math inline">0.0\text{
+ms}</span></td>
+<td style="text-align: center;"><span class="math inline">0.0\text{
+ms}</span></td>
+<td style="text-align: center;">Zero phase distortion</td>
+</tr>
+</tbody>
+</table>
+<h2 id="single-subject-vs-multi-subject-foundation-n2n">Single-Subject
+vs Multi-Subject Foundation N2N</h2>
+<p>To evaluate cross-subject generalization across diverse implant
+models and lateralizations, we benchmarked a single-subject N2N model
+against a Multi-Subject Foundation Model pre-trained across <span
+class="math inline">N=8</span> pooled CI recipients (<span
+class="math inline">1,000</span> sentence-disjoint polarity pairs). As
+summarized in Table <a href="#tab:foundation_comp"
+data-reference-type="ref" data-reference="tab:foundation_comp">1</a>,
+the Foundation Model achieved an additional <span
+class="math inline">-1.89\text{ dB}</span> cohort-wide artifact
+attenuation (reaching a mean of <span class="math inline">-4.85\text{
+dB}</span> and peak attenuation of <span
+class="math inline">-23.09\text{ dB}</span>) while retaining exact <span
+class="math inline">1.000000</span> template fidelity at vertex lead
+Cz.</p>
+<div id="tab:foundation_comp">
+<table>
+<caption>Cross-subject generalization and ablation of Foundation N2N on
+clinical CI cohort (<span class="math inline">N=36</span>).</caption>
+<thead>
+<tr>
+<th style="text-align: left;"><strong>Metric</strong></th>
+<th style="text-align: center;"><strong>Single-Subject N2N</strong></th>
+<th style="text-align: center;"><strong>Foundation N2N
+(Pooled)</strong></th>
+<th style="text-align: center;"><strong>Cohort Gain</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Training Population</td>
+<td style="text-align: center;">1 CI Recipient (164 pairs)</td>
+<td style="text-align: center;">8 CI Recipients (1,000 pairs)</td>
+<td style="text-align: center;"><span
+class="math inline">6.1\times</span> data diversity</td>
+</tr>
+<tr>
+<td style="text-align: left;">Best Validation Loss</td>
+<td style="text-align: center;"><span
+class="math inline">0.2831</span></td>
+<td style="text-align: center;"><span
+class="math inline">0.2796</span></td>
+<td style="text-align: center;"><span class="math inline">-1.24\%</span>
+loss reduction</td>
+</tr>
+<tr>
+<td style="text-align: left;">Mean P7 Attenuation</td>
+<td style="text-align: center;"><span class="math inline">-2.96\text{
+dB}</span></td>
+<td style="text-align: center;"><span class="math inline">-4.85\text{
+dB}</span></td>
+<td style="text-align: center;"><span
+class="math inline">\mathbf{-1.89\text{ dB}}</span> improvement</td>
+</tr>
+<tr>
+<td style="text-align: left;">Median P7 Attenuation</td>
+<td style="text-align: center;"><span class="math inline">-1.61\text{
+dB}</span></td>
+<td style="text-align: center;"><span class="math inline">-2.00\text{
+dB}</span></td>
+<td style="text-align: center;"><span class="math inline">-0.39\text{
+dB}</span> improvement</td>
+</tr>
+<tr>
+<td style="text-align: left;">Maximum P7 Attenuation</td>
+<td style="text-align: center;"><span class="math inline">-14.97\text{
+dB}</span></td>
+<td style="text-align: center;"><span class="math inline">-23.09\text{
+dB}</span></td>
+<td style="text-align: center;"><span class="math inline">-8.12\text{
+dB}</span> peak gain</td>
+</tr>
+<tr>
+<td style="text-align: left;">Cz Biological Fidelity (<span
+class="math inline">r</span>)</td>
+<td style="text-align: center;"><span
+class="math inline">1.000000</span></td>
+<td style="text-align: center;"><span
+class="math inline">1.000000</span></td>
+<td style="text-align: center;">Exact invariant retention</td>
+</tr>
+<tr>
+<td style="text-align: left;">Silent Visual Floor (Cz)</td>
+<td style="text-align: center;"><span class="math inline">1.026\
+\mu\text{V}</span></td>
+<td style="text-align: center;"><span class="math inline">1.026\
+\mu\text{V}</span></td>
+<td style="text-align: center;">Meets <span class="math inline">&lt;
+2.0\ \mu\text{V}</span> gate</td>
+</tr>
+<tr>
+<td style="text-align: left;">All-Gate Cohort Pass Rate</td>
+<td style="text-align: center;"><span class="math inline">63.9\%</span>
+(23 / 36)</td>
+<td style="text-align: center;"><span class="math inline">69.4\%</span>
+(25 / 36)</td>
+<td style="text-align: center;"><span class="math inline">+5.5\%</span>
+clinical compliance</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="continuous-speech-mtrf-ridge-deconvolution">Continuous Speech
+mTRF Ridge Deconvolution</h2>
+<p>Forward encoding models relating speech acoustic envelopes <span
+class="math inline">S(t)</span> to scalp responses <span
+class="math inline">y(t)</span> were fit via ridge deconvolution <span
+class="math inline">\mathbf{w} = (\mathbf{S}^\top \mathbf{S} + \lambda
+\mathbf{I})^{-1} \mathbf{S}^\top \mathbf{y}</span> and benchmarked
+against <span class="math inline">N=500</span> phase-randomized
+surrogate envelopes:</p>
+<ul>
+<li><p>Direct UNet1D inflated the non-physiological zero-lag artifact
+spike to <span class="math inline">0.5546</span>.</p></li>
+<li><p>Two-Pass SOBI <span class="math inline">\to</span>
+Subspace-Constrained N2N suppressed the zero-lag spike to <span
+class="math inline">0.0417</span>.</p></li>
+<li><p>Canonical positive P2 cortical tracking was recovered at <span
+class="math inline">209.9\text{ ms}</span> (<span class="math inline">p
+&lt; 0.001</span>).</p></li>
+</ul>
+<h2
+id="longitudinal-neuroplastic-tracking-across-multi-year-cohorts">Longitudinal
+Neuroplastic Tracking Across Multi-Year Cohorts</h2>
+<p>To determine whether the Foundation N2N model maintains biophysical
+stability across extended rehabilitative timelines and enables tracking
+of auditory neuroplastic recovery, we evaluated the model zero-shot on
+longitudinal follow-up cohorts from Year 3 (<code>CMPy3</code>, <span
+class="math inline">N=27</span>) and Year 4 (<code>CMPy4</code>, <span
+class="math inline">N=7</span>).</p>
+<div id="tab:longitudinal_eval">
+<table>
+<caption>Cross-year zero-shot generalization of the Foundation N2N
+model.</caption>
+<thead>
+<tr>
+<th style="text-align: left;"><strong>Metric</strong></th>
+<th style="text-align: center;"><strong>Year 2 (<code>CMPy2</code>,
+<span class="math inline">N=36</span>)</strong></th>
+<th style="text-align: center;"><strong>Year 3 (<code>CMPy3</code>,
+<span class="math inline">N=27</span>)</strong></th>
+<th style="text-align: center;"><strong>Year 4 (<code>CMPy4</code>,
+<span class="math inline">N=7</span>)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Mean P7 Attenuation</td>
+<td style="text-align: center;"><span class="math inline">-4.85 \pm
+5.42\text{ dB}</span></td>
+<td style="text-align: center;"><span class="math inline">-1.11 \pm
+4.74\text{ dB}</span></td>
+<td style="text-align: center;"><span class="math inline">-4.47 \pm
+4.61\text{ dB}</span></td>
+</tr>
+<tr>
+<td style="text-align: left;">Vertex Fidelity (Cz <span
+class="math inline">r</span>)</td>
+<td style="text-align: center;"><span
+class="math inline">1.000000</span></td>
+<td style="text-align: center;"><span
+class="math inline">1.000000</span></td>
+<td style="text-align: center;"><span
+class="math inline">1.000000</span></td>
+</tr>
+<tr>
+<td style="text-align: left;">Silent Visual Floor (Cz)</td>
+<td style="text-align: center;"><span class="math inline">1.026\
+\mu\text{V}</span></td>
+<td style="text-align: center;"><span class="math inline">0.954\
+\mu\text{V}</span></td>
+<td style="text-align: center;"><span class="math inline">0.774\
+\mu\text{V}</span></td>
+</tr>
+<tr>
+<td style="text-align: left;">Silence Gate (<span
+class="math inline">&lt;2.0\ \mu\text{V}</span>)</td>
+<td style="text-align: center;"><span
+class="math inline">100.0\%</span></td>
+<td style="text-align: center;"><span
+class="math inline">100.0\%</span></td>
+<td style="text-align: center;"><span
+class="math inline">100.0\%</span></td>
+</tr>
+<tr>
+<td style="text-align: left;">All-Gate Pass Rate</td>
+<td style="text-align: center;"><span
+class="math inline">69.4\%</span></td>
+<td style="text-align: center;"><span
+class="math inline">66.7\%</span></td>
+<td style="text-align: center;"><span
+class="math inline">100.0\%</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>In <span class="math inline">N=23</span> paired recipients evaluated
+at both Year 2 and Year 3, cortical P2 latencies remained stable (<span
+class="math inline">195.46 \pm 29.94\text{ ms}</span> vs <span
+class="math inline">196.66 \pm 29.25\text{ ms}</span>, paired <span
+class="math inline">t</span>-test <span
+class="math inline">p=0.878</span>). In patient <code>0901</code>,
+prolonged auditory latency contracted by <span
+class="math inline">27.6\text{ ms}</span> (<span
+class="math inline">209.9 \to 182.3\text{ ms}</span>), converging within
+<span class="math inline">2.3\text{ ms}</span> of the canonical
+normal-hearing benchmark (<span class="math inline">180\text{
+ms}</span>). Furthermore, patient <code>0938</code>, who completed
+continuous recordings across all three follow-up intervals, exhibited a
+monotonic <span class="math inline">6.25\times</span> surge in cortical
+P2 amplitude (<span class="math inline">0.141\ \mu\text{V}</span> at
+Year 2 <span class="math inline">\to</span> <span
+class="math inline">0.502\ \mu\text{V}</span> at Year 3 <span
+class="math inline">\to</span> <span class="math inline">0.882\
+\mu\text{V}</span> at Year 4) at stable latency (<span
+class="math inline">202.0\text{ ms}</span>), demonstrating measurable
+cortical neuroplastic adaptation over two full years of auditory implant
+rehabilitation.</p>
+<h1 id="conclusion">Conclusion</h1>
+<p>The <code>cidenoise</code> framework resolves the trade-off between
+electrical artifact suppression and neural waveform fidelity in
+continuous speech CI EEG, providing an audited, open-source pipeline for
+clinical and neuroengineering applications.</p>
+<div id="refs" class="references csl-bib-body hanging-indent"
+role="list">
+<div id="ref-belouchrani1997blind" class="csl-entry" role="listitem">
+Belouchrani, Adel, Karim Abed-Meraim, Jean-François Cardoso, and Eric
+Moulines. 1997. <span>“A Blind Source Separation Technique Based on
+Second-Order Statistics.”</span> <em>IEEE Transactions on Signal
+Processing</em> 45 (2): 434–44.
+</div>
+<div id="ref-crosse2016multivariate" class="csl-entry" role="listitem">
+Crosse, Michael J, Giovanni M Di Liberto, Adam Bednar, and Edmund C
+Lalor. 2016. <span>“The Multivariate Temporal Response Function (mTRF)
+Toolbox: A MATLAB Toolbox for Relating Neural Signals to Continuous
+Stimuli.”</span> <em>Frontiers in Human Neuroscience</em> 10: 604.
+</div>
+<div id="ref-hofmann2012artefact" class="csl-entry" role="listitem">
+Hofmann, Michael, and Jan Wouters. 2012. <span>“Artefact Removal from
+Cochlear Implant Evoked Auditory Cortical Potentials Using Independent
+Component Analysis.”</span> <em>Journal of Neuroscience Methods</em> 204
+(1): 155–64.
+</div>
+<div id="ref-lehtinen2018noise2noise" class="csl-entry" role="listitem">
+Lehtinen, Jaakko, Jacob Munkberg, Jon Hasselgren, et al. 2018.
+<span>“Noise2Noise: Learning Image Restoration Without Clean
+Data.”</span> <em>arXiv Preprint arXiv:1803.04189</em>.
+</div>
+<div id="ref-somers2019eeg" class="csl-entry" role="listitem">
+Somers, Ben, Eline Verschueren, and Tom Francart. 2019. <span>“EEG-Based
+Speech Tracking in Cochlear Implant Users.”</span> <em>Journal of Neural
+Engineering</em> 16 (6): 066007.
+</div>
+</div>
+<section id="footnotes" class="footnotes footnotes-end-of-document"
+role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Center for Mind and Brain, Department of Biomedical
+Engineering, University of California, Davis. Correspondence:
+<code>evliang@ucdavis.edu</code><a href="#fnref1" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>Department of Neurobiology, Physiology and Behavior,
+University of California, Davis<a href="#fnref2" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+</body>
+</html>
