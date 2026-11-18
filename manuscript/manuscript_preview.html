@@ -593,6 +593,25 @@ class="math inline">0.0417</span>.</p></li>
 class="math inline">209.9\text{ ms}</span> (<span class="math inline">p
 &lt; 0.001</span>).</p></li>
 </ul>
+<figure id="fig:mtrf_deconvolution" data-latex-placement="t!">
+<img src="figures/fig3_mtrf_deconvolution.png" style="width:95.0%" />
+<figcaption>Forward continuous speech temporal response function (mTRF)
+ridge deconvolution. (A) Forward encoding weights <span
+class="math inline">\mathbf{w}(\tau)</span> across auditory cortical
+lags (<span class="math inline">\tau \in [-100, 450]\text{ ms}</span>).
+Direct UNet1D exhibits a pathological <span
+class="math inline">10\times</span> inflation of the non-physiological
+zero-lag stimulus artifact spike (<span
+class="math inline">0.5546</span>). In contrast, Two-Pass SOBI followed
+by Subspace-Constrained N2N eliminates the artifact spike (<span
+class="math inline">0.0417</span>), recovering the canonical auditory P2
+cortical tracking peak at <span class="math inline">209.9\text{
+ms}</span> matching normal-hearing latency profiles. (B)
+Phase-randomized surrogate envelope significance testing (<span
+class="math inline">N=500</span> Fourier permutations) demonstrating
+statistical significance (<span class="math inline">p &lt; 0.001</span>)
+of the recovered speech tracking response.</figcaption>
+</figure>
 <h2
 id="longitudinal-neuroplastic-tracking-across-multi-year-cohorts">Longitudinal
 Neuroplastic Tracking Across Multi-Year Cohorts</h2>
@@ -691,7 +710,7 @@ class="math inline">202.0\text{ ms}</span>), demonstrating measurable
 cortical neuroplastic adaptation over two full years of auditory implant
 rehabilitation (Figure <a href="#fig:longitudinal_tracking"
 data-reference-type="ref"
-data-reference="fig:longitudinal_tracking">2</a>).</p>
+data-reference="fig:longitudinal_tracking">3</a>).</p>
 <figure id="fig:longitudinal_tracking" data-latex-placement="t!">
 <img src="figures/fig2_longitudinal_tracking.png" style="width:95.0%" />
 <figcaption>Longitudinal auditory cortical neuroplasticity tracking
