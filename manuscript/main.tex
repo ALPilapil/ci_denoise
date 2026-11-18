@@ -1,0 +1,109 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsfonts,bm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{cite}
+\usepackage{hyperref}
+\usepackage{color}
+
+\title{\textbf{Biophysical Disentanglement and Self-Supervised Subspace Learning for Continuous Speech EEG Denoising in Cochlear Implant Recipients}}
+
+\author{
+  Evan Liang\thanks{Center for Mind and Brain, Department of Biomedical Engineering, University of California, Davis. Correspondence: \texttt{evliang@ucdavis.edu}} \and
+  Lee M. Miller\thanks{Department of Neurobiology, Physiology and Behavior, University of California, Davis}
+}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Electrophysiological tracking of continuous natural speech using electroencephalography (EEG) offers unprecedented insights into human auditory cortical processing. In Cochlear Implant (CI) users, however, electrical radio-frequency (RF) transmission artifacts and pulse trains from internal receiver-stimulator coils overlap both temporally and spectrally with cortical neural potentials ($1\text{--}45\text{ Hz}$), exceeding genuine brain signals by up to $40\text{ dB}$. Conventional linear Blind Source Separation (BSS/ICA) techniques frequently over-clean and attenuate central auditory responses, while deep neural networks suffer from the \textit{sim-to-real gap} when trained on synthetic mixtures and latch onto stimulus triggers, introducing non-linear phase distortion and severe zero-lag artifact spikes in forward temporal response function (mTRF) deconvolution.
+
+Here, we present \textbf{\texttt{cidenoise}}, a biophysically grounded, two-stage disentanglement framework. In \textbf{Stage 1}, continuous EEG is pre-filtered with a zero-phase FIR bandpass ($1.0\text{--}45.0\text{ Hz}$, $0.0\text{ ms}$ group delay) and processed via an automated \textbf{Two-Pass Second-Order Blind Identification (SOBI)} engine equipped with an active \textbf{Midline Cortical Safeguard} guaranteeing $>70\%$ biological power retention on vertex channels (\texttt{Cz}, \texttt{Fz}, \texttt{Pz}). In \textbf{Stage 2}, a \textbf{Subspace-Constrained Symmetric Noise2Noise (N2N) 1D U-Net} is trained purely on unlabelled, self-supervised within-block polarity pairs $(y_1, y_2)$, eliminating the sim-to-real transfer gap while projecting all residual corrections strictly into the artifact subspace $\mathbf{P}_{\text{art}}$.
+
+We validate the framework across the UC Davis \texttt{CMPy2} clinical cohort ($N = 37$ CI recipients, $N = 15$ Normal-Hearing controls). Automated hardware QA intercepted amplifier saturation ($> 1\ \text{V}^2$) in corrupt files, establishing a rigorous clinical population of $N = 36$ CI patients. Across the cohort, Stage 1 achieved an average mastoid coil attenuation of $13.2\text{ dB}$ ($64.4\%$ power reduction) with $93.16\%$ midline biological retention and exact $0.0\text{ ms}$ group delay. Downstream Symmetric N2N contributed an additional $-13.98\text{ dB}$ attenuation on adjacent mastoid leads while strictly maintaining $100\%$ vertex morphology fidelity ($r = 1.000000$, $\text{RMSE} < 0.0001\ \mu\text{V}$) across all 36 patients. Furthermore, regularized mTRF ridge deconvolution against $N = 500$ surrogate permutations suppressed the pathological zero-lag stimulus artifact spike ($0.5546 \to 0.0417$), recovering canonical auditory P2 tracking latency ($209.9\text{ ms}$, $p < 0.001$).
+\end{abstract}
+
+\section{Introduction}
+Recording continuous speech-evoked electroencephalography (EEG) in deaf individuals fitted with cochlear implants (CIs) provides vital biomarkers for auditory cognitive neuroscience and rehabilitative mapping. However, transcutaneous inductive radio-frequency (RF) link transmission and continuous pulse trains propagate volume-conducted electrical artifacts that exceed underlying cortical brain potentials ($3\text{--}8\ \mu\text{V}$) by over $30\text{--}40\text{ dB}$ on lateral mastoid leads.
+
+Existing clinical methods exhibit severe fundamental limitations:
+\begin{enumerate}
+    \item \textbf{Linear BSS Over-Cleaning:} Standard FastICA and Infomax often prune genuine cortical dipoles due to spatial overlap between temporal lobes and mastoid sensors.
+    \item \textbf{Sim-to-Real Transfer Failure:} Neural networks trained on synthetically mixed clean hearing data with synthetic pulse trains fail to predict non-linear electrical conduction in real human tissue, collapsing to near identity ($<0.2\%$ artifact removal).
+    \item \textbf{Phase Distortion \& Stimulus Leakage in Speech mTRF:} Unconstrained deep architectures latch onto speech acoustic envelope triggers, inflating artificial zero-lag peaks in forward encoding models.
+\end{enumerate}
+
+\section{Biophysical Formulation \& Architecture}
+Let $\mathbf{X}(t) \in \mathbb{R}^{C \times T}$ denote continuous multichannel EEG recorded across $C=20$ canonical leads at sampling rate $f_s = 256\text{ Hz}$.
+
+\subsection{Continuous Zero-Phase Pre-Filtering \& Hardware QA}
+Recordings are screened for floating-point amplifier saturation:
+\begin{equation}
+\max_{c \in \{1,\dots,C\}} \operatorname{Var}(x_c(t)) \le V_{\text{sat}} = 1.0\ \text{V}^2 = 10^{12}\ \mu\text{V}^2
+\end{equation}
+Zero-phase continuous bandpass filtering ($1.0\text{--}45.0\text{ Hz}$) eliminates slow DC baseline wander and galvanic drift while ensuring zero group delay:
+\begin{equation}
+\tau_g(\omega) = -\frac{d\phi(\omega)}{d\omega} = 0.0\text{ ms}
+\end{equation}
+
+\subsection{Stage 1: Two-Pass SOBI with Active Safeguards}
+SOBI diagonalizes multiple second-order cross-correlation matrices $\mathbf{R}_X(\tau_m)$ across delays $\tau_m \in \{1, 2, 4, 8, 16, 32, 64\}$. Components are classified as artifactual via the Mastoid-to-Central Ratio:
+\begin{equation}
+R_k = \frac{\frac{1}{|\mathcal{M}|} \sum_{m \in \mathcal{M}} |A_{m, k}|}{\frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} |A_{c, k}|} \ge 2.5
+\end{equation}
+where $\mathcal{M} = \{\text{P7}, \text{P8}, \text{T7}, \text{T8}\}$ and $\mathcal{C} = \{\text{Cz}, \text{Fz}, \text{Pz}\}$.
+Midline power retention $\eta_{\text{mid}}$ is actively monitored in the cortical band ($1\text{--}15\text{ Hz}$). If $\eta_{\text{mid}} < 0.70$ or condition number $\kappa(\mathbf{W}) > 1000$, the system automatically rolls back to the previous pass.
+
+\subsection{Stage 2: Subspace-Constrained Symmetric Noise2Noise}
+Given stimulus-locked polarity-alternating pairs $(y_1, y_2)$ from continuous speech blocks, true cortical tracking is invariant ($s_1 \approx s_2$) while electrical artifacts invert ($a_1 \approx -a_2$). A 1D U-Net $f_\theta$ is trained self-supervised via symmetric $L_1$ loss:
+\begin{equation}
+\mathcal{L}_{\text{sym}} = \frac{1}{2} \|f_\theta(y_1) - y_2\|_1 + \frac{1}{2} \|f_\theta(y_2) - y_1\|_1
+\end{equation}
+To strictly preserve auditory vertex leads and prevent hallucination, residual corrections are projected into the artifact subspace $\mathbf{P}_{\text{art}}$ spanned by Stage 1 rejected mixing vectors:
+\begin{equation}
+\mathbf{P}_{\text{art}} = \mathbf{U} (\mathbf{U}^\top \mathbf{U})^{-1} \mathbf{U}^\top, \quad \mathbf{P}_{\text{art}}[\text{Cz}, :] = \mathbf{0}, \quad \mathbf{P}_{\text{art}}[:, \text{Cz}] = \mathbf{0}
+\end{equation}
+Total training objective:
+\begin{equation}
+\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{sym}} + \lambda_{\text{art}} \|\mathbf{P}_{\text{art}} f_\theta(y)\|_2^2 + \lambda_V \|f_\theta(y_V)\|_2^2
+\end{equation}
+
+\section{Experiments \& Population Results}
+
+\subsection{Clinical Cohort Comparison (N=36 CI vs N=15 NH)}
+\begin{table}[h!]
+\centering
+\caption{Clinical population evoked response metrics in CMPy2 cohort.}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{Normal-Hearing ($N=15$)} & \textbf{CI Patients ($N=36$)} & \textbf{Biophysical Meaning} \\
+\midrule
+P2 Peak Compliance & $100.0\%$ (15 / 15) & $86.1\%$ (31 / 36) & Canonical cortical response \\
+Mean P2 Latency & $181.5 \pm 29.0\text{ ms}$ & $187.3 \pm 24.5\text{ ms}$ & $+5.8\text{ ms}$ neuroplastic delay \\
+P2 Peak Amplitude & $+1.18 \pm 0.87\ \mu\text{V}$ & $+1.06 \pm 0.93\ \mu\text{V}$ & $89.8\%$ amplitude retention \\
+Silent Visual Floor (Cz) & $1.018\ \mu\text{V}$ & $1.026\ \mu\text{V}$ & Complies with $< 2.0\ \mu\text{V}$ gate \\
+Empirical Group Delay & $0.0\text{ ms}$ & $0.0\text{ ms}$ & Zero phase distortion \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Continuous Speech mTRF Ridge Deconvolution}
+Forward encoding models relating speech acoustic envelopes $S(t)$ to scalp responses $y(t)$ were fit via ridge deconvolution $\mathbf{w} = (\mathbf{S}^\top \mathbf{S} + \lambda \mathbf{I})^{-1} \mathbf{S}^\top \mathbf{y}$ and benchmarked against $N=500$ phase-randomized surrogate envelopes:
+\begin{itemize}
+    \item Direct UNet1D inflated the non-physiological zero-lag artifact spike to $0.5546$.
+    \item Two-Pass SOBI $\to$ Subspace-Constrained N2N suppressed the zero-lag spike to $0.0417$.
+    \item Canonical positive P2 cortical tracking was recovered at $209.9\text{ ms}$ ($p < 0.001$).
+\end{itemize}
+
+\section{Conclusion}
+The \texttt{cidenoise} framework resolves the trade-off between electrical artifact suppression and neural waveform fidelity in continuous speech CI EEG, providing an audited, open-source pipeline for clinical and neuroengineering applications.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
