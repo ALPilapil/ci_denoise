@@ -23,7 +23,7 @@ echo "Host: $(hostname) | Date: $(date)"
 echo "=========================================================="
 
 python -u track_a_deep_learning/evaluate_sobi_n2n_cohort.py \
-    --data-dir    /quobyte/millerlmgrp/annotated_data/CMPy3 \
+    --data-dir    /quobyte/millerlmgrp/annotated_data/CMPy3_extracted \
     --sobi-dir    ./benchmark_results/sobi_cmpy3_cohort \
     --year-tag    y3 \
     --task-id     ${SLURM_ARRAY_TASK_ID} \

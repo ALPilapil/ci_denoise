@@ -24,7 +24,7 @@ echo "=========================================================="
 
 python -u processing/run_cohort_pipeline.py \
     --cohort-type ci \
-    --data-dir    /quobyte/millerlmgrp/annotated_data/CMPy3 \
+    --data-dir    /quobyte/millerlmgrp/annotated_data/CMPy3_extracted \
     --year-tag    y3 \
     --task-id     ${SLURM_ARRAY_TASK_ID} \
     --output-dir  ./benchmark_results/sobi_cmpy3_cohort
