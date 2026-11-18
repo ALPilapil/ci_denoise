@@ -1,5 +1,6 @@
 # cidenoise: Biophysical Disentanglement & Self-Supervised Subspace Learning for Cochlear Implant EEG
 
+[![Release](https://img.shields.io/badge/Release-v1.0.0-blue.svg)](https://github.com/ALPilapil/ci_denoise/releases/tag/v1.0.0)
 [![Unit Tests](https://img.shields.io/badge/Unit%20Tests-Passing-brightgreen.svg)]()
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-blue.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]()
