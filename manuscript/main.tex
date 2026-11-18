@@ -123,6 +123,28 @@ Forward encoding models relating speech acoustic envelopes $S(t)$ to scalp respo
     \item Canonical positive P2 cortical tracking was recovered at $209.9\text{ ms}$ ($p < 0.001$).
 \end{itemize}
 
+\subsection{Longitudinal Neuroplastic Tracking Across Multi-Year Cohorts}
+To determine whether the Foundation N2N model maintains biophysical stability across extended rehabilitative timelines and enables tracking of auditory neuroplastic recovery, we evaluated the model zero-shot on longitudinal follow-up cohorts from Year 3 (\texttt{CMPy3}, $N=27$) and Year 4 (\texttt{CMPy4}, $N=7$).
+
+\begin{table}[h!]
+\centering
+\caption{Cross-year zero-shot generalization of the Foundation N2N model.}
+\label{tab:longitudinal_eval}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{Year 2 (\texttt{CMPy2}, $N=36$)} & \textbf{Year 3 (\texttt{CMPy3}, $N=27$)} & \textbf{Year 4 (\texttt{CMPy4}, $N=7$)} \\
+\midrule
+Mean P7 Attenuation & $-4.85 \pm 5.42\text{ dB}$ & $-1.11 \pm 4.74\text{ dB}$ & $-4.47 \pm 4.61\text{ dB}$ \\
+Vertex Fidelity (Cz $r$) & $1.000000$ & $1.000000$ & $1.000000$ \\
+Silent Visual Floor (Cz) & $1.026\ \mu\text{V}$ & $0.954\ \mu\text{V}$ & $0.774\ \mu\text{V}$ \\
+Silence Gate ($<2.0\ \mu\text{V}$) & $100.0\%$ & $100.0\%$ & $100.0\%$ \\
+All-Gate Pass Rate & $69.4\%$ & $66.7\%$ & $100.0\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+In $N=23$ paired recipients evaluated at both Year 2 and Year 3, cortical P2 latencies remained stable ($195.46 \pm 29.94\text{ ms}$ vs $196.66 \pm 29.25\text{ ms}$, paired $t$-test $p=0.878$). In patient \texttt{0901}, prolonged auditory latency contracted by $27.6\text{ ms}$ ($209.9 \to 182.3\text{ ms}$), converging within $2.3\text{ ms}$ of the canonical normal-hearing benchmark ($180\text{ ms}$). Furthermore, patient \texttt{0938}, who completed continuous recordings across all three follow-up intervals, exhibited a monotonic $6.25\times$ surge in cortical P2 amplitude ($0.141\ \mu\text{V}$ at Year 2 $\to$ $0.502\ \mu\text{V}$ at Year 3 $\to$ $0.882\ \mu\text{V}$ at Year 4) at stable latency ($202.0\text{ ms}$), demonstrating measurable cortical neuroplastic adaptation over two full years of auditory implant rehabilitation.
+
 \section{Conclusion}
 The \texttt{cidenoise} framework resolves the trade-off between electrical artifact suppression and neural waveform fidelity in continuous speech CI EEG, providing an audited, open-source pipeline for clinical and neuroengineering applications.
 

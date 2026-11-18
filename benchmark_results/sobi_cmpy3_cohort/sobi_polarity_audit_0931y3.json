@@ -1,0 +1,35 @@
+{
+  "subject": "0931y3",
+  "hardware_failure": false,
+  "total_runtime_s": 75.51548647880554,
+  "stage1_sobi": {
+    "artifact_attenuation_db": -0.0015134809034336985,
+    "p7_mean_single_take_power_uv2": 768.2671041482349
+  },
+  "stage2_polarity_averaging": {
+    "matched_pairs": 180,
+    "additional_attenuation_db": -2.6651708046892333,
+    "p7_summed_power_uv2": 415.90597289794414,
+    "isolated_artifact_power_uv2": 352.3611312502909
+  },
+  "total_pipeline": {
+    "total_artifact_attenuation_db": -2.6666842855926602,
+    "power_reduction_pct": 45.88326689238662
+  },
+  "cz_cortical_erp": {
+    "n1_latency_ms": 131.03448275862073,
+    "n1_amplitude_uv": -0.8559744762381882,
+    "n1_gate_passed": true,
+    "p2_latency_ms": 170.44334975369463,
+    "p2_amplitude_uv": 0.06997038587253282,
+    "p2_gate_passed": false,
+    "peak_to_peak_uv": 0.925944862110721,
+    "cz_group_delay_ms": 0.0,
+    "cz_raw_clean_corr_r": 0.9801193438849848
+  },
+  "condition_v_silent_baseline": {
+    "cz_noise_floor_uv": 0.5925179006878208,
+    "p7_noise_floor_uv": 3.5310136254371036,
+    "silent_gate_passed": true
+  }
+}

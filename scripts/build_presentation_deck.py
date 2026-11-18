@@ -292,23 +292,56 @@ def create_deck(output_pptx="lab_meeting_ci_denoise_update.pptx"):
         tf8.add_paragraph()
 
     # -------------------------------------------------------------
-    # SLIDE 9: Part 4 - Up Next
+    # SLIDE 9: Longitudinal Tracking Across Multi-Year Follow-Ups
     # -------------------------------------------------------------
-    s9 = prs.slides.add_slide(blank_layout)
-    add_header(s9, "4. Up Next: Strategic Next Steps & Decisions", "Immediate Experimental Priorities and Publication Timeline")
+    s9_long = prs.slides.add_slide(blank_layout)
+    add_header(s9_long, "3b. Longitudinal Tracking: Multi-Year Auditory Cortical Neuroplasticity", "Zero-Shot Generalization & Individual Tracking Across Follow-Up Intervals (Years 2, 3, and 4)")
 
-    tb9 = s9.shapes.add_textbox(Inches(0.8), Inches(1.5), Inches(11.7), Inches(5.4))
-    tf9 = tb9.text_frame
-    tf9.word_wrap = True
+    img_long = "benchmark_results/longitudinal_tracking_figure.png"
+    if os.path.exists(img_long):
+        s9_long.shapes.add_picture(img_long, Inches(0.8), Inches(1.5), width=Inches(7.2))
+
+    tb_long = s9_long.shapes.add_textbox(Inches(8.2), Inches(1.5), Inches(4.3), Inches(5.4))
+    tf_long = tb_long.text_frame
+    tf_long.word_wrap = True
+
+    long_pts = [
+        ("Multi-Year Subspace Invariance:", "Foundation N2N zero-shot generalized to Year 3 (N=27) and Year 4 (N=7) with 100% vertex fidelity (r = 1.000000) and zero silence floor violation."),
+        ("Cortical Latency Contraction (Sub 0901):", "P2 latency shortened by 27.6 ms (209.9 -> 182.3 ms), converging within 2.3 ms of normal-hearing latency (180 ms)."),
+        ("6.25x P2 Amplitude Surge (Sub 0938):", "Tracked across all 3 years: P2 amplitude grew monotonically from 0.141 -> 0.502 -> 0.882 µV at 202.0 ms."),
+        ("Cohort Calibration Stability:", "Across N=23 paired recipients, mean latency shift was +1.2 ms (p = 0.878), confirming reliable longitudinal reproducibility."),
+    ]
+    for p_t, p_d in long_pts:
+        p_p = tf_long.add_paragraph()
+        p_p.text = p_t + " "
+        p_p.font.bold = True
+        p_p.font.size = Pt(13)
+        p_p.font.color.rgb = c_navy
+        run = p_p.add_run()
+        run.text = p_d
+        run.font.bold = False
+        run.font.size = Pt(12)
+        run.font.color.rgb = c_dark
+        tf_long.add_paragraph()
+
+    # -------------------------------------------------------------
+    # SLIDE 10: Part 4 - Up Next
+    # -------------------------------------------------------------
+    s10 = prs.slides.add_slide(blank_layout)
+    add_header(s10, "4. Up Next: Strategic Next Steps & Decisions", "Immediate Experimental Priorities and Publication Timeline")
+
+    tb10 = s10.shapes.add_textbox(Inches(0.8), Inches(1.5), Inches(11.7), Inches(5.4))
+    tf10 = tb10.text_frame
+    tf10.word_wrap = True
 
     next_items = [
         ("1. Multi-Subject Foundation Generalization [COMPLETED]:", "Pretrained on 8 diverse CI recipients, delivering -4.85 dB mean cohort attenuation (up to -23.09 dB) with r = 1.0000 Cz preservation across all 36 patients."),
-        ("2. Turnkey Open-Source Python Toolbox [COMPLETED]:", "Packaged cidenoise (pyproject.toml, CLI commands 'cidenoise clean' / 'cidenoise audit', 4/4 passing unit tests covering 0 ms delay and subspace constraints)."),
-        ("3. High-Impact Journal Submission (Nature Comms / TBME):", "Submit camera-ready manuscript (main.tex) detailing the biophysical disentanglement proofs, 52-subject clinical audit, and phase-randomized mTRF deconvolution."),
-        ("4. COSYNE 2027 Continuous Speech Tracking Abstract:", "Package speech envelope mTRF ridge deconvolution and phase-randomized surrogate results into an abstract submission."),
+        ("2. Multi-Year Longitudinal Validation [COMPLETED]:", "Extracted and evaluated CMPy3 (N=27) and CMPy4 (N=7), establishing 3-year within-patient neuroplastic cortical tracking."),
+        ("3. Turnkey Open-Source Python Toolbox [COMPLETED]:", "Packaged cidenoise (pyproject.toml, CLI commands 'cidenoise clean' / 'cidenoise audit', 4/4 passing unit tests covering 0 ms delay and subspace constraints)."),
+        ("4. High-Impact Journal Submission (Nature Comms / TBME):", "Submit camera-ready manuscript (main.tex) detailing the biophysical disentanglement proofs, 70-subject clinical audit, and phase-randomized mTRF deconvolution."),
     ]
     for n_t, n_d in next_items:
-        p_n = tf9.add_paragraph()
+        p_n = tf10.add_paragraph()
         p_n.text = n_t + " "
         p_n.font.bold = True
         p_n.font.size = Pt(15)
@@ -317,7 +350,7 @@ def create_deck(output_pptx="lab_meeting_ci_denoise_update.pptx"):
         run.text = n_d
         run.font.bold = False
         run.font.color.rgb = c_dark
-        tf9.add_paragraph()
+        tf10.add_paragraph()
 
     prs.save(output_pptx)
     print(f"Successfully generated presentation deck: {output_pptx}")

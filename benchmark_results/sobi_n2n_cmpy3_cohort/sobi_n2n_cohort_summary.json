@@ -1,0 +1,13 @@
+{
+  "total_evaluated_subjects": 27,
+  "mean_p7_attenuation_db": -1.108918610542587,
+  "median_p7_attenuation_db": -0.3658498976357169,
+  "std_p7_attenuation_db": 4.7374713872185,
+  "min_p7_attenuation_db": -10.726930748293961,
+  "max_p7_attenuation_db": 14.535213464227517,
+  "mean_cz_template_r": 0.9999999999999579,
+  "min_cz_template_r": 0.9999999999998618,
+  "mean_v_cz_floor_uv": 0.9537692213499988,
+  "max_v_cz_floor_uv": 1.8165128231048584,
+  "pct_subjects_passing_all_gates": 66.66666666666666
+}
