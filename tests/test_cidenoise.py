@@ -135,5 +135,29 @@ class TestCIDenoiseBiophysics(unittest.TestCase):
         self.assertGreater(eta_good, 0.70, "Healthy retention must exceed 70% threshold")
         self.assertLess(eta_bad, 0.70, "Aggressive over-cleaning must fall below 70% threshold")
 
+    def test_cli_audit_command(self):
+        """Verify cidenoise audit CLI analyzes raw FIF and outputs valid JSON report."""
+        import tempfile
+        import json
+        from argparse import Namespace
+        from cidenoise.cli import audit_command
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            temp_fif = os.path.join(tmpdir, "test_raw.fif")
+            temp_json = os.path.join(tmpdir, "audit_out.json")
+            self.raw.save(temp_fif, overwrite=True, verbose=False)
+            
+            args = Namespace(input=temp_fif, output_json=temp_json)
+            audit_command(args)
+            
+            self.assertTrue(os.path.exists(temp_json), "audit report JSON must be created")
+            with open(temp_json, 'r') as jf:
+                report = json.load(jf)
+                
+            self.assertIn("hardware_saturation_detected", report)
+            self.assertIn("status", report)
+            self.assertEqual(report["status"], "PASSED")
+            self.assertFalse(report["hardware_saturation_detected"])
+
 if __name__ == '__main__':
     unittest.main()

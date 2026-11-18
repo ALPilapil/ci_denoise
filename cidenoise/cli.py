@@ -29,8 +29,43 @@ def clean_command(args):
     
     if args.method == "sobi-n2n" and args.checkpoint:
         print(f"[cidenoise clean] Applying Stage 2 Subspace-Constrained N2N from {args.checkpoint}...")
-        # Placeholder / hook for downstream sliding-window inference
-        print("[cidenoise clean] Continuous sliding-window N2N applied.")
+        import torch
+        from track_a_deep_learning.train_sobi_n2n import ResidualConstrainedUNet1D
+        from track_a_deep_learning.evaluate_sobi_n2n_downstream import apply_sobi_n2n_sliding_window, CANONICAL_20_CHS
+        
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        available_chs = [ch for ch in CANONICAL_20_CHS if ch in raw_clean.ch_names]
+        
+        # Build P_artifact from summary pass history
+        A_art_list = []
+        for p in summary.get('pass_history', []):
+            weights = p.get('mixing_weights', {})
+            vec = np.array([weights.get(ch, 0.0) for ch in available_chs], dtype=np.float32)
+            norm = np.linalg.norm(vec)
+            if norm > 1e-9:
+                A_art_list.append(vec / norm)
+                
+        if A_art_list:
+            U = np.column_stack(A_art_list)
+            P_artifact = U @ np.linalg.pinv(U.T @ U) @ U.T
+            for m_ch in ['Cz', 'Fz', 'Pz']:
+                if m_ch in available_chs:
+                    m_idx = available_chs.index(m_ch)
+                    P_artifact[m_idx, :] = 0.0
+                    P_artifact[:, m_idx] = 0.0
+        else:
+            P_artifact = np.zeros((len(available_chs), len(available_chs)), dtype=np.float32)
+            
+        p_art_tensor = torch.tensor(P_artifact, dtype=torch.float32).to(device)
+        model = ResidualConstrainedUNet1D(in_channels=len(available_chs), out_channels=len(available_chs)).to(device)
+        model.load_state_dict(torch.load(args.checkpoint, map_location=device))
+        
+        sobi_data = raw_clean.get_data(picks=available_chs)
+        n2n_data = apply_sobi_n2n_sliding_window(model, sobi_data, p_art_tensor, device)
+        
+        raw_clean._data[[raw_clean.ch_names.index(ch) for ch in available_chs]] = n2n_data
+        raw_clean.save(args.output, overwrite=True)
+        print("[cidenoise clean] Continuous sliding-window N2N applied and saved successfully.")
         
     print("[cidenoise clean] Successfully completed!")
 
