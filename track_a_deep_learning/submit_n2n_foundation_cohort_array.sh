@@ -14,7 +14,6 @@ cd /home/evliang/cidenoise
 export PYTHONPATH="/home/evliang/cidenoise/track_a_deep_learning:${PYTHONPATH}"
 mkdir -p logs benchmark_results/sobi_n2n_foundation_cohort
 
-source "/cvmfs/hpc.ucdavis.edu/sw/spack/environments/core/view/generic/slurm/bin"
 source "/cvmfs/hpc.ucdavis.edu/sw/conda/root/etc/profile.d/conda.sh"
 conda activate ci_denoise_env
 
