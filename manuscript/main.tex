@@ -29,13 +29,13 @@ We validate the framework across the UC Davis \texttt{CMPy2} clinical cohort ($N
 \end{abstract}
 
 \section{Introduction}
-Recording continuous speech-evoked electroencephalography (EEG) in deaf individuals fitted with cochlear implants (CIs) provides vital biomarkers for auditory cognitive neuroscience and rehabilitative mapping. However, transcutaneous inductive radio-frequency (RF) link transmission and continuous pulse trains propagate volume-conducted electrical artifacts that exceed underlying cortical brain potentials ($3\text{--}8\ \mu\text{V}$) by over $30\text{--}40\text{ dB}$ on lateral mastoid leads.
+Recording continuous speech-evoked electroencephalography (EEG) in deaf individuals fitted with cochlear implants (CIs) provides vital biomarkers for auditory cognitive neuroscience and rehabilitative mapping \cite{somers2019eeg}. However, transcutaneous inductive radio-frequency (RF) link transmission and continuous pulse trains propagate volume-conducted electrical artifacts that exceed underlying cortical brain potentials ($3\text{--}8\ \mu\text{V}$) by over $30\text{--}40\text{ dB}$ on lateral mastoid leads \cite{hofmann2012artefact}.
 
 Existing clinical methods exhibit severe fundamental limitations:
 \begin{enumerate}
-    \item \textbf{Linear BSS Over-Cleaning:} Standard FastICA and Infomax often prune genuine cortical dipoles due to spatial overlap between temporal lobes and mastoid sensors.
+    \item \textbf{Linear BSS Over-Cleaning:} Standard FastICA and Infomax often prune genuine cortical dipoles due to spatial overlap between temporal lobes and mastoid sensors \cite{hofmann2012artefact}.
     \item \textbf{Sim-to-Real Transfer Failure:} Neural networks trained on synthetically mixed clean hearing data with synthetic pulse trains fail to predict non-linear electrical conduction in real human tissue, collapsing to near identity ($<0.2\%$ artifact removal).
-    \item \textbf{Phase Distortion \& Stimulus Leakage in Speech mTRF:} Unconstrained deep architectures latch onto speech acoustic envelope triggers, inflating artificial zero-lag peaks in forward encoding models.
+    \item \textbf{Phase Distortion \& Stimulus Leakage in Speech mTRF:} Unconstrained deep architectures latch onto speech acoustic envelope triggers, inflating artificial zero-lag peaks in forward encoding models \cite{crosse2016multivariate}.
 \end{enumerate}
 
 \section{Biophysical Formulation \& Architecture}
@@ -52,7 +52,7 @@ Zero-phase continuous bandpass filtering ($1.0\text{--}45.0\text{ Hz}$) eliminat
 \end{equation}
 
 \subsection{Stage 1: Two-Pass SOBI with Active Safeguards}
-SOBI diagonalizes multiple second-order cross-correlation matrices $\mathbf{R}_X(\tau_m)$ across delays $\tau_m \in \{1, 2, 4, 8, 16, 32, 64\}$. Components are classified as artifactual via the Mastoid-to-Central Ratio:
+SOBI diagonalizes multiple second-order cross-correlation matrices $\mathbf{R}_X(\tau_m)$ across delays $\tau_m \in \{1, 2, 4, 8, 16, 32, 64\}$ \cite{belouchrani1997blind}. Components are classified as artifactual via the Mastoid-to-Central Ratio:
 \begin{equation}
 R_k = \frac{\frac{1}{|\mathcal{M}|} \sum_{m \in \mathcal{M}} |A_{m, k}|}{\frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} |A_{c, k}|} \ge 2.5
 \end{equation}
@@ -60,7 +60,7 @@ where $\mathcal{M} = \{\text{P7}, \text{P8}, \text{T7}, \text{T8}\}$ and $\mathc
 Midline power retention $\eta_{\text{mid}}$ is actively monitored in the cortical band ($1\text{--}15\text{ Hz}$). If $\eta_{\text{mid}} < 0.70$ or condition number $\kappa(\mathbf{W}) > 1000$, the system automatically rolls back to the previous pass.
 
 \subsection{Stage 2: Subspace-Constrained Symmetric Noise2Noise}
-Given stimulus-locked polarity-alternating pairs $(y_1, y_2)$ from continuous speech blocks, true cortical tracking is invariant ($s_1 \approx s_2$) while electrical artifacts invert ($a_1 \approx -a_2$). A 1D U-Net $f_\theta$ is trained self-supervised via symmetric $L_1$ loss:
+Given stimulus-locked polarity-alternating pairs $(y_1, y_2)$ from continuous speech blocks, true cortical tracking is invariant ($s_1 \approx s_2$) while electrical artifacts invert ($a_1 \approx -a_2$). A 1D U-Net $f_\theta$ is trained self-supervised via symmetric $L_1$ loss inspired by Noise2Noise formulations \cite{lehtinen2018noise2noise}:
 \begin{equation}
 \mathcal{L}_{\text{sym}} = \frac{1}{2} \|f_\theta(y_1) - y_2\|_1 + \frac{1}{2} \|f_\theta(y_2) - y_1\|_1
 \end{equation}
