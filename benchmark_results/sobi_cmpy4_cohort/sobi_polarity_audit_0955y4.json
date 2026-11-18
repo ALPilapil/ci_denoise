@@ -1,0 +1,35 @@
+{
+  "subject": "0955y4",
+  "hardware_failure": false,
+  "total_runtime_s": 76.91842746734619,
+  "stage1_sobi": {
+    "artifact_attenuation_db": -1.9054318962523142,
+    "p7_mean_single_take_power_uv2": 704.5389803550045
+  },
+  "stage2_polarity_averaging": {
+    "matched_pairs": 180,
+    "additional_attenuation_db": -2.4653429775623,
+    "p7_summed_power_uv2": 399.365669221813,
+    "isolated_artifact_power_uv2": 305.17331113319153
+  },
+  "total_pipeline": {
+    "total_artifact_attenuation_db": -4.370774873814609,
+    "power_reduction_pct": 63.447043246215465
+  },
+  "cz_cortical_erp": {
+    "n1_latency_ms": 91.62561576354683,
+    "n1_amplitude_uv": 0.0006853003365508313,
+    "n1_gate_passed": false,
+    "p2_latency_ms": 209.85221674876854,
+    "p2_amplitude_uv": 1.2827186868691285,
+    "p2_gate_passed": true,
+    "peak_to_peak_uv": 1.2820333865325777,
+    "cz_group_delay_ms": 0.0,
+    "cz_raw_clean_corr_r": 0.9994631451983061
+  },
+  "condition_v_silent_baseline": {
+    "cz_noise_floor_uv": 0.9870442250014819,
+    "p7_noise_floor_uv": 5.015871814635127,
+    "silent_gate_passed": true
+  }
+}
